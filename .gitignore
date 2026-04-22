@@ -43,3 +43,13 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+
+# Ignore JDK/Java folders
+oracleJdk-26/
+jdk/
+
+# Ignore Flutter build files
+build/
+.dart_tool/
+.connectedly/
