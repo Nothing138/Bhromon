@@ -25,10 +25,15 @@ class BhromonApp extends StatelessWidget {
       title: 'Bhromon',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+        // Seed color Teal thakleo amra Dark Mode focus UI banachhi
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.teal,
+          brightness: Brightness
+              .light, // Dark theme use korle eita Brightness.dark korte paren
+        ),
         useMaterial3: true,
       ),
-      home: const SplashScreen(), // App shuru hobe Splash Screen diye
+      home: const SplashScreen(),
     );
   }
 }

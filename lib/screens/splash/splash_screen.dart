@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../home/home_screen.dart';
 import '../auth/login_screen.dart';
+import '../main_wrapper.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -31,7 +32,7 @@ class _SplashScreenState extends State<SplashScreen> {
       // User login thakle shorasori Home Screen-e
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        MaterialPageRoute(builder: (context) => const MainWrapper()),
       );
     } else {
       // Login na thakle Login Screen-e

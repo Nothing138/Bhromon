@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../auth/login_screen.dart';
 import 'create_post_screen.dart';
+import '../profile/profile_screen.dart'; // Import kora holo
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -57,6 +58,16 @@ class _HomeScreenState extends State<HomeScreen> {
         centerTitle: true,
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.person_pin_rounded, size: 28),
+          tooltip: 'Profile',
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ProfileScreen()),
+            );
+          },
+        ),
         actions: [
           IconButton(
             onPressed: () => _handleLogout(context),
@@ -106,8 +117,6 @@ class _HomeScreenState extends State<HomeScreen> {
               final location = post['location_name'] as String? ?? "Unknown";
               final isLookingForGroup =
                   post['is_looking_for_group'] as bool? ?? false;
-
-              // Anonymous Logic Implementation
               final isAnonymous = post['is_anonymous'] as bool? ?? false;
 
               return Container(
@@ -136,10 +145,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         radius: 22,
                         backgroundColor: isAnonymous
                             ? Colors.blueGrey[100]
-                            : Colors.teal,
+                            : Colors.teal.withOpacity(0.1),
                         child: Icon(
                           isAnonymous ? Icons.visibility_off : Icons.person,
-                          color: isAnonymous ? Colors.blueGrey : Colors.white,
+                          color: isAnonymous ? Colors.blueGrey : Colors.teal,
                           size: 24,
                         ),
                       ),
@@ -244,10 +253,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 15),
 
                     const Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 15,
-                        vertical: 10,
-                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 15),
                       child: Divider(height: 1),
                     ),
 
@@ -295,14 +301,16 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Helper function for action buttons
   Widget _buildActionButton(IconData icon, String label) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: Colors.grey[700]),
-        const SizedBox(width: 5),
-        Text(label, style: TextStyle(color: Colors.grey[700])),
-      ],
+    return InkWell(
+      onTap: () {}, // Pore amra ekhane logic add korbo
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: Colors.grey[700]),
+          const SizedBox(width: 5),
+          Text(label, style: TextStyle(color: Colors.grey[700])),
+        ],
+      ),
     );
   }
 }
