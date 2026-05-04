@@ -1,10 +1,13 @@
 // screens/home/home_premium.dart
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart'; // প্রোভাইডার যুক্ত করা হয়েছে
+import '../../providers/theme_provider.dart';
 import '../home/all_places_page.dart';
 import '../details/place_details_page.dart';
 import '../shop/gear_shop_page.dart';
 import '../plan/plan_trip_page.dart';
+import '../notifications/notifications_page.dart';
 
 class HomePremium extends StatefulWidget {
   const HomePremium({super.key});
@@ -16,37 +19,58 @@ class HomePremium extends StatefulWidget {
 class _HomePremiumState extends State<HomePremium> {
   final supabase = Supabase.instance.client;
 
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour < 12) return "Good Morning,";
+    if (hour >= 12 && hour < 17) return "Good Afternoon,";
+    if (hour >= 17 && hour < 21) return "Good Evening,";
+    return "Good Night,";
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = supabase.auth.currentUser;
     final userName = user?.userMetadata?['full_name'] ?? 'Traveler';
 
+    // থিম প্রোভাইডার কল করা হয়েছে
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final accentColor = themeProvider.accentColor;
+    final isDark = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: Colors.white, // Black theme bad diye white kora holo
+      // ব্যাকগ্রাউন্ড থিম অনুযায়ী অটোমেটিক নিবে
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "Good Morning,",
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+            Text(
+              _getGreeting(),
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
             Text(
               userName,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.black,
+                color: isDark ? Colors.white : Colors.black,
               ),
             ),
           ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_none, color: Colors.black),
-            onPressed: () {},
+            icon: Icon(
+              Icons.notifications_none,
+              color: isDark ? Colors.white : Colors.black,
+            ),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const NotificationsPage(),
+              ),
+            ),
           ),
         ],
       ),
@@ -55,18 +79,29 @@ class _HomePremiumState extends State<HomePremium> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Search Bar (Light Mode)
+            // 1. Search Bar
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: isDark ? Colors.white10 : Colors.grey[100],
                 borderRadius: BorderRadius.circular(15),
               ),
-              child: const TextField(
+              child: TextField(
+                onSubmitted: (value) {
+                  if (value.isNotEmpty) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            AllPlacesPage(title: "Search: $value"),
+                      ),
+                    );
+                  }
+                },
                 decoration: InputDecoration(
                   border: InputBorder.none,
                   hintText: "Search your next trip...",
-                  icon: Icon(Icons.search, color: Colors.teal),
+                  icon: Icon(Icons.search, color: accentColor),
                 ),
               ),
             ),
@@ -88,10 +123,7 @@ class _HomePremiumState extends State<HomePremium> {
                           const AllPlacesPage(title: "All Places"),
                     ),
                   ),
-                  child: const Text(
-                    "See All",
-                    style: TextStyle(color: Colors.teal),
-                  ),
+                  child: Text("See All", style: TextStyle(color: accentColor)),
                 ),
               ],
             ),
@@ -102,16 +134,18 @@ class _HomePremiumState extends State<HomePremium> {
               child: FutureBuilder<List<Map<String, dynamic>>>(
                 future: supabase.from('places').select(),
                 builder: (context, snapshot) {
+                  if (snapshot.hasError)
+                    return Center(child: Text("Error: ${snapshot.error}"));
                   if (!snapshot.hasData)
-                    return const Center(child: CircularProgressIndicator());
+                    return Center(
+                      child: CircularProgressIndicator(color: accentColor),
+                    );
                   final places = snapshot.data!;
                   return ListView.builder(
                     scrollDirection: Axis.horizontal,
                     itemCount: places.length,
-                    itemBuilder: (context, index) {
-                      final place = places[index];
-                      return _buildPremiumCard(place);
-                    },
+                    itemBuilder: (context, index) =>
+                        _buildPremiumCard(places[index], accentColor),
                   );
                 },
               ),
@@ -119,7 +153,7 @@ class _HomePremiumState extends State<HomePremium> {
 
             const SizedBox(height: 25),
 
-            // 4. Categories
+            // 4. Categories Section
             const Text(
               "Explore Categories",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -128,17 +162,17 @@ class _HomePremiumState extends State<HomePremium> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildCategoryIcon(Icons.landscape, "Nature"),
-                _buildCategoryIcon(Icons.hiking, "Adventure"),
-                _buildCategoryIcon(Icons.beach_access, "Beach"),
-                _buildCategoryIcon(Icons.hotel, "Resorts"),
+                _buildCategoryIcon(Icons.landscape, "Nature", accentColor),
+                _buildCategoryIcon(Icons.hiking, "Adventure", accentColor),
+                _buildCategoryIcon(Icons.beach_access, "Beach", accentColor),
+                _buildCategoryIcon(Icons.hotel, "Resorts", accentColor),
               ],
             ),
 
             const SizedBox(height: 30),
 
             // 5. Gear Shop Banner
-            _buildShopBanner(),
+            _buildShopBanner(accentColor),
 
             const SizedBox(height: 20),
 
@@ -148,8 +182,9 @@ class _HomePremiumState extends State<HomePremium> {
               height: 55,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal,
+                  backgroundColor: accentColor,
                   foregroundColor: Colors.white,
+                  elevation: 2,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15),
                   ),
@@ -157,7 +192,10 @@ class _HomePremiumState extends State<HomePremium> {
                 icon: const Icon(Icons.add_location_alt),
                 label: const Text(
                   "PLAN A NEW TRIP",
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.1,
+                  ),
                 ),
                 onPressed: () => Navigator.push(
                   context,
@@ -165,16 +203,16 @@ class _HomePremiumState extends State<HomePremium> {
                 ),
               ),
             ),
-            const SizedBox(height: 100), // Bottom Nav spacing
+            const SizedBox(height: 100),
           ],
         ),
       ),
     );
   }
 
-  // --- Helper Widgets ---
+  // --- Helper Widgets with Color Parameters ---
 
-  Widget _buildPremiumCard(Map<String, dynamic> place) {
+  Widget _buildPremiumCard(Map<String, dynamic> place, Color accentColor) {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
@@ -187,9 +225,9 @@ class _HomePremiumState extends State<HomePremium> {
           borderRadius: BorderRadius.circular(25),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
@@ -202,42 +240,61 @@ class _HomePremiumState extends State<HomePremium> {
                 height: double.infinity,
                 width: double.infinity,
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: Colors.grey[300],
+                  child: const Icon(
+                    Icons.image_not_supported,
+                    color: Colors.grey,
+                  ),
+                ),
               ),
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
-                    colors: [Colors.black.withOpacity(0.8), Colors.transparent],
+                    colors: [
+                      Colors.black.withOpacity(0.85),
+                      Colors.transparent,
+                    ],
                   ),
                 ),
               ),
               Positioned(
                 bottom: 15,
                 left: 15,
+                right: 15,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      place['name'] ?? '',
+                      place['name'] ?? 'Unknown Place',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
+                    const SizedBox(height: 4),
                     Row(
                       children: [
                         const Icon(
                           Icons.location_on,
                           color: Colors.white70,
-                          size: 12,
+                          size: 14,
                         ),
-                        Text(
-                          place['location'] ?? '',
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            place['location'] ?? 'Location not set',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
@@ -252,34 +309,52 @@ class _HomePremiumState extends State<HomePremium> {
     );
   }
 
-  Widget _buildCategoryIcon(IconData icon, String label) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(15),
-          decoration: BoxDecoration(
-            color: Colors.teal.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(15),
+  Widget _buildCategoryIcon(IconData icon, String label, Color accentColor) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              AllPlacesPage(title: "$label Places", category: label),
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(15),
+            decoration: BoxDecoration(
+              color: accentColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Icon(icon, color: accentColor),
           ),
-          child: Icon(icon, color: Colors.teal),
-        ),
-        const SizedBox(height: 5),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-        ),
-      ],
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildShopBanner() {
+  Widget _buildShopBanner(Color accentColor) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Colors.teal, Colors.tealAccent],
+        gradient: LinearGradient(
+          colors: [accentColor, accentColor.withOpacity(0.7)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -295,6 +370,7 @@ class _HomePremiumState extends State<HomePremium> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                SizedBox(height: 4),
                 Text(
                   "Get 20% off on your first buy!",
                   style: TextStyle(color: Colors.white70, fontSize: 12),
@@ -309,10 +385,14 @@ class _HomePremiumState extends State<HomePremium> {
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
-              foregroundColor: Colors.teal,
+              foregroundColor: accentColor,
+              elevation: 0,
               shape: const StadiumBorder(),
             ),
-            child: const Text("Shop Now"),
+            child: const Text(
+              "Shop Now",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),

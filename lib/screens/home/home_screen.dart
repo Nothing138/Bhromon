@@ -1,9 +1,11 @@
 // screens/home/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart'; // প্রোভাইডার যুক্ত করা হয়েছে
+import '../../providers/theme_provider.dart';
 import '../auth/login_screen.dart';
 import 'create_post_screen.dart';
-import '../profile/profile_screen.dart'; // Import kora holo
+import '../profile/profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -47,8 +49,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // থিম প্রোভাইডার কল করা হয়েছে
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final accentColor = themeProvider.accentColor;
+    final isDark = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      // ব্যাকগ্রাউন্ড থিম অনুযায়ী পরিবর্তন হবে
+      backgroundColor: isDark
+          ? const Color(0xFF121212)
+          : const Color(0xFFF5F7FA),
       appBar: AppBar(
         elevation: 0,
         title: const Text(
@@ -56,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
         ),
         centerTitle: true,
-        backgroundColor: Colors.teal,
+        backgroundColor: accentColor, // ডাইনামিক কালার
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.person_pin_rounded, size: 28),
@@ -80,9 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
         stream: _postStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: Colors.teal),
-            );
+            return Center(child: CircularProgressIndicator(color: accentColor));
           }
 
           if (snapshot.hasError) {
@@ -97,9 +105,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Icon(Icons.auto_awesome, size: 60, color: Colors.grey[400]),
                   const SizedBox(height: 10),
-                  const Text(
+                  Text(
                     "No posts yet. Be the first to post!",
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
+                    style: TextStyle(
+                      color: isDark ? Colors.grey[500] : Colors.grey,
+                      fontSize: 16,
+                    ),
                   ),
                 ],
               ),
@@ -122,11 +133,11 @@ class _HomeScreenState extends State<HomeScreen> {
               return Container(
                 margin: const EdgeInsets.only(bottom: 20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, 5),
                     ),
@@ -145,18 +156,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         radius: 22,
                         backgroundColor: isAnonymous
                             ? Colors.blueGrey[100]
-                            : Colors.teal.withOpacity(0.1),
+                            : accentColor.withOpacity(0.1),
                         child: Icon(
                           isAnonymous ? Icons.visibility_off : Icons.person,
-                          color: isAnonymous ? Colors.blueGrey : Colors.teal,
+                          color: isAnonymous ? Colors.blueGrey : accentColor,
                           size: 24,
                         ),
                       ),
                       title: Text(
                         isAnonymous ? "Anonymous Traveler" : "Traveler",
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
+                          color: isDark ? Colors.white : Colors.black,
                         ),
                       ),
                       subtitle: Row(
@@ -171,7 +183,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Text(
                               location,
                               style: TextStyle(
-                                color: Colors.grey[600],
+                                color: isDark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
                                 fontSize: 13,
                               ),
                               overflow: TextOverflow.ellipsis,
@@ -207,9 +221,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                         child: Text(
                           content,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
-                            color: Colors.black87,
+                            color: isDark ? Colors.white70 : Colors.black87,
                           ),
                         ),
                       ),
@@ -229,7 +243,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               if (loadingProgress == null) return child;
                               return Container(
                                 height: 280,
-                                color: Colors.grey[200],
+                                color: isDark
+                                    ? Colors.white10
+                                    : Colors.grey[200],
                                 child: const Center(
                                   child: CircularProgressIndicator(),
                                 ),
@@ -239,7 +255,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Container(
                                   height: 150,
                                   width: double.infinity,
-                                  color: Colors.grey[200],
+                                  color: isDark
+                                      ? Colors.white10
+                                      : Colors.grey[200],
                                   child: const Icon(
                                     Icons.broken_image,
                                     color: Colors.grey,
@@ -252,9 +270,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     const SizedBox(height: 15),
 
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 15),
-                      child: Divider(height: 1),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Divider(
+                        height: 1,
+                        color: isDark ? Colors.white10 : null,
+                      ),
                     ),
 
                     // Actions
@@ -266,12 +287,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _buildActionButton(Icons.favorite_border, "Like"),
-                          _buildActionButton(Icons.chat_bubble_outline, "Chat"),
-                          const Icon(
+                          _buildActionButton(
+                            Icons.favorite_border,
+                            "Like",
+                            isDark,
+                          ),
+                          _buildActionButton(
+                            Icons.chat_bubble_outline,
+                            "Chat",
+                            isDark,
+                          ),
+                          Icon(
                             Icons.share_outlined,
                             size: 20,
-                            color: Colors.grey,
+                            color: isDark ? Colors.grey[500] : Colors.grey,
                           ),
                         ],
                       ),
@@ -296,19 +325,20 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         icon: const Icon(Icons.add_a_photo, color: Colors.white),
-        backgroundColor: Colors.teal,
+        backgroundColor: accentColor,
       ),
     );
   }
 
-  Widget _buildActionButton(IconData icon, String label) {
+  Widget _buildActionButton(IconData icon, String label, bool isDark) {
+    final textColor = isDark ? Colors.grey[400] : Colors.grey[700];
     return InkWell(
-      onTap: () {}, // Pore amra ekhane logic add korbo
+      onTap: () {},
       child: Row(
         children: [
-          Icon(icon, size: 20, color: Colors.grey[700]),
+          Icon(icon, size: 20, color: textColor),
           const SizedBox(width: 5),
-          Text(label, style: TextStyle(color: Colors.grey[700])),
+          Text(label, style: TextStyle(color: textColor)),
         ],
       ),
     );

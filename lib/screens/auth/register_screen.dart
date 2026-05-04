@@ -1,6 +1,8 @@
 // screens/auth/register_screen.dart
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart'; // প্রোভাইডার যুক্ত করা হয়েছে
+import '../../providers/theme_provider.dart'; // আপনার প্রোজেক্ট স্ট্রাকচার অনুযায়ী পাথ ঠিক করে নিবেন
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -10,23 +12,21 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final _formKey = GlobalKey<FormState>(); // Validation-er jonno
+  final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
   Future<void> _signUp() async {
-    if (!_formKey.currentState!.validate()) return; // Validation check
+    if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
     try {
       await Supabase.instance.client.auth.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
-        data: {
-          'full_name': _nameController.text.trim(),
-        }, // Trigger-er jonno metadata
+        data: {'full_name': _nameController.text.trim()},
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -40,7 +40,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
         );
       }
     } finally {
@@ -50,12 +53,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // থিম প্রোভাইডার কল করা হয়েছে
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      // ব্যাকগ্রাউন্ড এখন অটোমেটিক থিম থেকে নিবে
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
-        foregroundColor: Colors.black,
+        // আইকন কালার অটোমেটিক থিম থেকে অ্যাডজাস্ট হবে
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 30),
@@ -64,12 +71,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 "Join Bhromon",
                 style: TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.bold,
-                  color: Colors.teal,
+                  color: themeProvider.accentColor, // ডাইনামিক অ্যাকসেন্ট কালার
                 ),
               ),
               const Text(
@@ -83,9 +90,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 controller: _nameController,
                 decoration: InputDecoration(
                   labelText: 'Full Name',
-                  prefixIcon: const Icon(Icons.person),
+                  prefixIcon: Icon(
+                    Icons.person,
+                    color: themeProvider.accentColor,
+                  ),
+                  filled: true,
+                  fillColor: isDark ? Colors.white10 : Colors.grey[100],
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  floatingLabelStyle: TextStyle(
+                    color: themeProvider.accentColor,
                   ),
                 ),
                 validator: (value) => value!.isEmpty ? 'Enter your name' : null,
@@ -97,9 +113,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 controller: _emailController,
                 decoration: InputDecoration(
                   labelText: 'Email',
-                  prefixIcon: const Icon(Icons.email),
+                  prefixIcon: Icon(
+                    Icons.email,
+                    color: themeProvider.accentColor,
+                  ),
+                  filled: true,
+                  fillColor: isDark ? Colors.white10 : Colors.grey[100],
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  floatingLabelStyle: TextStyle(
+                    color: themeProvider.accentColor,
                   ),
                 ),
                 validator: (value) =>
@@ -113,9 +138,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: 'Password',
-                  prefixIcon: const Icon(Icons.lock),
+                  prefixIcon: Icon(
+                    Icons.lock,
+                    color: themeProvider.accentColor,
+                  ),
+                  filled: true,
+                  fillColor: isDark ? Colors.white10 : Colors.grey[100],
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  floatingLabelStyle: TextStyle(
+                    color: themeProvider.accentColor,
                   ),
                 ),
                 validator: (value) =>
@@ -124,21 +158,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 30),
 
               _isLoading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? Center(
+                      child: CircularProgressIndicator(
+                        color: themeProvider.accentColor,
+                      ),
+                    )
                   : ElevatedButton(
                       onPressed: _signUp,
                       style: ElevatedButton.styleFrom(
                         minimumSize: const Size(double.infinity, 55),
-                        backgroundColor: Colors.teal,
+                        backgroundColor:
+                            themeProvider.accentColor, // ডাইনামিক বাটন কালার
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
+                        elevation: 0,
                       ),
                       child: const Text(
                         'Create Account',
-                        style: TextStyle(fontSize: 18, color: Colors.white),
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white, // বাটন টেক্সট সবসময় সাদা
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
+              const SizedBox(height: 20),
             ],
           ),
         ),
