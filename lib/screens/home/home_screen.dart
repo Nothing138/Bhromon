@@ -1,7 +1,7 @@
 // screens/home/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:provider/provider.dart'; // প্রোভাইডার যুক্ত করা হয়েছে
+import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
 import '../auth/login_screen.dart';
 import 'create_post_screen.dart';
@@ -25,12 +25,43 @@ class _HomeScreenState extends State<HomeScreen> {
       .order('created_at', ascending: false);
 
   Future<void> _handleLogout(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF111827)
+            : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Log out?',
+          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+        ),
+        content: const Text(
+          'Are you sure you want to log out of Bhromon?',
+          style: TextStyle(fontSize: 13, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text(
+              'Log out',
+              style: TextStyle(color: Colors.redAccent),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
     try {
       await supabase.auth.signOut();
       if (context.mounted) {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
           (route) => false,
         );
       }
@@ -38,9 +69,13 @@ class _HomeScreenState extends State<HomeScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Logout failed: $e"),
+            content: Text('Logout failed: $e'),
             backgroundColor: Colors.redAccent,
             behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -49,40 +84,88 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // থিম প্রোভাইডার কল করা হয়েছে
     final themeProvider = Provider.of<ThemeProvider>(context);
     final accentColor = themeProvider.accentColor;
     final isDark = themeProvider.isDarkMode;
 
+    final bg = isDark ? const Color(0xFF080C18) : const Color(0xFFF5F7FF);
+    final surface = isDark ? const Color(0xFF111827) : Colors.white;
+    final surfaceBorder = isDark
+        ? const Color(0xFF1E2A42).withOpacity(0.8)
+        : Colors.black.withOpacity(0.06);
+    final textPrimary = isDark
+        ? const Color(0xFFE2E8F4)
+        : const Color(0xFF0D1117);
+    final textSecondary = isDark
+        ? const Color(0xFF4A5478)
+        : const Color(0xFF8892A4);
+
     return Scaffold(
-      // ব্যাকগ্রাউন্ড থিম অনুযায়ী পরিবর্তন হবে
-      backgroundColor: isDark
-          ? const Color(0xFF121212)
-          : const Color(0xFFF5F7FA),
+      backgroundColor: bg,
       appBar: AppBar(
         elevation: 0,
-        title: const Text(
-          "Bhromon Feed",
-          style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+        backgroundColor: bg,
+        titleSpacing: 0,
+        leading: GestureDetector(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ProfileScreen()),
+          ),
+          child: Container(
+            margin: const EdgeInsets.only(left: 16),
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: surfaceBorder, width: 0.5),
+            ),
+            child: Icon(
+              Icons.person_outline_rounded,
+              color: accentColor,
+              size: 20,
+            ),
+          ),
         ),
-        centerTitle: true,
-        backgroundColor: accentColor, // ডাইনামিক কালার
-        foregroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.person_pin_rounded, size: 28),
-          tooltip: 'Profile',
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const ProfileScreen()),
-            );
-          },
+        title: Padding(
+          padding: const EdgeInsets.only(left: 10),
+          child: Row(
+            children: [
+              Icon(Icons.travel_explore_outlined, color: accentColor, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                'Bhromon Feed',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 17,
+                  color: textPrimary,
+                  letterSpacing: -0.3,
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
-          IconButton(
-            onPressed: () => _handleLogout(context),
-            icon: const Icon(Icons.logout_rounded),
-            tooltip: 'Logout',
+          GestureDetector(
+            onTap: () => _handleLogout(context),
+            child: Container(
+              margin: const EdgeInsets.only(right: 16),
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: Colors.redAccent.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.redAccent.withOpacity(0.12),
+                  width: 0.5,
+                ),
+              ),
+              child: const Icon(
+                Icons.logout_rounded,
+                color: Colors.redAccent,
+                size: 18,
+              ),
+            ),
           ),
         ],
       ),
@@ -90,11 +173,32 @@ class _HomeScreenState extends State<HomeScreen> {
         stream: _postStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator(color: accentColor));
+            return Center(
+              child: CircularProgressIndicator(
+                color: accentColor,
+                strokeWidth: 2,
+              ),
+            );
           }
 
           if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}"));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline_rounded,
+                    size: 40,
+                    color: textSecondary,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Something went wrong',
+                    style: TextStyle(color: textSecondary, fontSize: 14),
+                  ),
+                ],
+              ),
+            );
           }
 
           final posts = snapshot.data;
@@ -103,14 +207,36 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.auto_awesome, size: 60, color: Colors.grey[400]),
-                  const SizedBox(height: 10),
-                  Text(
-                    "No posts yet. Be the first to post!",
-                    style: TextStyle(
-                      color: isDark ? Colors.grey[500] : Colors.grey,
-                      fontSize: 16,
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: accentColor.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(
+                        color: accentColor.withOpacity(0.15),
+                        width: 0.5,
+                      ),
                     ),
+                    child: Icon(
+                      Icons.photo_camera_back_outlined,
+                      size: 32,
+                      color: accentColor.withOpacity(0.6),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    'No posts yet',
+                    style: TextStyle(
+                      color: textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Be the first to share your adventure!',
+                    style: TextStyle(color: textSecondary, fontSize: 13),
                   ),
                 ],
               ),
@@ -119,227 +245,294 @@ class _HomeScreenState extends State<HomeScreen> {
 
           return ListView.builder(
             itemCount: posts.length,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 15),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
             physics: const BouncingScrollPhysics(),
-            itemBuilder: (context, index) {
-              final post = posts[index];
-              final imageUrl = post['image_url'] as String?;
-              final content = post['content'] as String? ?? "";
-              final location = post['location_name'] as String? ?? "Unknown";
-              final isLookingForGroup =
-                  post['is_looking_for_group'] as bool? ?? false;
-              final isAnonymous = post['is_anonymous'] as bool? ?? false;
-
-              return Container(
-                margin: const EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
+            itemBuilder: (_, index) => _buildPostCard(
+              posts[index],
+              accentColor,
+              isDark,
+              surface,
+              surfaceBorder,
+              textPrimary,
+              textSecondary,
+            ),
+          );
+        },
+      ),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          color: accentColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: accentColor.withOpacity(0.3), width: 0.5),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CreatePostScreen()),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(
+                    Icons.add_a_photo_outlined,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Post adventure',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      letterSpacing: 0.1,
                     ),
-                  ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPostCard(
+    Map<String, dynamic> post,
+    Color accentColor,
+    bool isDark,
+    Color surface,
+    Color surfaceBorder,
+    Color textPrimary,
+    Color textSecondary,
+  ) {
+    final imageUrl = post['image_url'] as String?;
+    final content = post['content'] as String? ?? '';
+    final location = post['location_name'] as String? ?? 'Unknown location';
+    final isLookingForGroup = post['is_looking_for_group'] as bool? ?? false;
+    final isAnonymous = post['is_anonymous'] as bool? ?? false;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: surfaceBorder, width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: isAnonymous
+                        ? const Color(0xFF1E2A42)
+                        : accentColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(13),
+                    border: Border.all(
+                      color: isAnonymous
+                          ? const Color(0xFF2E3A56)
+                          : accentColor.withOpacity(0.2),
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Icon(
+                    isAnonymous
+                        ? Icons.visibility_off_outlined
+                        : Icons.person_outline_rounded,
+                    color: isAnonymous ? const Color(0xFF4A5478) : accentColor,
+                    size: 20,
+                  ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header Section
-                    ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 15,
-                        vertical: 5,
-                      ),
-                      leading: CircleAvatar(
-                        radius: 22,
-                        backgroundColor: isAnonymous
-                            ? Colors.blueGrey[100]
-                            : accentColor.withOpacity(0.1),
-                        child: Icon(
-                          isAnonymous ? Icons.visibility_off : Icons.person,
-                          color: isAnonymous ? Colors.blueGrey : accentColor,
-                          size: 24,
-                        ),
-                      ),
-                      title: Text(
-                        isAnonymous ? "Anonymous Traveler" : "Traveler",
+                const SizedBox(width: 11),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isAnonymous ? 'Anonymous traveler' : 'Traveler',
                         style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: isDark ? Colors.white : Colors.black,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                          color: textPrimary,
                         ),
                       ),
-                      subtitle: Row(
+                      const SizedBox(height: 2),
+                      Row(
                         children: [
                           const Icon(
-                            Icons.location_on,
-                            size: 14,
+                            Icons.location_on_outlined,
+                            size: 11,
                             color: Colors.redAccent,
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 3),
                           Expanded(
                             child: Text(
                               location,
                               style: TextStyle(
-                                color: isDark
-                                    ? Colors.grey[400]
-                                    : Colors.grey[600],
-                                fontSize: 13,
+                                color: textSecondary,
+                                fontSize: 11,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
                       ),
-                      trailing: isLookingForGroup
-                          ? Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Text(
-                                "Group Sync",
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.orange,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            )
-                          : null,
-                    ),
-
-                    // Content Text
-                    if (content.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                        child: Text(
-                          content,
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: isDark ? Colors.white70 : Colors.black87,
-                          ),
-                        ),
-                      ),
-
-                    // Image Section
-                    if (imageUrl != null && imageUrl.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(15),
-                          child: Image.network(
-                            imageUrl,
-                            height: 280,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return Container(
-                                height: 280,
-                                color: isDark
-                                    ? Colors.white10
-                                    : Colors.grey[200],
-                                child: const Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              );
-                            },
-                            errorBuilder: (context, error, stackTrace) =>
-                                Container(
-                                  height: 150,
-                                  width: double.infinity,
-                                  color: isDark
-                                      ? Colors.white10
-                                      : Colors.grey[200],
-                                  child: const Icon(
-                                    Icons.broken_image,
-                                    color: Colors.grey,
-                                    size: 50,
-                                  ),
-                                ),
-                          ),
-                        ),
-                      ),
-
-                    const SizedBox(height: 15),
-
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      child: Divider(
-                        height: 1,
-                        color: isDark ? Colors.white10 : null,
-                      ),
-                    ),
-
-                    // Actions
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildActionButton(
-                            Icons.favorite_border,
-                            "Like",
-                            isDark,
-                          ),
-                          _buildActionButton(
-                            Icons.chat_bubble_outline,
-                            "Chat",
-                            isDark,
-                          ),
-                          Icon(
-                            Icons.share_outlined,
-                            size: 20,
-                            color: isDark ? Colors.grey[500] : Colors.grey,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                  ],
+                    ],
+                  ),
                 ),
-              );
-            },
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const CreatePostScreen()),
-          );
-        },
-        label: const Text(
-          "Post Adventure",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        icon: const Icon(Icons.add_a_photo, color: Colors.white),
-        backgroundColor: accentColor,
+                if (isLookingForGroup)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.orange.withOpacity(0.2),
+                        width: 0.5,
+                      ),
+                    ),
+                    child: const Text(
+                      'Group sync',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.orange,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
+          // Content
+          if (content.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+              child: Text(
+                content,
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.6,
+                  color: isDark
+                      ? const Color(0xFFB0B8D0)
+                      : const Color(0xFF334155),
+                ),
+              ),
+            ),
+
+          // Image
+          if (imageUrl != null && imageUrl.isNotEmpty)
+            ClipRRect(
+              borderRadius: BorderRadius.zero,
+              child: Image.network(
+                imageUrl,
+                height: 240,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    height: 240,
+                    color: isDark
+                        ? const Color(0xFF111827)
+                        : const Color(0xFFF0F2F8),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: accentColor,
+                        strokeWidth: 2,
+                      ),
+                    ),
+                  );
+                },
+                errorBuilder: (_, __, ___) => Container(
+                  height: 120,
+                  color: isDark
+                      ? const Color(0xFF111827)
+                      : const Color(0xFFF0F2F8),
+                  child: Center(
+                    child: Icon(
+                      Icons.broken_image_outlined,
+                      color: textSecondary,
+                      size: 32,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+          // Actions
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+            child: Row(
+              children: [
+                _buildActionButton(
+                  Icons.favorite_border_rounded,
+                  'Like',
+                  accentColor,
+                  isDark,
+                ),
+                const SizedBox(width: 10),
+                _buildActionButton(
+                  Icons.chat_bubble_outline_rounded,
+                  'Comment',
+                  accentColor,
+                  isDark,
+                ),
+                const Spacer(),
+                Icon(Icons.ios_share_outlined, size: 18, color: textSecondary),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildActionButton(IconData icon, String label, bool isDark) {
-    final textColor = isDark ? Colors.grey[400] : Colors.grey[700];
+  Widget _buildActionButton(
+    IconData icon,
+    String label,
+    Color accentColor,
+    bool isDark,
+  ) {
     return InkWell(
       onTap: () {},
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: textColor),
-          const SizedBox(width: 5),
-          Text(label, style: TextStyle(color: textColor)),
-        ],
+      borderRadius: BorderRadius.circular(9),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: accentColor.withOpacity(0.07),
+          borderRadius: BorderRadius.circular(9),
+          border: Border.all(color: accentColor.withOpacity(0.12), width: 0.5),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 15, color: accentColor),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: TextStyle(
+                color: accentColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

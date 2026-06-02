@@ -1,8 +1,8 @@
 // screens/auth/register_screen.dart
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:provider/provider.dart'; // প্রোভাইডার যুক্ত করা হয়েছে
-import '../../providers/theme_provider.dart'; // আপনার প্রোজেক্ট স্ট্রাকচার অনুযায়ী পাথ ঠিক করে নিবেন
+import 'package:provider/provider.dart';
+import '../../providers/theme_provider.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -53,17 +53,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // থিম প্রোভাইডার কল করা হয়েছে
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = themeProvider.isDarkMode;
 
     return Scaffold(
-      // ব্যাকগ্রাউন্ড এখন অটোমেটিক থিম থেকে নিবে
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        // আইকন কালার অটোমেটিক থিম থেকে অ্যাডজাস্ট হবে
-      ),
+      appBar: AppBar(elevation: 0, backgroundColor: Colors.transparent),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 30),
         child: Form(
@@ -76,7 +70,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 style: TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.bold,
-                  color: themeProvider.accentColor, // ডাইনামিক অ্যাকসেন্ট কালার
+                  color: themeProvider.accentColor,
                 ),
               ),
               const Text(
@@ -167,8 +161,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       onPressed: _signUp,
                       style: ElevatedButton.styleFrom(
                         minimumSize: const Size(double.infinity, 55),
-                        backgroundColor:
-                            themeProvider.accentColor, // ডাইনামিক বাটন কালার
+                        backgroundColor: themeProvider.accentColor,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -178,7 +171,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         'Create Account',
                         style: TextStyle(
                           fontSize: 18,
-                          color: Colors.white, // বাটন টেক্সট সবসময় সাদা
+                          color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

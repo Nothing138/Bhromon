@@ -1,10 +1,12 @@
 // screens/main_wrapper.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // প্রোভাইডার যুক্ত করা হয়েছে
+import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import 'home/home_premium.dart';
 import 'home/home_screen.dart';
 import 'profile/profile_screen.dart';
+import 'map/map_page.dart';
+import 'sos/sos_page.dart';
 
 class MainWrapper extends StatefulWidget {
   const MainWrapper({super.key});
@@ -17,32 +19,24 @@ class _MainWrapperState extends State<MainWrapper> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
-    const HomePremium(), // Index 0
-    const HomeScreen(), // Index 1
-    const ProfileScreen(), // Index 2
+    const HomePremium(), // 0 - Explore
+    const HomeScreen(), // 1 - Feed
+    const BDMapPage(), // 2 - Map
+    const SOSPage(), // 3 - SOS
+    const ProfileScreen(), // 4 - Profile
   ];
 
   @override
   Widget build(BuildContext context) {
-    // থিম প্রোভাইডার থেকে ডাটা নেওয়া হচ্ছে
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = themeProvider.isDarkMode;
     final accentColor = themeProvider.accentColor;
 
     return Scaffold(
-      // বডি এখন ডাইনামিক পেজ রেন্ডার করবে
-      body: _pages[_selectedIndex],
-
-      // বোটম বারটি স্ক্রিনের ওপর ভাসমান (Floating) স্টাইলে রাখা হয়েছে
+      body: IndexedStack(index: _selectedIndex, children: _pages),
       bottomNavigationBar: Container(
-        margin: const EdgeInsets.fromLTRB(
-          20,
-          0,
-          20,
-          20,
-        ), // নিচের এবং পাশের স্পেসিং
+        margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
         decoration: BoxDecoration(
-          // ডার্ক মোডে নেভি ব্লু আর লাইট মোডে সাদা
           color: isDark ? const Color(0xFF1E293B) : Colors.white,
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
@@ -55,42 +49,160 @@ class _MainWrapperState extends State<MainWrapper> {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(30),
-          child: BottomNavigationBar(
-            currentIndex: _selectedIndex,
-            onTap: (index) => setState(() => _selectedIndex = index),
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-
-            // ইউজারের সিলেক্ট করা অ্যাকসেন্ট কালার এখন হাইলাইট হিসেবে কাজ করবে
-            selectedItemColor: accentColor,
-            unselectedItemColor: isDark ? Colors.white38 : Colors.grey[400],
-
-            showSelectedLabels: true,
-            showUnselectedLabels:
-                false, // আনসিলেক্টেড লেবেল হাইড করলে বেশি ক্লিন লাগে
-            type: BottomNavigationBarType
-                .fixed, // আইটেমগুলোর পজিশন ফিক্সড রাখার জন্য
-
-            selectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildNavItem(
+                  index: 0,
+                  icon: Icons.explore_outlined,
+                  activeIcon: Icons.explore_rounded,
+                  label: 'Explore',
+                  accentColor: accentColor,
+                  isDark: isDark,
+                ),
+                _buildNavItem(
+                  index: 1,
+                  icon: Icons.rss_feed_outlined,
+                  activeIcon: Icons.rss_feed_rounded,
+                  label: 'Feed',
+                  accentColor: accentColor,
+                  isDark: isDark,
+                ),
+                _buildNavItem(
+                  index: 2,
+                  icon: Icons.map_outlined,
+                  activeIcon: Icons.map_rounded,
+                  label: 'Map',
+                  accentColor: accentColor,
+                  isDark: isDark,
+                ),
+                // SOS — special red pill button
+                _buildSOSItem(isDark),
+                _buildNavItem(
+                  index: 4,
+                  icon: Icons.person_outline_rounded,
+                  activeIcon: Icons.person_rounded,
+                  label: 'Profile',
+                  accentColor: accentColor,
+                  isDark: isDark,
+                ),
+              ],
             ),
-
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.explore_rounded),
-                label: "Explore",
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.rss_feed_rounded),
-                label: "Feed",
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.person_rounded),
-                label: "Profile",
-              ),
-            ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem({
+    required int index,
+    required IconData icon,
+    required IconData activeIcon,
+    required String label,
+    required Color accentColor,
+    required bool isDark,
+  }) {
+    final isSelected = _selectedIndex == index;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedIndex = index),
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? accentColor.withOpacity(0.12)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: Icon(
+                isSelected ? activeIcon : icon,
+                key: ValueKey(isSelected),
+                color: isSelected
+                    ? accentColor
+                    : (isDark ? Colors.white38 : Colors.grey[400]),
+                size: 22,
+              ),
+            ),
+            const SizedBox(height: 3),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
+              style: TextStyle(
+                color: isSelected
+                    ? accentColor
+                    : (isDark ? Colors.white38 : Colors.grey[400]),
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+              ),
+              child: Text(label),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSOSItem(bool isDark) {
+    final isSelected = _selectedIndex == 3;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedIndex = 3),
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              width: 48,
+              height: 28,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Colors.redAccent
+                    : Colors.redAccent.withOpacity(0.85),
+                borderRadius: BorderRadius.circular(9),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.redAccent.withOpacity(
+                      isSelected ? 0.55 : 0.3,
+                    ),
+                    blurRadius: isSelected ? 14 : 8,
+                    spreadRadius: isSelected ? 1 : 0,
+                  ),
+                ],
+              ),
+              child: const Center(
+                child: Text(
+                  'SOS',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              'SOS',
+              style: TextStyle(
+                color: isSelected
+                    ? Colors.redAccent
+                    : Colors.redAccent.withOpacity(0.6),
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       ),
     );

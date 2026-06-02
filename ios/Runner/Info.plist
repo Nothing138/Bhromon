@@ -66,5 +66,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>com.google.android.geo.API_KEY</key>
+	<string>AIzaSyBsh8W7e8Oq_1bbJ8bQsTk_-K54wSvJYwk</string>
 </dict>
 </plist>

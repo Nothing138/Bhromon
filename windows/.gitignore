@@ -15,3 +15,13 @@ x86/
 *.[Cc]ache
 # but keep track of directories ending in .cache
 !*.[Cc]ache/
+
+
+oracleJdk-26/
+.gradle/
+.idea/
+.dart_tool/
+.packages
+.pub-cache/
+build/
+*.lock

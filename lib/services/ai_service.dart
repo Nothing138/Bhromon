@@ -1,11 +1,9 @@
 // services/ai_service.dart
-import 'package:google_generative_ai/google_generative_ai.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
 class AIService {
-  // আপনার Gemini API Key এখানে বসান
-  static const String _apiKey = 'AIzaSyCqBLBZB5Rpf98LQUYYbmZFTTDBTGAe6v4';
-
   static Future<String> generateItinerary({
     required String destination,
     required int budget,
@@ -13,29 +11,66 @@ class AIService {
     required String style,
   }) async {
     try {
-      final model = GenerativeModel(model: 'gemini-1.5-flash', apiKey: _apiKey);
-
-      // AI-এর জন্য একটি ক্লিয়ার প্রম্পট তৈরি করা
       final prompt =
           """
-        You are a Bangladesh Travel Expert. Create a detailed day-wise travel itinerary for ${destination}.
-        Strict Rules:
-        1. Only suggest tourist spots, hotels, and food located within Bangladesh.
-        2. If the user mentions a location outside Bangladesh, politely suggest a similar destination inside Bangladesh (e.g., if they say "Darjeeling", suggest "Sajek Valley").
-        3. Duration: ${days} days.
-        4. Budget: ${budget} BDT total.
-        5. Travel Style: ${style}.
-        6. Include estimated costs for transport and local Bangladeshi food.
-        """;
+You are a Bangladesh Travel Expert. Create a detailed day-wise travel itinerary for $destination, Bangladesh.
+Duration: $days days.
+Budget: $budget BDT.
+Travel Style: $style.
 
-      final content = [Content.text(prompt)];
-      final response = await model.generateContent(content);
+Please provide:
+- Day-by-day schedule (morning, afternoon, evening)
+- Famous local food spots and must-try dishes
+- Transport options (bus, train, launch, CNG)
+- Budget breakdown estimate
+- Top attractions and hidden gems
 
-      return response.text ??
-          "Sorry, I couldn't generate a plan. Please try again.";
+Keep everything practical and within Bangladesh only.
+""";
+
+      final response = await http.post(
+        Uri.parse(_apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_apiKey',
+        },
+        body: jsonEncode({
+          'model': 'llama-3.3-70b-versatile',
+          'max_tokens': 1500,
+          'temperature': 0.7,
+          'messages': [
+            {
+              'role': 'system',
+              'content':
+                  'You are a helpful Bangladesh travel expert who gives detailed, practical travel advice.',
+            },
+            {'role': 'user', 'content': prompt},
+          ],
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final text = data['choices'][0]['message']['content'] as String;
+        return text;
+      } else if (response.statusCode == 401) {
+        return "❌ Invalid API Key! console.groq.com থেকে নতুন key নিন।";
+      } else if (response.statusCode == 429) {
+        return "⏳ একটু বেশি request হয়ে গেছে। কিছুক্ষণ পর আবার চেষ্টা করুন।";
+      } else {
+        try {
+          final errorData = jsonDecode(response.body);
+          final errorMsg = errorData['error']['message'] ?? 'Unknown error';
+          debugPrint("Groq Error Detail: $errorMsg");
+          return "❌ Error: $errorMsg";
+        } catch (_) {
+          debugPrint("Groq Error: ${response.statusCode} - ${response.body}");
+          return "❌ Error ${response.statusCode}: Itinerary তৈরি করা যায়নি।";
+        }
+      }
     } catch (e) {
-      debugPrint("AI Generation Error: $e");
-      return "Error: Failed to connect to AI service.";
+      debugPrint("Connection Error: $e");
+      return "❌ ইন্টারনেট কানেকশন চেক করুন এবার চেষ্টা করুন।";
     }
   }
 }
