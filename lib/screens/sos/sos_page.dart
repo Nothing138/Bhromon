@@ -3,11 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:async';
-import '../../providers/theme_provider.dart';
 import 'dart:math';
+import '../../providers/theme_provider.dart';
 
 class SOSPage extends StatefulWidget {
   const SOSPage({super.key});
@@ -24,13 +22,11 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
   List<Map<String, dynamic>> _myAlerts = [];
   bool _loadingAlerts = true;
 
-  // Location
   double? _latitude;
   double? _longitude;
   bool _loadingLocation = false;
   String? _locationError;
 
-  // Emergency Services
   List<EmergencyService> _nearbyServices = [];
   bool _loadingServices = false;
 
@@ -38,14 +34,16 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
   late Animation<double> _pulseAnim;
   late AnimationController _successController;
   late Animation<double> _successScaleAnim;
-  late AnimationController _shakeController;
-
-  GoogleMapController? _mapController;
-  Set<Marker> _markers = {};
 
   @override
   void initState() {
     super.initState();
+    _setupAnimations();
+    _initLocation();
+    _loadMyAlerts();
+  }
+
+  void _setupAnimations() {
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -63,106 +61,116 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
       parent: _successController,
       curve: Curves.elasticOut,
     );
-
-    _shakeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
-    );
-
-    _initLocation();
-    _loadMyAlerts();
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
     _successController.dispose();
-    _shakeController.dispose();
-    _mapController?.dispose();
     super.dispose();
   }
 
   Future<void> _initLocation() async {
+    if (!mounted) return;
+
     setState(() => _loadingLocation = true);
     try {
       final permission = await Geolocator.checkPermission();
+
       if (permission == LocationPermission.denied) {
         final result = await Geolocator.requestPermission();
         if (result == LocationPermission.denied) {
-          setState(() {
-            _locationError = 'Location permission denied';
-            _loadingLocation = false;
-          });
+          if (mounted) {
+            setState(() {
+              _locationError = 'Location permission denied';
+              _loadingLocation = false;
+            });
+          }
           return;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        setState(() {
-          _locationError = 'Location permission permanently denied';
-          _loadingLocation = false;
-        });
+        if (mounted) {
+          setState(() {
+            _locationError = 'Please enable location in settings';
+            _loadingLocation = false;
+          });
+        }
         return;
       }
 
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10),
       );
 
-      setState(() {
-        _latitude = position.latitude;
-        _longitude = position.longitude;
-        _loadingLocation = false;
-        _locationError = null;
-      });
+      if (mounted) {
+        setState(() {
+          _latitude = position.latitude;
+          _longitude = position.longitude;
+          _loadingLocation = false;
+          _locationError = null;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _locationError = 'Failed to get location: $e';
-        _loadingLocation = false;
-      });
+      if (mounted) {
+        setState(() {
+          _locationError = 'Location error';
+          _loadingLocation = false;
+        });
+      }
     }
   }
 
   Future<void> _loadMyAlerts() async {
     try {
       final userId = supabase.auth.currentUser?.id;
-      if (userId == null) return;
+      if (userId == null) {
+        setState(() => _loadingAlerts = false);
+        return;
+      }
+
       final data = await supabase
           .from('sos_alerts')
           .select()
           .eq('user_id', userId)
           .order('created_at', ascending: false)
           .limit(10);
-      setState(() {
-        _myAlerts = List<Map<String, dynamic>>.from(data);
-        _loadingAlerts = false;
-      });
-    } catch (_) {
-      setState(() => _loadingAlerts = false);
+
+      if (mounted) {
+        setState(() {
+          _myAlerts = List<Map<String, dynamic>>.from(data);
+          _loadingAlerts = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loadingAlerts = false);
+      }
     }
   }
 
   Future<void> _fetchNearbyServices() async {
     if (_latitude == null || _longitude == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please enable location to find nearby services'),
-          backgroundColor: Colors.redAccent,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Please enable location'),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
           ),
-          margin: const EdgeInsets.all(16),
-        ),
-      );
+        );
+      }
       return;
     }
 
-    setState(() => _loadingServices = true);
+    if (mounted) {
+      setState(() => _loadingServices = true);
+    }
 
     try {
-      // Call your backend API to fetch nearby services
-      // This should use Google Places API or your own backend
       final response = await supabase
           .from('emergency_services')
           .select()
@@ -174,104 +182,42 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
           .limit(15);
 
       List<EmergencyService> services = [];
+
       for (var item in response) {
         services.add(EmergencyService.fromMap(item));
       }
 
-      // Sort by distance
-      services.sort((a, b) {
-        double distA = _calculateDistance(
+      for (var service in services) {
+        service.distance = _calculateDistance(
           _latitude!,
           _longitude!,
-          a.lat,
-          a.lng,
+          service.lat,
+          service.lng,
         );
-        double distB = _calculateDistance(
-          _latitude!,
-          _longitude!,
-          b.lat,
-          b.lng,
-        );
-        return distA.compareTo(distB);
-      });
-
-      setState(() {
-        _nearbyServices = services;
-        _loadingServices = false;
-        _updateMapMarkers();
-      });
-
-      _showServicesBottomSheet();
-    } catch (e) {
-      setState(() => _loadingServices = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error loading services: $e'),
-          backgroundColor: Colors.redAccent,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          margin: const EdgeInsets.all(16),
-        ),
-      );
-    }
-  }
-
-  void _updateMapMarkers() {
-    _markers.clear();
-
-    // User location marker
-    if (_latitude != null && _longitude != null) {
-      _markers.add(
-        Marker(
-          markerId: const MarkerId('user_location'),
-          position: LatLng(_latitude!, _longitude!),
-          infoWindow: const InfoWindow(title: 'Your Location'),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-        ),
-      );
-    }
-
-    // Service markers
-    for (var i = 0; i < _nearbyServices.length; i++) {
-      final service = _nearbyServices[i];
-      BitmapDescriptor markerColor;
-
-      switch (service.type.toLowerCase()) {
-        case 'hospital':
-          markerColor = BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueRed,
-          );
-          break;
-        case 'police':
-          markerColor = BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueBlue,
-          );
-          break;
-        case 'ambulance':
-          markerColor = BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueOrange,
-          );
-          break;
-        default:
-          markerColor = BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueYellow,
-          );
       }
 
-      _markers.add(
-        Marker(
-          markerId: MarkerId('service_$i'),
-          position: LatLng(service.lat, service.lng),
-          infoWindow: InfoWindow(title: service.name, snippet: service.type),
-          icon: markerColor,
-        ),
-      );
-    }
+      services.sort((a, b) => a.distance.compareTo(b.distance));
 
-    if (mounted) {
-      setState(() {});
+      if (mounted) {
+        setState(() {
+          _nearbyServices = services;
+          _loadingServices = false;
+        });
+
+        _showServicesBottomSheet();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loadingServices = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Error loading services'),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
     }
   }
 
@@ -311,7 +257,6 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
     final textSecondary = isDark
         ? const Color(0xFF4A5478)
         : const Color(0xFF8892A4);
-    final bg = isDark ? const Color(0xFF080C18) : const Color(0xFFF5F7FF);
 
     return Container(
       decoration: BoxDecoration(
@@ -342,7 +287,11 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
               const SizedBox(height: 24),
               Row(
                 children: [
-                  const Icon(Icons.location_on, color: Colors.redAccent),
+                  const Icon(
+                    Icons.location_on,
+                    color: Colors.redAccent,
+                    size: 20,
+                  ),
                   const SizedBox(width: 12),
                   Text(
                     'Nearby Emergency Services',
@@ -368,7 +317,7 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 32),
                     child: Text(
-                      'No emergency services found nearby',
+                      'No services found',
                       style: TextStyle(color: textSecondary),
                     ),
                   ),
@@ -382,26 +331,6 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
                     surfaceBorder,
                     textPrimary,
                     textSecondary,
-                  ),
-                ),
-              const SizedBox(height: 16),
-              if (_latitude != null && _longitude != null)
-                SizedBox(
-                  height: 300,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: GoogleMap(
-                      initialCameraPosition: CameraPosition(
-                        target: LatLng(_latitude!, _longitude!),
-                        zoom: 14,
-                      ),
-                      markers: _markers,
-                      onMapCreated: (controller) {
-                        _mapController = controller;
-                      },
-                      myLocationEnabled: true,
-                      myLocationButtonEnabled: false,
-                    ),
                   ),
                 ),
             ],
@@ -594,32 +523,47 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
   }
 
   Future<void> _launchCall(String phoneNumber) async {
-    final uri = Uri(scheme: 'tel', path: phoneNumber);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+    try {
+      final uri = Uri(scheme: 'tel', path: phoneNumber);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      }
+    } catch (e) {
+      debugPrint('Error: $e');
     }
   }
 
   Future<void> _launchMaps(double lat, double lng) async {
-    final uri = Uri(scheme: 'geo', path: '$lat,$lng', query: 'q=$lat,$lng');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+    try {
+      final uri = Uri(scheme: 'geo', path: '$lat,$lng');
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      }
+    } catch (e) {
+      debugPrint('Error: $e');
     }
   }
 
   Future<void> _sendSOS() async {
     final userId = supabase.auth.currentUser?.id;
-    if (userId == null) return;
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please login first'),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+      return;
+    }
 
     if (_latitude == null || _longitude == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Waiting for location...'),
+          content: const Text('Getting location...'),
           backgroundColor: Colors.orange,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -627,6 +571,7 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
     }
 
     setState(() => _isSending = true);
+
     try {
       await supabase.from('sos_alerts').insert({
         'user_id': userId,
@@ -634,29 +579,29 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
         'longitude': _longitude,
         'status': 'active',
       });
-      setState(() {
-        _isSending = false;
-        _alertSent = true;
-      });
-      _successController.forward(from: 0);
+
+      if (mounted) {
+        setState(() {
+          _isSending = false;
+          _alertSent = true;
+        });
+        _successController.forward(from: 0);
+      }
+
       await _loadMyAlerts();
 
-      // Automatically fetch nearby services
       await Future.delayed(const Duration(milliseconds: 800));
       if (mounted) {
         await _fetchNearbyServices();
       }
     } catch (e) {
-      setState(() => _isSending = false);
       if (mounted) {
+        setState(() => _isSending = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to send SOS: $e'),
+            content: const Text('Failed to send SOS'),
             backgroundColor: Colors.redAccent,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
             margin: const EdgeInsets.all(16),
           ),
         );
@@ -670,25 +615,14 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
           .from('sos_alerts')
           .update({'status': 'cancelled'})
           .eq('id', alertId);
+
       await _loadMyAlerts();
       if (mounted) {
         setState(() => _alertSent = false);
         _successController.reverse();
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to cancel: $e'),
-            backgroundColor: Colors.redAccent,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: const EdgeInsets.all(16),
-          ),
-        );
-      }
+      debugPrint('Error: $e');
     }
   }
 
@@ -779,7 +713,7 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Use only in genuine emergency situations. False alerts may prevent real emergencies from being addressed.',
+                      'Use only in genuine emergency situations.',
                       style: TextStyle(
                         color: isDark
                             ? const Color(0xFFB0B8D0)
@@ -861,7 +795,7 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Fetching your location...',
+                      'Getting location...',
                       style: TextStyle(
                         color: Colors.blue.shade400,
                         fontSize: 12,
@@ -891,10 +825,10 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Location ready: ${_latitude!.toStringAsFixed(4)}, ${_longitude!.toStringAsFixed(4)}',
+                      'Location ready ✓',
                       style: TextStyle(
                         color: Colors.green.shade400,
-                        fontSize: 11,
+                        fontSize: 12,
                       ),
                     ),
                   ],
@@ -928,11 +862,9 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
             _buildInfoCard(
               Icons.location_on_outlined,
               'Location Sharing',
-              'Your GPS coordinates will be sent with the alert to help responders locate you.',
+              'GPS coordinates sent with alert',
               Colors.blueAccent,
               isDark,
-              surface,
-              surfaceBorder,
               textPrimary,
               textSecondary,
             ),
@@ -940,11 +872,9 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
             _buildInfoCard(
               Icons.local_hospital_outlined,
               'Find Services',
-              'Instantly locate nearby hospitals, police stations, and ambulances with one tap.',
+              'Locate nearby hospitals and ambulances',
               Colors.redAccent,
               isDark,
-              surface,
-              surfaceBorder,
               textPrimary,
               textSecondary,
             ),
@@ -952,23 +882,9 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
             _buildInfoCard(
               Icons.people_outline_rounded,
               'Alert Broadcast',
-              'Nearby Bhromon users and emergency contacts will be notified immediately.',
+              'Nearby users will be notified',
               Colors.orange,
               isDark,
-              surface,
-              surfaceBorder,
-              textPrimary,
-              textSecondary,
-            ),
-            const SizedBox(height: 12),
-            _buildInfoCard(
-              Icons.history_outlined,
-              'Alert History',
-              'All your SOS alerts are logged and can be reviewed by you.',
-              accentColor,
-              isDark,
-              surface,
-              surfaceBorder,
               textPrimary,
               textSecondary,
             ),
@@ -984,22 +900,13 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
                       color: textPrimary,
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      letterSpacing: -0.3,
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
               ..._myAlerts.map(
-                (alert) => _buildAlertItem(
-                  alert,
-                  accentColor,
-                  isDark,
-                  surface,
-                  surfaceBorder,
-                  textPrimary,
-                  textSecondary,
-                ),
+                (alert) => _buildAlertItem(alert, textPrimary, textSecondary),
               ),
             ],
           ],
@@ -1014,7 +921,6 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Outer ring
           Container(
             width: 160,
             height: 160,
@@ -1026,7 +932,6 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
               ),
             ),
           ),
-          // Middle ring
           Container(
             width: 130,
             height: 130,
@@ -1038,7 +943,6 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
               ),
             ),
           ),
-          // Main button
           Container(
             width: 112,
             height: 112,
@@ -1144,7 +1048,7 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
         ),
         const SizedBox(height: 6),
         Text(
-          'Help is on the way. Stay calm.',
+          'Help is on the way',
           style: TextStyle(color: textSecondary, fontSize: 13),
         ),
         const SizedBox(height: 20),
@@ -1211,11 +1115,14 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
     String desc,
     Color iconColor,
     bool isDark,
-    Color surface,
-    Color surfaceBorder,
     Color textPrimary,
     Color textSecondary,
   ) {
+    final surface = isDark ? const Color(0xFF111827) : Colors.white;
+    final surfaceBorder = isDark
+        ? const Color(0xFF1E2A42).withOpacity(0.8)
+        : Colors.black.withOpacity(0.06);
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -1267,29 +1174,19 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
 
   Widget _buildAlertItem(
     Map<String, dynamic> alert,
-    Color accentColor,
-    bool isDark,
-    Color surface,
-    Color surfaceBorder,
     Color textPrimary,
     Color textSecondary,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surface = isDark ? const Color(0xFF111827) : Colors.white;
+    final surfaceBorder = isDark
+        ? const Color(0xFF1E2A42).withOpacity(0.8)
+        : Colors.black.withOpacity(0.06);
+
     final status = alert['status'] as String? ?? 'active';
-    final createdAt = alert['created_at'] as String? ?? '';
     final isActive = status == 'active';
 
-    Color statusColor;
-    String statusLabel;
-    if (status == 'active') {
-      statusColor = Colors.redAccent;
-      statusLabel = 'Active';
-    } else if (status == 'cancelled') {
-      statusColor = textSecondary;
-      statusLabel = 'Cancelled';
-    } else {
-      statusColor = Colors.greenAccent.shade400;
-      statusLabel = 'Resolved';
-    }
+    Color statusColor = isActive ? Colors.redAccent : Colors.grey;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -1311,67 +1208,26 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'SOS Alert',
-                  style: TextStyle(
-                    color: textPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                if (createdAt.isNotEmpty)
-                  Text(
-                    _formatDate(createdAt),
-                    style: TextStyle(color: textSecondary, fontSize: 11),
-                  ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(
-                color: statusColor.withOpacity(0.2),
-                width: 0.5,
-              ),
-            ),
             child: Text(
-              statusLabel,
+              'SOS Alert - $status',
               style: TextStyle(
-                color: statusColor,
-                fontSize: 11,
+                color: textPrimary,
+                fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
-          if (isActive) ...[
-            const SizedBox(width: 8),
+          if (isActive)
             GestureDetector(
               onTap: () => _cancelAlert(alert['id']),
               child: Icon(Icons.close_rounded, color: textSecondary, size: 16),
             ),
-          ],
         ],
       ),
     );
   }
-
-  String _formatDate(String iso) {
-    try {
-      final dt = DateTime.parse(iso).toLocal();
-      return '${dt.day}/${dt.month}/${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-    } catch (_) {
-      return iso;
-    }
-  }
 }
 
-// Emergency Service Model
 class EmergencyService {
   final String id;
   final String name;
@@ -1380,7 +1236,7 @@ class EmergencyService {
   final String phone;
   final double lat;
   final double lng;
-  final double distance;
+  double distance;
 
   EmergencyService({
     required this.id,
