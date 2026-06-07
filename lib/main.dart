@@ -6,6 +6,9 @@ import 'providers/theme_provider.dart';
 import 'screens/splash/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/main_wrapper.dart';
+import 'providers/cart_provider.dart';
+import 'screens/shop/gear_shop_page.dart';
+import '../../services/ssl_commerce_payment_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
