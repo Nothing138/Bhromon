@@ -1,14 +1,14 @@
 // main.dart
+// ✅ সম্পূর্ণ FIXED VERSION - সব Provider সঠিকভাবে setup করা
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'providers/theme_provider.dart';
+import 'providers/cart_provider.dart';
 import 'screens/splash/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/main_wrapper.dart';
-import 'providers/cart_provider.dart';
-import 'screens/shop/gear_shop_page.dart';
-import '../../services/ssl_commerce_payment_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,8 +21,15 @@ Future<void> main() async {
   );
 
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => ThemeProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (context) => ThemeProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => CartProvider(),
+        ),
+      ],
       child: const BhromonApp(),
     ),
   );
@@ -33,14 +40,12 @@ class BhromonApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // থিম প্রোভাইডার থেকে ডাটা নেওয়া হচ্ছে
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return MaterialApp(
       title: 'Bhromon',
       debugShowCheckedModeBanner: false,
 
-      // ইউজার সিলেক্টেড থিম মোড (Light/Dark/System)
       themeMode: themeProvider.themeMode,
 
       // --- Light Theme ---
@@ -49,19 +54,16 @@ class BhromonApp extends StatelessWidget {
         brightness: Brightness.light,
         colorScheme: ColorScheme.fromSeed(
           seedColor: themeProvider.accentColor,
-          primary: themeProvider.accentColor, // গ্লোবাল প্রাইমারি কালার
+          primary: themeProvider.accentColor,
           brightness: Brightness.light,
         ),
-        scaffoldBackgroundColor: const Color(
-          0xFFF8FAFC,
-        ), // হালকা গ্রে ব্যাকগ্রাউন্ড
+        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.transparent,
           foregroundColor: Colors.black,
           elevation: 0,
           centerTitle: true,
         ),
-        // বাটনের গ্লোবাল স্টাইল
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: themeProvider.accentColor,
@@ -82,9 +84,7 @@ class BhromonApp extends StatelessWidget {
           primary: themeProvider.accentColor,
           brightness: Brightness.dark,
         ),
-        scaffoldBackgroundColor: const Color(
-          0xFF0F172A,
-        ), // আপনার সিগনেচার ডার্ক ব্লু
+        scaffoldBackgroundColor: const Color(0xFF0F172A),
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.transparent,
           foregroundColor: Colors.white,
@@ -102,7 +102,6 @@ class BhromonApp extends StatelessWidget {
         ),
       ),
 
-      // রাউট ম্যানেজমেন্ট
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),

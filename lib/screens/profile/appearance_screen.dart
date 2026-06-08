@@ -16,9 +16,8 @@ class AppearanceScreen extends StatelessWidget {
 
     return Scaffold(
       // ডার্ক মোডে আপনার পছন্দের গাঢ় নীল শেডটি ব্যবহার করা হয়েছে
-      backgroundColor: isDark
-          ? const Color(0xFF0F172A)
-          : const Color(0xFFF8FAFC),
+      backgroundColor:
+          isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text(
           "Appearance",
@@ -65,12 +64,11 @@ class AppearanceScreen extends StatelessWidget {
                   color: isDark ? Colors.white54 : Colors.grey[600],
                 ),
               ),
-              activeColor: themeProvider.accentColor,
+              activeThumbColor: themeProvider.accentColor,
               value: themeProvider.isDarkMode,
               onChanged: (val) => themeProvider.toggleTheme(val),
             ),
           ),
-
           const Padding(
             padding: EdgeInsets.fromLTRB(20, 30, 20, 10),
             child: Text(

@@ -18,9 +18,8 @@ class CartPage extends StatelessWidget {
     final textColor = isDark ? Colors.white : Colors.black87;
 
     return Scaffold(
-      backgroundColor: isDark
-          ? const Color(0xFF0F172A)
-          : const Color(0xFFF8FAFC),
+      backgroundColor:
+          isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: Text(
           "Shopping Cart",
@@ -268,7 +267,7 @@ class CartPage extends StatelessWidget {
                             ),
                           );
                         },
-                        child: Icon(
+                        child: const Icon(
                           Icons.delete_outline,
                           color: Colors.red,
                           size: 20,

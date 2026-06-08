@@ -16,9 +16,8 @@ class PastTripsScreen extends StatelessWidget {
 
     return Scaffold(
       // ডাইনামিক ব্যাকগ্রাউন্ড কালার
-      backgroundColor: isDark
-          ? const Color(0xFF0F172A)
-          : const Color(0xFFF8FAFC),
+      backgroundColor:
+          isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text(
           "Booking History",
@@ -88,14 +87,14 @@ class PastTripsScreen extends StatelessWidget {
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
                                   Container(
-                                    width: 60,
-                                    height: 60,
-                                    color: accentColor.withOpacity(0.2),
-                                    child: Icon(
-                                      Icons.image,
-                                      color: accentColor,
-                                    ),
-                                  ),
+                                width: 60,
+                                height: 60,
+                                color: accentColor.withOpacity(0.2),
+                                child: Icon(
+                                  Icons.image,
+                                  color: accentColor,
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -133,15 +132,15 @@ class PastTripsScreen extends StatelessWidget {
                             ],
                           ),
                         ),
-                        trailing: Column(
+                        trailing: const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.check_circle,
                               color: Colors.green,
                               size: 20,
                             ),
-                            const SizedBox(height: 4),
+                            SizedBox(height: 4),
                             Text(
                               "Visited",
                               style: TextStyle(

@@ -18,11 +18,9 @@ class _HomeScreenState extends State<HomeScreen> {
   final supabase = Supabase.instance.client;
 
   final Stream<List<Map<String, dynamic>>> _postStream = Supabase
-      .instance
-      .client
+      .instance.client
       .from('posts')
-      .stream(primaryKey: ['id'])
-      .order('created_at', ascending: false);
+      .stream(primaryKey: ['id']).order('created_at', ascending: false);
 
   Future<void> _handleLogout(BuildContext context) async {
     final confirmed = await showDialog<bool>(
@@ -93,12 +91,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final surfaceBorder = isDark
         ? const Color(0xFF1E2A42).withOpacity(0.8)
         : Colors.black.withOpacity(0.06);
-    final textPrimary = isDark
-        ? const Color(0xFFE2E8F4)
-        : const Color(0xFF0D1117);
-    final textSecondary = isDark
-        ? const Color(0xFF4A5478)
-        : const Color(0xFF8892A4);
+    final textPrimary =
+        isDark ? const Color(0xFFE2E8F4) : const Color(0xFF0D1117);
+    final textSecondary =
+        isDark ? const Color(0xFF4A5478) : const Color(0xFF8892A4);
 
     return Scaffold(
       backgroundColor: bg,
@@ -273,11 +269,11 @@ class _HomeScreenState extends State<HomeScreen> {
               context,
               MaterialPageRoute(builder: (_) => const CreatePostScreen()),
             ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
-                children: const [
+                children: [
                   Icon(
                     Icons.add_a_photo_outlined,
                     color: Colors.white,

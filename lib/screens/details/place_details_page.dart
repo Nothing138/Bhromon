@@ -136,7 +136,7 @@ class _PlaceDetailsPageState extends State<PlaceDetailsPage> {
                 size: 50,
               ),
               const SizedBox(height: 15),
-              Text(
+              const Text(
                 "Confirm Trip",
                 style: TextStyle(
                   fontSize: 20,
@@ -148,16 +148,15 @@ class _PlaceDetailsPageState extends State<PlaceDetailsPage> {
               Text(
                 "Booking ${widget.place['name']} will cost approx. ৳${widget.place['price_estimate']}. This will be saved to your past trips.",
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey, fontSize: 14),
+                style: const TextStyle(color: Colors.grey, fontSize: 14),
               ),
               const SizedBox(height: 25),
               Row(
                 children: [
                   Expanded(
                     child: TextButton(
-                      onPressed: _isBooking
-                          ? null
-                          : () => Navigator.pop(context),
+                      onPressed:
+                          _isBooking ? null : () => Navigator.pop(context),
                       child: Text(
                         "CANCEL",
                         style: TextStyle(
@@ -211,11 +210,11 @@ class _PlaceDetailsPageState extends State<PlaceDetailsPage> {
   void _showSuccessMessage() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Row(
+        content: const Row(
           children: [
-            const Icon(Icons.check_circle, color: Colors.white),
-            const SizedBox(width: 10),
-            const Expanded(
+            Icon(Icons.check_circle, color: Colors.white),
+            SizedBox(width: 10),
+            Expanded(
               child: Text("Booking Successful! Saved in your history."),
             ),
           ],

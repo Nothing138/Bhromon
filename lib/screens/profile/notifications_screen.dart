@@ -72,21 +72,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       final userId = supabase.auth.currentUser?.id;
       if (userId == null) return;
 
-      await supabase
-          .from('profiles')
-          .update({
-            'notification_prefs': {
-              'push_enabled': _pushEnabled,
-              'trip_reminders': _tripReminders,
-              'booking_updates': _bookingUpdates,
-              'group_invites': _groupInvites,
-              'sos_alerts': _sosAlerts,
-              'new_places': _newPlaces,
-              'weekly_digest': _weeklyDigest,
-              'marketing_emails': _marketingEmails,
-            },
-          })
-          .eq('id', userId);
+      await supabase.from('profiles').update({
+        'notification_prefs': {
+          'push_enabled': _pushEnabled,
+          'trip_reminders': _tripReminders,
+          'booking_updates': _bookingUpdates,
+          'group_invites': _groupInvites,
+          'sos_alerts': _sosAlerts,
+          'new_places': _newPlaces,
+          'weekly_digest': _weeklyDigest,
+          'marketing_emails': _marketingEmails,
+        },
+      }).eq('id', userId);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -240,7 +237,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         Switch(
                           value: _pushEnabled,
                           onChanged: (v) => setState(() => _pushEnabled = v),
-                          activeColor: amberColor,
+                          activeThumbColor: amberColor,
                         ),
                       ],
                     ),
@@ -387,14 +384,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Widget _sectionLabel(String label, bool isDark) => Text(
-    label,
-    style: TextStyle(
-      color: isDark ? Colors.white38 : Colors.grey[400],
-      fontSize: 11,
-      fontWeight: FontWeight.bold,
-      letterSpacing: 1.5,
-    ),
-  );
+        label,
+        style: TextStyle(
+          color: isDark ? Colors.white38 : Colors.grey[400],
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.5,
+        ),
+      );
 
   Widget _buildNotifCard({
     required Color cardColor,
@@ -462,7 +459,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 trailing: Switch(
                   value: item.value,
                   onChanged: item.enabled ? item.onChanged : null,
-                  activeColor: item.color,
+                  activeThumbColor: item.color,
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
               ),

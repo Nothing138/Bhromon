@@ -155,11 +155,11 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
     if (_latitude == null || _longitude == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Please enable location'),
+          const SnackBar(
+            content: Text('Please enable location'),
             backgroundColor: Colors.redAccent,
             behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.all(16),
+            margin: EdgeInsets.all(16),
           ),
         );
       }
@@ -210,11 +210,11 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
       if (mounted) {
         setState(() => _loadingServices = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Error loading services'),
+          const SnackBar(
+            content: Text('Error loading services'),
             backgroundColor: Colors.redAccent,
             behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.all(16),
+            margin: EdgeInsets.all(16),
           ),
         );
       }
@@ -228,8 +228,7 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
     double lng2,
   ) {
     const p = 0.017453292519943295;
-    final a =
-        0.5 -
+    final a = 0.5 -
         cos((lat2 - lat1) * p) / 2 +
         cos(lat1 * p) * cos(lat2 * p) * (1 - cos((lng2 - lng1) * p)) / 2;
     return 12742 * asin(sqrt(a));
@@ -251,12 +250,10 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
     final surfaceBorder = isDark
         ? const Color(0xFF1E2A42).withOpacity(0.8)
         : Colors.black.withOpacity(0.06);
-    final textPrimary = isDark
-        ? const Color(0xFFE2E8F4)
-        : const Color(0xFF0D1117);
-    final textSecondary = isDark
-        ? const Color(0xFF4A5478)
-        : const Color(0xFF8892A4);
+    final textPrimary =
+        isDark ? const Color(0xFFE2E8F4) : const Color(0xFF0D1117);
+    final textSecondary =
+        isDark ? const Color(0xFF4A5478) : const Color(0xFF8892A4);
 
     return Container(
       decoration: BoxDecoration(
@@ -306,9 +303,9 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
               ),
               const SizedBox(height: 16),
               if (_loadingServices)
-                Center(
+                const Center(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 32),
+                    padding: EdgeInsets.symmetric(vertical: 32),
                     child: CircularProgressIndicator(color: Colors.redAccent),
                   ),
                 )
@@ -548,11 +545,11 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please login first'),
+        const SnackBar(
+          content: Text('Please login first'),
           backgroundColor: Colors.redAccent,
           behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(16),
+          margin: EdgeInsets.all(16),
         ),
       );
       return;
@@ -560,11 +557,11 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
 
     if (_latitude == null || _longitude == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Getting location...'),
+        const SnackBar(
+          content: Text('Getting location...'),
           backgroundColor: Colors.orange,
           behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(16),
+          margin: EdgeInsets.all(16),
         ),
       );
       return;
@@ -598,11 +595,11 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
       if (mounted) {
         setState(() => _isSending = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Failed to send SOS'),
+          const SnackBar(
+            content: Text('Failed to send SOS'),
             backgroundColor: Colors.redAccent,
             behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.all(16),
+            margin: EdgeInsets.all(16),
           ),
         );
       }
@@ -613,8 +610,7 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
     try {
       await supabase
           .from('sos_alerts')
-          .update({'status': 'cancelled'})
-          .eq('id', alertId);
+          .update({'status': 'cancelled'}).eq('id', alertId);
 
       await _loadMyAlerts();
       if (mounted) {
@@ -637,12 +633,10 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
     final surfaceBorder = isDark
         ? const Color(0xFF1E2A42).withOpacity(0.8)
         : Colors.black.withOpacity(0.06);
-    final textPrimary = isDark
-        ? const Color(0xFFE2E8F4)
-        : const Color(0xFF0D1117);
-    final textSecondary = isDark
-        ? const Color(0xFF4A5478)
-        : const Color(0xFF8892A4);
+    final textPrimary =
+        isDark ? const Color(0xFFE2E8F4) : const Color(0xFF0D1117);
+    final textSecondary =
+        isDark ? const Color(0xFF4A5478) : const Color(0xFF8892A4);
 
     return Scaffold(
       backgroundColor: bg,
@@ -744,7 +738,8 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.location_off, color: Colors.orange, size: 16),
+                    const Icon(Icons.location_off,
+                        color: Colors.orange, size: 16),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -1021,9 +1016,8 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
               height: 112,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isDark
-                    ? const Color(0xFF1E2A42)
-                    : const Color(0xFFEEF0F5),
+                color:
+                    isDark ? const Color(0xFF1E2A42) : const Color(0xFFEEF0F5),
                 border: Border.all(
                   color: Colors.greenAccent.withOpacity(0.3),
                   width: 2,

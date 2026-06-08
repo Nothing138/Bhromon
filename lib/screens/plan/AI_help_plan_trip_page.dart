@@ -134,12 +134,10 @@ class _AITripPageState extends State<AITripPage> {
     final surfaceBorder = isDark
         ? const Color(0xFF1E2A42).withOpacity(0.8)
         : Colors.black.withOpacity(0.06);
-    final textPrimary = isDark
-        ? const Color(0xFFE2E8F4)
-        : const Color(0xFF0D1117);
-    final textSecondary = isDark
-        ? const Color(0xFF4A5478)
-        : const Color(0xFF8892A4);
+    final textPrimary =
+        isDark ? const Color(0xFFE2E8F4) : const Color(0xFF0D1117);
+    final textSecondary =
+        isDark ? const Color(0xFF4A5478) : const Color(0xFF8892A4);
 
     return Scaffold(
       backgroundColor: bg,
@@ -283,9 +281,8 @@ class _AITripPageState extends State<AITripPage> {
                           ? 'Select start date'
                           : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
                       style: TextStyle(
-                        color: _selectedDate == null
-                            ? textSecondary
-                            : textPrimary,
+                        color:
+                            _selectedDate == null ? textSecondary : textPrimary,
                         fontSize: 14,
                         fontWeight: _selectedDate == null
                             ? FontWeight.w400
@@ -379,7 +376,7 @@ class _AITripPageState extends State<AITripPage> {
                   Switch(
                     value: _useAI,
                     onChanged: (val) => setState(() => _useAI = val),
-                    activeColor: accentColor,
+                    activeThumbColor: accentColor,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ],
@@ -602,9 +599,8 @@ class _AITripPageState extends State<AITripPage> {
               color: isSelected ? accentColor.withOpacity(0.1) : surface,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isSelected
-                    ? accentColor.withOpacity(0.35)
-                    : surfaceBorder,
+                color:
+                    isSelected ? accentColor.withOpacity(0.35) : surfaceBorder,
                 width: isSelected ? 1 : 0.5,
               ),
             ),

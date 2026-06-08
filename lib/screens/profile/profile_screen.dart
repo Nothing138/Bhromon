@@ -1,4 +1,9 @@
 // screens/profile/profile_screen.dart
+// screens/profile/profile_screen.dart (UPDATED)
+// ✅ Updated with Past Shopping এবং My Places sections
+
+// ⚠️ এই file টি পুরোটা replace করবেন আপনার profile_screen.dart দিয়ে
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -8,6 +13,8 @@ import '../../providers/theme_provider.dart';
 import 'appearance_screen.dart';
 import 'edit_profile_screen.dart';
 import 'past_trips_screen.dart';
+import 'past_shopping_screen.dart'; // ← নতুন
+import 'my_places_screen.dart'; // ← নতুন
 import 'privacy_security_screen.dart';
 import 'notifications_screen.dart';
 
@@ -50,15 +57,12 @@ class _ProfileScreenState extends State<ProfileScreen>
       final user = supabase.auth.currentUser;
       if (user == null) return;
 
-      // Auth metadata থেকে registered name নেওয়া
       final authMeta = user.userMetadata;
-      final authName =
-          authMeta?['full_name'] ??
+      final authName = authMeta?['full_name'] ??
           authMeta?['name'] ??
           user.email?.split('@').first ??
           'Traveler';
 
-      // profiles table fetch — RLS insert করব না
       final profile = await supabase
           .from('profiles')
           .select()
@@ -68,13 +72,11 @@ class _ProfileScreenState extends State<ProfileScreen>
       Map<String, dynamic> merged = {};
       if (profile != null) {
         merged = Map<String, dynamic>.from(profile);
-        // full_name খালি থাকলে auth থেকে নাও
         if (merged['full_name'] == null ||
             merged['full_name'].toString().trim().isEmpty) {
           merged['full_name'] = authName;
         }
       } else {
-        // Row নেই — শুধু local state, DB তে insert করব না (RLS)
         merged = {
           'id': user.id,
           'full_name': authName,
@@ -84,7 +86,6 @@ class _ProfileScreenState extends State<ProfileScreen>
         };
       }
 
-      // Bookings fetch
       List<dynamic> trips = [];
       try {
         trips = await supabase
@@ -106,15 +107,13 @@ class _ProfileScreenState extends State<ProfileScreen>
       }
     } catch (e) {
       debugPrint('Data loading error: $e');
-      // যেকোনো error তে auth থেকে basic info দেখাও
       final user = supabase.auth.currentUser;
       if (mounted) {
         final authMeta = user?.userMetadata;
         setState(() {
           _profileData = {
             'id': user?.id ?? '',
-            'full_name':
-                authMeta?['full_name'] ??
+            'full_name': authMeta?['full_name'] ??
                 authMeta?['name'] ??
                 user?.email?.split('@').first ??
                 'Traveler',
@@ -153,8 +152,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       final url = supabase.storage.from('avatars').getPublicUrl(fileName);
       await supabase
           .from('profiles')
-          .update({'avatar_url': url})
-          .eq('id', user.id);
+          .update({'avatar_url': url}).eq('id', user.id);
 
       await _loadAllData();
       if (mounted) {
@@ -287,6 +285,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                       const SizedBox(height: 24),
                       _buildStatsRow(accentColor, isDark, textColor, cardColor),
                       const SizedBox(height: 28),
+
+                      // ✅ HISTORY SECTION (নতুন)
                       _buildSectionLabel('HISTORY', isDark),
                       const SizedBox(height: 10),
                       _buildMenuCard(
@@ -304,6 +304,30 @@ class _ProfileScreenState extends State<ProfileScreen>
                               MaterialPageRoute(
                                 builder: (_) =>
                                     PastTripsScreen(trips: _pastTrips),
+                              ),
+                            ),
+                          ),
+                          _MenuItem(
+                            icon: Icons.shopping_bag_outlined,
+                            label: 'Past Shopping',
+                            subtitle: 'Purchase history',
+                            color: Colors.orange,
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const PastShoppingScreen(),
+                              ),
+                            ),
+                          ),
+                          _MenuItem(
+                            icon: Icons.location_on_outlined,
+                            label: 'My Places',
+                            subtitle: 'Places you added',
+                            color: Colors.green,
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const MyPlacesScreen(),
                               ),
                             ),
                           ),
@@ -423,9 +447,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                         )
                       : CircleAvatar(
                           radius: 49,
-                          backgroundImage: hasAvatar
-                              ? NetworkImage(avatarUrl)
-                              : null,
+                          backgroundImage:
+                              hasAvatar ? NetworkImage(avatarUrl) : null,
                           backgroundColor: accentColor.withOpacity(0.13),
                           child: !hasAvatar
                               ? Text(
@@ -516,9 +539,8 @@ class _ProfileScreenState extends State<ProfileScreen>
     Color textColor,
     Color cardColor,
   ) {
-    final confirmed = _pastTrips
-        .where((t) => t['status'] == 'confirmed')
-        .length;
+    final confirmed =
+        _pastTrips.where((t) => t['status'] == 'confirmed').length;
     final upcoming = _pastTrips.where((t) => t['status'] == 'upcoming').length;
     return Row(
       children: [
@@ -607,17 +629,17 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _buildSectionLabel(String label, bool isDark) => Align(
-    alignment: Alignment.centerLeft,
-    child: Text(
-      label,
-      style: TextStyle(
-        color: isDark ? Colors.white38 : Colors.grey[400],
-        fontSize: 11,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 1.5,
-      ),
-    ),
-  );
+        alignment: Alignment.centerLeft,
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isDark ? Colors.white38 : Colors.grey[400],
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.5,
+          ),
+        ),
+      );
 
   Widget _buildMenuCard({
     required Color cardColor,

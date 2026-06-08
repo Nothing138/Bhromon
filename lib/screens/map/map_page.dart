@@ -54,13 +54,13 @@ class _BDMapPageState extends State<BDMapPage> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 350),
     );
-    _cardSlideAnim = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
-        .animate(
-          CurvedAnimation(
-            parent: _cardAnimController,
-            curve: Curves.easeOutCubic,
-          ),
-        );
+    _cardSlideAnim =
+        Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero).animate(
+      CurvedAnimation(
+        parent: _cardAnimController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
     _cardFadeAnim = CurvedAnimation(
       parent: _cardAnimController,
       curve: Curves.easeOut,
@@ -133,12 +133,10 @@ class _BDMapPageState extends State<BDMapPage> with TickerProviderStateMixin {
     final surfaceBorder = isDark
         ? const Color(0xFF1E2A42).withOpacity(0.8)
         : Colors.black.withOpacity(0.06);
-    final textPrimary = isDark
-        ? const Color(0xFFE2E8F4)
-        : const Color(0xFF0D1117);
-    final textSecondary = isDark
-        ? const Color(0xFF4A5478)
-        : const Color(0xFF8892A4);
+    final textPrimary =
+        isDark ? const Color(0xFFE2E8F4) : const Color(0xFF0D1117);
+    final textSecondary =
+        isDark ? const Color(0xFF4A5478) : const Color(0xFF8892A4);
 
     return Scaffold(
       backgroundColor: bg,
@@ -574,9 +572,9 @@ class _BDMapPageState extends State<BDMapPage> with TickerProviderStateMixin {
                         color: accentColor,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Row(
+                      child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
+                        children: [
                           Icon(
                             Icons.explore_outlined,
                             color: Colors.white,

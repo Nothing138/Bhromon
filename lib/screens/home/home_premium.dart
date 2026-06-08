@@ -64,12 +64,10 @@ class _HomePremiumState extends State<HomePremium>
     final surfaceBorder = isDark
         ? const Color(0xFF1E2A42).withOpacity(0.8)
         : Colors.black.withOpacity(0.06);
-    final textPrimary = isDark
-        ? const Color(0xFFE2E8F4)
-        : const Color(0xFF0D1117);
-    final textSecondary = isDark
-        ? const Color(0xFF4A5478)
-        : const Color(0xFF8892A4);
+    final textPrimary =
+        isDark ? const Color(0xFFE2E8F4) : const Color(0xFF0D1117);
+    final textSecondary =
+        isDark ? const Color(0xFF4A5478) : const Color(0xFF8892A4);
 
     return Scaffold(
       backgroundColor: bg,
@@ -260,9 +258,8 @@ class _HomePremiumState extends State<HomePremium>
                         color: Colors.redAccent,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: isDark
-                              ? const Color(0xFF080C18)
-                              : Colors.white,
+                          color:
+                              isDark ? const Color(0xFF080C18) : Colors.white,
                           width: 1.5,
                         ),
                       ),
@@ -480,9 +477,9 @@ class _HomePremiumState extends State<HomePremium>
                               ),
                             ],
                           ),
-                          child: Row(
+                          child: const Row(
                             mainAxisSize: MainAxisSize.min,
-                            children: const [
+                            children: [
                               Text(
                                 'Start exploring',
                                 style: TextStyle(
@@ -698,9 +695,8 @@ class _HomePremiumState extends State<HomePremium>
               width: double.infinity,
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => Container(
-                color: isDark
-                    ? const Color(0xFF111827)
-                    : const Color(0xFFEEF0F5),
+                color:
+                    isDark ? const Color(0xFF111827) : const Color(0xFFEEF0F5),
                 child: Center(
                   child: Icon(
                     Icons.image_not_supported_outlined,
@@ -733,9 +729,9 @@ class _HomePremiumState extends State<HomePremium>
                     width: 0.5,
                   ),
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
+                  children: [
                     Icon(
                       Icons.trending_up_rounded,
                       color: Colors.orangeAccent,

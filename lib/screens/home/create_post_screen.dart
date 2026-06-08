@@ -199,7 +199,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             // Group Search Toggle
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              activeColor: accentColor,
+              activeThumbColor: accentColor,
               title: const Text("Looking for Group?"),
               secondary: Icon(
                 Icons.group_add,
@@ -212,7 +212,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             // Anonymous Post Toggle
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              activeColor: accentColor,
+              activeThumbColor: accentColor,
               title: const Text("Post Anonymously"),
               secondary: const Icon(Icons.security, color: Colors.blueGrey),
               value: _isAnonymous,

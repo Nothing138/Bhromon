@@ -114,15 +114,14 @@ class SSLCommercePaymentService {
       };
 
       // SSL Commerce API-তে রিকোয়েস্ট পাঠান
-      final response = await http
-          .post(Uri.parse(BASE_URL), body: postData)
-          .timeout(
-            const Duration(seconds: 30),
-            onTimeout: () {
-              _onFailure?.call('Payment request timeout');
-              throw Exception('Request timeout');
-            },
-          );
+      final response =
+          await http.post(Uri.parse(BASE_URL), body: postData).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          _onFailure?.call('Payment request timeout');
+          throw Exception('Request timeout');
+        },
+      );
 
       if (response.statusCode == 200) {
         final responseBody = response.body;
@@ -211,7 +210,7 @@ class SSLCommercePaymentService {
   String generateOrderId() {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final random = DateTime.now().microsecond;
-    return '${timestamp}_${random}';
+    return '${timestamp}_$random';
   }
 
   /// ডিভাইসের IP অ্যাড্রেস পান (সিম্পল ডেমো)
