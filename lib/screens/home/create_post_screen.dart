@@ -1,8 +1,9 @@
 // screens/home/create_post_screen.dart
-import 'dart:io'; // ফাইল ডিসপ্লে করার জন্য প্রয়োজন
+// screens/home/create_post_screen.dart (UPDATED)
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart'; // প্রোভাইডার যুক্ত করা হয়েছে
+import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../services/post_service.dart';
 
@@ -16,6 +17,7 @@ class CreatePostScreen extends StatefulWidget {
 class _CreatePostScreenState extends State<CreatePostScreen> {
   final _contentController = TextEditingController();
   final _locationController = TextEditingController();
+  final _contactController = TextEditingController();
   XFile? _selectedImage;
   bool _isLoading = false;
   bool _isGroupTour = false;
@@ -31,129 +33,243 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 
   Future<void> _submitPost() async {
+    // Validation
     if (_contentController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please write something first!")),
-      );
+      _showSnackBar('Please write something first!', Colors.redAccent);
+      return;
+    }
+
+    if (_contactController.text.isEmpty) {
+      _showSnackBar('Please provide your contact number', Colors.redAccent);
+      return;
+    }
+
+    // Validate phone number (basic validation)
+    if (!RegExp(r'^[0-9+\-\s()]+$').hasMatch(_contactController.text)) {
+      _showSnackBar('Please enter a valid phone number', Colors.redAccent);
       return;
     }
 
     setState(() => _isLoading = true);
     String? imageUrl;
 
-    if (_selectedImage != null) {
-      imageUrl = await PostService().uploadImage(_selectedImage!);
+    try {
+      if (_selectedImage != null) {
+        imageUrl = await PostService().uploadImage(_selectedImage!);
+      }
+
+      await PostService().createPost(
+        content: _contentController.text,
+        imageUrl: imageUrl,
+        location: _locationController.text,
+        contactNumber: _contactController.text,
+        isLookingForGroup: _isGroupTour,
+        isAnonymous: _isAnonymous,
+      );
+
+      if (mounted) {
+        _showSnackBar('Post created successfully!', Colors.green);
+        Future.delayed(const Duration(milliseconds: 800), () {
+          if (mounted) Navigator.pop(context);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar('Failed to create post: $e', Colors.redAccent);
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
+  }
 
-    await PostService().createPost(
-      content: _contentController.text,
-      imageUrl: imageUrl,
-      location: _locationController.text,
-      isLookingForGroup: _isGroupTour,
-      isAnonymous: _isAnonymous,
+  void _showSnackBar(String message, Color bgColor) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: bgColor,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+      ),
     );
-
-    if (mounted) Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    // থিম এবং অ্যাকসেন্ট কালার কল করা হয়েছে
     final themeProvider = Provider.of<ThemeProvider>(context);
     final accentColor = themeProvider.accentColor;
     final isDark = themeProvider.isDarkMode;
 
+    final bg = isDark ? const Color(0xFF080C18) : const Color(0xFFF5F7FF);
+    final surface = isDark ? const Color(0xFF111827) : Colors.white;
+    final surfaceBorder = isDark
+        ? const Color(0xFF1E2A42).withOpacity(0.8)
+        : Colors.black.withOpacity(0.06);
+    final textPrimary =
+        isDark ? const Color(0xFFE2E8F4) : const Color(0xFF0D1117);
+    final textSecondary =
+        isDark ? const Color(0xFF4A5478) : const Color(0xFF8892A4);
+
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
-        title: const Text(
-          "Create Post",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        // অ্যাপবার এখন অ্যাকসেন্ট কালার নিবে
-        backgroundColor: accentColor,
-        foregroundColor: Colors.white,
         elevation: 0,
+        backgroundColor: surface,
+        titleSpacing: 0,
+        leading: GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: Icon(Icons.arrow_back_ios_rounded, color: textPrimary),
+        ),
+        title: Padding(
+          padding: const EdgeInsets.only(left: 10),
+          child: Text(
+            'Create Post',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 17,
+              color: textPrimary,
+              letterSpacing: -0.3,
+            ),
+          ),
+        ),
         actions: [
-          _isLoading
-              ? const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Center(
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: _isLoading
+                ? Center(
                     child: SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
-                        color: Colors.white,
+                        color: accentColor,
                         strokeWidth: 2,
                       ),
                     ),
-                  ),
-                )
-              : TextButton(
-                  onPressed: _submitPost,
-                  child: const Text(
-                    "POST",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                  )
+                : GestureDetector(
+                    onTap: _submitPost,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: accentColor,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Text(
+                        'POST',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+          ),
         ],
       ),
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // User Profile Section
-            Row(
-              children: [
-                CircleAvatar(
-                  // এনোনিমাস হলে গ্রে, নাহলে অ্যাকসেন্ট কালার
-                  backgroundColor: _isAnonymous ? Colors.grey : accentColor,
-                  child: Icon(
-                    _isAnonymous ? Icons.visibility_off : Icons.person,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  _isAnonymous ? "Anonymous Traveler" : "Public Identity",
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 15),
-
-            TextField(
-              controller: _contentController,
-              maxLines: 6,
-              style: TextStyle(
-                fontSize: 16,
-                color: isDark ? Colors.white : Colors.black87,
+            // Profile Section
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: surface,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: surfaceBorder, width: 0.5),
               ),
-              decoration: InputDecoration(
-                hintText: "Share your travel experience...",
-                hintStyle: TextStyle(color: Colors.grey[500]),
-                border: InputBorder.none,
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: _isAnonymous
+                          ? Colors.grey.withOpacity(0.2)
+                          : accentColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      _isAnonymous
+                          ? Icons.visibility_off_rounded
+                          : Icons.person_outline_rounded,
+                      color: _isAnonymous ? Colors.grey : accentColor,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _isAnonymous ? 'Anonymous Traveler' : 'Public Identity',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          color: textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _isAnonymous
+                            ? 'Your name won\'t be visible'
+                            : 'Your profile will be shown',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
+            const SizedBox(height: 20),
 
+            // Content Input
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: surface,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: surfaceBorder, width: 0.5),
+              ),
+              child: TextField(
+                controller: _contentController,
+                maxLines: 5,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: textPrimary,
+                  height: 1.6,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Share your travel experience...',
+                  hintStyle: TextStyle(color: textSecondary),
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Selected Image Preview
             if (_selectedImage != null)
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 15),
+                padding: const EdgeInsets.only(bottom: 16),
                 child: Stack(
                   children: [
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(14),
                       child: Image.file(
-                        File(
-                          _selectedImage!.path,
-                        ), // local file দেখানোর জন্য Image.file ব্যবহার করা ভালো
-                        height: 250,
+                        File(_selectedImage!.path),
+                        height: 220,
                         width: double.infinity,
                         fit: BoxFit.cover,
                       ),
@@ -165,12 +281,12 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                         onTap: () => setState(() => _selectedImage = null),
                         child: Container(
                           padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Colors.black54,
-                            shape: BoxShape.circle,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.6),
+                            borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Icon(
-                            Icons.close,
+                            Icons.close_rounded,
                             color: Colors.white,
                             size: 20,
                           ),
@@ -181,64 +297,253 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 ),
               ),
 
-            const Divider(height: 30),
+            const SizedBox(height: 6),
+
+            // Contact Number Input
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: surfaceBorder, width: 0.5),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.phone_outlined,
+                    color: accentColor,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: _contactController,
+                      keyboardType: TextInputType.phone,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: textPrimary,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Your contact number (required)',
+                        hintStyle: TextStyle(color: textSecondary),
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
 
             // Location Input
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.location_on, color: accentColor),
-              title: TextField(
-                controller: _locationController,
-                decoration: const InputDecoration(
-                  hintText: "Where are you?",
-                  border: InputBorder.none,
-                ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: surfaceBorder, width: 0.5),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.location_on_outlined,
+                    color: Colors.redAccent,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: _locationController,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: textPrimary,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Where are you? (optional)',
+                        hintStyle: TextStyle(color: textSecondary),
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
+            const SizedBox(height: 20),
 
-            // Group Search Toggle
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              activeThumbColor: accentColor,
-              title: const Text("Looking for Group?"),
-              secondary: Icon(
-                Icons.group_add,
-                color: accentColor.withOpacity(0.8),
+            // Toggle Options
+            Container(
+              decoration: BoxDecoration(
+                color: surface,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: surfaceBorder, width: 0.5),
               ),
-              value: _isGroupTour,
-              onChanged: (val) => setState(() => _isGroupTour = val),
-            ),
-
-            // Anonymous Post Toggle
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              activeThumbColor: accentColor,
-              title: const Text("Post Anonymously"),
-              secondary: const Icon(Icons.security, color: Colors.blueGrey),
-              value: _isAnonymous,
-              onChanged: (val) => setState(() => _isAnonymous = val),
-            ),
-
-            const SizedBox(height: 25),
-
-            OutlinedButton.icon(
-              onPressed: _pickImage,
-              icon: Icon(Icons.add_a_photo, color: accentColor),
-              label: Text(
-                "Select Photo",
-                style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+              child: Column(
+                children: [
+                  // Group Tour Toggle
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: _isGroupTour
+                                ? accentColor.withOpacity(0.1)
+                                : Colors.grey.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            Icons.group_add_outlined,
+                            color: _isGroupTour ? accentColor : Colors.grey,
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Looking for Group?',
+                                style: TextStyle(
+                                  color: textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Find travel buddies for this trip',
+                                style: TextStyle(
+                                  color: textSecondary,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Switch(
+                          value: _isGroupTour,
+                          onChanged: (value) =>
+                              setState(() => _isGroupTour = value),
+                          activeThumbColor: accentColor,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Divider(
+                    color: surfaceBorder,
+                    height: 1,
+                    indent: 52,
+                  ),
+                  // Anonymous Toggle
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: _isAnonymous
+                                ? Colors.blue.withOpacity(0.1)
+                                : Colors.grey.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            Icons.privacy_tip_outlined,
+                            color: _isAnonymous ? Colors.blue : Colors.grey,
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Post Anonymously',
+                                style: TextStyle(
+                                  color: textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Your name won\'t be visible',
+                                style: TextStyle(
+                                  color: textSecondary,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Switch(
+                          value: _isAnonymous,
+                          onChanged: (value) =>
+                              setState(() => _isAnonymous = value),
+                          activeThumbColor: accentColor,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 52),
-                side: BorderSide(color: accentColor.withOpacity(0.5)),
-                shape: RoundedRectangleBorder(
+            ),
+            const SizedBox(height: 20),
+
+            // Select Photo Button
+            GestureDetector(
+              onTap: _isLoading ? null : _pickImage,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: accentColor.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: accentColor.withOpacity(0.3),
+                    width: 0.5,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.add_a_photo_outlined,
+                      color: accentColor,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _selectedImage == null ? 'Select Photo' : 'Change Photo',
+                      style: TextStyle(
+                        color: accentColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
+            const SizedBox(height: 30),
           ],
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _contentController.dispose();
+    _locationController.dispose();
+    _contactController.dispose();
+    super.dispose();
   }
 }

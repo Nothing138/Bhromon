@@ -539,7 +539,7 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
-          value: _selectedCategory,
+          initialValue: _selectedCategory,
           hint: Text('Select category',
               style: TextStyle(color: textColor.withOpacity(0.5))),
           items: _categories

@@ -1,4 +1,5 @@
 // screens/home/home_screen.dart
+// screens/home/home_screen.dart (FIXED - WITH CONTACT BUTTON)
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +7,7 @@ import '../../providers/theme_provider.dart';
 import '../auth/login_screen.dart';
 import 'create_post_screen.dart';
 import '../profile/profile_screen.dart';
+import '../chat/chat_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -313,6 +315,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final isLookingForGroup = post['is_looking_for_group'] as bool? ?? false;
     final isAnonymous = post['is_anonymous'] as bool? ?? false;
 
+    // ✅ GET USER NAME AND CONTACT NUMBER
+    final userName = (post['user_full_name'] as String?) ?? 'Traveler';
+    final contactNumber = (post['contact_number'] as String?) ?? '';
+    final posterId = (post['user_id'] as String?) ?? '';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -356,8 +363,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // ✅ SHOW ACTUAL USER NAME
                       Text(
-                        isAnonymous ? 'Anonymous traveler' : 'Traveler',
+                        isAnonymous ? 'Anonymous traveler' : userName,
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
@@ -471,26 +479,82 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-          // Actions
+          // ✅ ACTIONS WITH CONTACT BUTTON
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-            child: Row(
+            child: Column(
               children: [
-                _buildActionButton(
-                  Icons.favorite_border_rounded,
-                  'Like',
-                  accentColor,
-                  isDark,
+                Row(
+                  children: [
+                    _buildActionButton(
+                      Icons.favorite_border_rounded,
+                      'Like',
+                      accentColor,
+                      isDark,
+                    ),
+                    const SizedBox(width: 10),
+                    _buildActionButton(
+                      Icons.chat_bubble_outline_rounded,
+                      'Comment',
+                      accentColor,
+                      isDark,
+                    ),
+                    const Spacer(),
+                    Icon(Icons.ios_share_outlined,
+                        size: 18, color: textSecondary),
+                  ],
                 ),
-                const SizedBox(width: 10),
-                _buildActionButton(
-                  Icons.chat_bubble_outline_rounded,
-                  'Comment',
-                  accentColor,
-                  isDark,
-                ),
-                const Spacer(),
-                Icon(Icons.ios_share_outlined, size: 18, color: textSecondary),
+
+                // ✅ CONTACT BUTTON (only show if not anonymous and has contact number)
+                if (!isAnonymous && contactNumber.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ChatScreen(
+                              otherUserId: posterId,
+                              otherUserName: userName,
+                              otherUserPhone: contactNumber,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 9),
+                        decoration: BoxDecoration(
+                          color: accentColor.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: accentColor.withOpacity(0.2),
+                            width: 0.5,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.message_rounded,
+                              size: 14,
+                              color: accentColor,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Contact',
+                              style: TextStyle(
+                                color: accentColor,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),

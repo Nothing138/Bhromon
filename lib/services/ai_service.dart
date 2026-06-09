@@ -4,8 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
 class AIService {
-  static const String _apiKey =
-      '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';
+  static const String _apiKey = '';
   static const String _apiUrl =
       'https://api.groq.com/openai/v1/chat/completions';
 

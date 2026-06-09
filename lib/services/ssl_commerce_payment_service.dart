@@ -1,8 +1,6 @@
 // services/ssl_commerce_payment_service.dart
 
 import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:flutter/foundation.dart';
 
 typedef PaymentSuccessCallback = Future<void> Function(String transactionId);
 typedef PaymentFailureCallback = void Function(String error);
@@ -17,21 +15,13 @@ class SSLCommercePaymentService {
 
   SSLCommercePaymentService._internal();
 
-  // 🔑 SSL COMMERCE TEST CREDENTIALS (পরে প্রোডাকশনে বদলাবেন)
-  // টেস্ট মোড: সম্পূর্ণ ফ্রি, রিয়েল টাকা কাটা হয় না
-  static const String STORE_ID = 'testbox'; // Test Store ID
-  static const String STORE_PASSWORD = 'qwerty'; // Test Store Password
+  static const String STORE_ID = 'bhrom6a286b58cab14'; // Test Store ID
+  static const String STORE_PASSWORD =
+      'bhrom6a286b58cab14@ssl'; // Test Store Password
   static const String BASE_URL =
-      'https://testbox.sslcommerz.com/gwprocess/v4/api.php';
+      'https://sandbox.sslcommerz.com/gwprocess/v4/api.php';
   static const String VALIDATION_URL =
-      'https://testbox.sslcommerz.com/validator/api/validationAPI.php';
-
-  // 🟢 PRODUCTION CREDENTIALS (Live এ এটা ব্যবহার করবেন)
-  // নিজের credentials দিয়ে রিপ্লেস করুন
-  // static const String STORE_ID = 'আপনার_STORE_ID';
-  // static const String STORE_PASSWORD = 'আপনার_STORE_PASSWORD';
-  // static const String BASE_URL = 'https://securepay.sslcommerz.com/gwprocess/v4/api.php';
-  // static const String VALIDATION_URL = 'https://securepay.sslcommerz.com/validator/api/validationAPI.php';
+      'https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php';
 
   PaymentSuccessCallback? _onSuccess;
   PaymentFailureCallback? _onFailure;
@@ -116,7 +106,7 @@ class SSLCommercePaymentService {
       // SSL Commerce API-তে রিকোয়েস্ট পাঠান
       final response =
           await http.post(Uri.parse(BASE_URL), body: postData).timeout(
-        const Duration(seconds: 30),
+        const Duration(seconds: 10),
         onTimeout: () {
           _onFailure?.call('Payment request timeout');
           throw Exception('Request timeout');
@@ -176,7 +166,7 @@ class SSLCommercePaymentService {
 
       final response = await http
           .post(Uri.parse(VALIDATION_URL), body: postData)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final responseBody = response.body;
