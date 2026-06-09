@@ -1,7 +1,7 @@
 // screens/profile/add_place_screen.dart
-// ✅ Add Place Screen - Image upload সহ সম্পূর্ণ feature (Mobile + Web Compatible)
+// ✅ FINAL CORRECT - নতুন place: দুই table এ, পুরোনো place: alert দেখাবে
 
-import 'dart:typed_data'; // 👈 Uint8List ব্যবহারের জন্য যুক্ত করা হয়েছে
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
@@ -25,12 +25,9 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
   final _notesController = TextEditingController();
 
   String? _selectedCategory;
-  XFile?
-      _selectedImageFile; // 👈 File এর পরিবর্তে cross-platform XFile ব্যবহার করা হয়েছে
-  Uint8List?
-      _imageBytes; // 👈 ওয়েব ও মোবাইলে ইমেজ শো এবং আপলোডের জন্য বাইটস রাখা হয়েছে
+  XFile? _selectedImageFile;
+  Uint8List? _imageBytes;
   int _selectedRating = 0;
-  bool _isPublic = false;
   bool _isLoading = false;
 
   final List<String> _categories = [
@@ -64,8 +61,7 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
       );
 
       if (picked != null) {
-        final bytes =
-            await picked.readAsBytes(); // 👈 ইমেজটিকে বাইটে কনভার্ট করা হচ্ছে
+        final bytes = await picked.readAsBytes();
         setState(() {
           _selectedImageFile = picked;
           _imageBytes = bytes;
@@ -80,19 +76,17 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
     }
   }
 
-  Future<String?> _uploadImage(String placeName) async {
+  Future<String?> _uploadImage() async {
     if (_imageBytes == null || _selectedImageFile == null) return null;
 
     try {
       final user = supabase.auth.currentUser;
       if (user == null) return null;
 
-      // XFile থেকে ফাইলের নাম ও এক্সটেনশন নেওয়া হচ্ছে (মোবাইল ও ওয়েব দুইটার জন্যই নিরাপদ)
       final ext = _selectedImageFile!.name.split('.').last.toLowerCase();
       final fileName =
           '${user.id}/${DateTime.now().millisecondsSinceEpoch}.$ext';
 
-      // 👈 upload এর পরিবর্তে uploadBinary ব্যবহার করা হয়েছে যা Uint8List সাপোর্ট করে
       await supabase.storage.from('place_images').uploadBinary(
             fileName,
             _imageBytes!,
@@ -107,21 +101,20 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
     }
   }
 
-  Future<bool> _placesNameExists(String name) async {
+  // ✅ Check if place exists in GLOBAL places table
+  Future<Map<String, dynamic>?> _checkPlaceInGlobalDatabase(
+      String placeName) async {
     try {
-      final user = supabase.auth.currentUser;
-      if (user == null) return false;
-
       final existing = await supabase
-          .from('user_added_places')
-          .select('id')
-          .eq('user_id', user.id)
-          .ilike('name', name.trim());
+          .from('places')
+          .select()
+          .ilike('name', placeName.trim())
+          .maybeSingle();
 
-      return existing.isNotEmpty;
+      return existing;
     } catch (e) {
       debugPrint('Error checking place: $e');
-      return false;
+      return null;
     }
   }
 
@@ -134,15 +127,24 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
       final user = supabase.auth.currentUser;
       if (user == null) throw Exception('User not authenticated');
 
-      // Duplicate name check
-      final exists = await _placesNameExists(_nameController.text);
-      if (exists) {
+      final placeName = _nameController.text.trim();
+      final location = _locationController.text.trim();
+      final description = _descriptionController.text.trim();
+
+      // ✅ STEP 1: Check if place exists in places table
+      final existingPlace = await _checkPlaceInGlobalDatabase(placeName);
+
+      if (existingPlace != null) {
+        // ❌ Place already exists - Show alert and don't add anything
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('You already have a place with this name'),
-              backgroundColor: Colors.orange,
+            SnackBar(
+              content: Text(
+                '⚠️ "${existingPlace['name']}" already exists in our database. Cannot add duplicate places.',
+              ),
+              backgroundColor: Colors.red,
               behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 4),
             ),
           );
         }
@@ -150,32 +152,46 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
         return;
       }
 
-      // Upload image if selected
+      // ✅ STEP 2: Upload image if selected
       String? imageUrl;
       if (_imageBytes != null) {
-        imageUrl = await _uploadImage(_nameController.text);
+        imageUrl = await _uploadImage();
       }
 
-      // Insert place
+      // ✅ STEP 3: Place is NEW - Add to BOTH tables
+
+      // Add to places table (global - everyone sees)
+      await supabase.from('places').insert({
+        'name': placeName,
+        'location': location,
+        'description': description,
+        'category': _selectedCategory,
+        'image_url': imageUrl,
+        'price_estimate': null,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+
+      // Add to user_added_places table (user's personal collection)
       await supabase.from('user_added_places').insert({
         'user_id': user.id,
-        'name': _nameController.text.trim(),
-        'location': _locationController.text.trim(),
-        'description': _descriptionController.text.trim(),
+        'name': placeName,
+        'location': location,
+        'description': description,
         'category': _selectedCategory,
         'image_url': imageUrl,
         'rating': _selectedRating > 0 ? _selectedRating : null,
         'notes': _notesController.text.trim(),
-        'is_public': _isPublic,
+        'is_public': false,
         'visited_date': DateTime.now().toIso8601String(),
       });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Place added successfully!'),
+            content: Text('✅ New place added successfully!'),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 2),
           ),
         );
         Navigator.pop(context, true);
@@ -184,9 +200,10 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error adding place: $e'),
+            content: Text('❌ Error: $e'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
           ),
         );
       }
@@ -292,31 +309,35 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
                 accentColor: accentColor,
                 isDark: isDark,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
 
-              // Public toggle
+              // Info box
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: cardColor,
+                  color: accentColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: accentColor.withOpacity(0.2),
+                  ),
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Make this place public',
-                      style: TextStyle(color: textColor, fontSize: 14),
-                    ),
-                    Switch(
-                      value: _isPublic,
-                      onChanged: (val) => setState(() => _isPublic = val),
-                      activeColor: accentColor,
+                    Icon(Icons.info_outline, color: accentColor, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'New places are added to global database AND your personal collection.\nCannot add places that already exist.',
+                        style: TextStyle(
+                          color: textColor,
+                          fontSize: 12,
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
               // Submit button
               SizedBox(
@@ -376,7 +397,7 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
             width: 2,
           ),
         ),
-        child: _imageBytes == null // 👈 কন্ডিশন চেক এখন bytes দিয়ে করা হচ্ছে
+        child: _imageBytes == null
             ? Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -410,7 +431,7 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(14),
                     child: Image.memory(
-                      _imageBytes!, // 👈 Image.file এর বদলে Image.memory ব্যবহার করায় ওয়েব ও মোবাইল দুইটাই সাপোর্ট করবে
+                      _imageBytes!,
                       fit: BoxFit.cover,
                       width: double.infinity,
                       height: double.infinity,

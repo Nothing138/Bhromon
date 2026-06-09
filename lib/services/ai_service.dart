@@ -16,8 +16,7 @@ class AIService {
     required String style,
   }) async {
     try {
-      final prompt =
-          """
+      final prompt = """
 You are a Bangladesh Travel Expert. Create a detailed day-wise travel itinerary for $destination, Bangladesh.
 Duration: $days days.
 Budget: $budget BDT.
