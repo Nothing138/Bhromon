@@ -8,6 +8,7 @@ import '../details/place_details_page.dart';
 import '../shop/gear_shop_page.dart';
 import '../plan/AI_help_plan_trip_page.dart';
 import '../notifications/notifications_page.dart';
+import '../map/map_page.dart';
 
 class HomePremium extends StatefulWidget {
   const HomePremium({super.key});
@@ -166,7 +167,7 @@ class _HomePremiumState extends State<HomePremium>
   }
 
   // ───────────────────────────────────────────────────────────────────────────
-  //  TOP BAR  —  greeting pinned to left corner, bell to right
+  //  TOP BAR  —  greeting pinned to left corner, map + notification to right
   // ───────────────────────────────────────────────────────────────────────────
   Widget _buildTopBar(
     String userName,
@@ -219,55 +220,94 @@ class _HomePremiumState extends State<HomePremium>
             ),
           ),
 
-          // Right — notification bell
-          GestureDetector(
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const NotificationsPage()),
-            ),
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: surface,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: surfaceBorder, width: 0.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
+          // Right — map + notification buttons
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Map button
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const BDMapPage(),
                   ),
-                ],
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Icon(
-                    Icons.notifications_outlined,
+                ),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: surface,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: surfaceBorder, width: 0.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.map_outlined,
                     color: accentColor,
                     size: 20,
                   ),
-                  Positioned(
-                    top: 9,
-                    right: 9,
-                    child: Container(
-                      width: 7,
-                      height: 7,
-                      decoration: BoxDecoration(
-                        color: Colors.redAccent,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color:
-                              isDark ? const Color(0xFF080C18) : Colors.white,
-                          width: 1.5,
+                ),
+              ),
+              const SizedBox(width: 10),
+
+              // Notification bell
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const NotificationsPage()),
+                ),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: surface,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: surfaceBorder, width: 0.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Icon(
+                        Icons.notifications_outlined,
+                        color: accentColor,
+                        size: 20,
+                      ),
+                      Positioned(
+                        top: 9,
+                        right: 9,
+                        child: Container(
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            color: Colors.redAccent,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isDark
+                                  ? const Color(0xFF080C18)
+                                  : Colors.white,
+                              width: 1.5,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ],
       ),

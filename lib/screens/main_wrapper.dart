@@ -5,7 +5,7 @@ import '../providers/theme_provider.dart';
 import 'home/home_premium.dart';
 import 'home/home_screen.dart';
 import 'profile/profile_screen.dart';
-import 'map/map_page.dart';
+import 'chat/contacts_list_screen.dart';
 import 'sos/sos_page.dart';
 
 class MainWrapper extends StatefulWidget {
@@ -21,8 +21,8 @@ class _MainWrapperState extends State<MainWrapper> {
   final List<Widget> _pages = [
     const HomePremium(), // 0 - Explore
     const HomeScreen(), // 1 - Feed
-    const BDMapPage(), // 2 - Map
-    const SOSPage(), // 3 - SOS
+    const ContactsListScreen(), // 2 - Chat
+    const SOSPageUpdated(), // 3 - SOS
     const ProfileScreen(), // 4 - Profile
   ];
 
@@ -72,9 +72,9 @@ class _MainWrapperState extends State<MainWrapper> {
                 ),
                 _buildNavItem(
                   index: 2,
-                  icon: Icons.map_outlined,
-                  activeIcon: Icons.map_rounded,
-                  label: 'Map',
+                  icon: Icons.message_outlined,
+                  activeIcon: Icons.message_rounded,
+                  label: 'Chat',
                   accentColor: accentColor,
                   isDark: isDark,
                 ),
@@ -113,9 +113,8 @@ class _MainWrapperState extends State<MainWrapper> {
         curve: Curves.easeInOut,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected
-              ? accentColor.withOpacity(0.12)
-              : Colors.transparent,
+          color:
+              isSelected ? accentColor.withOpacity(0.12) : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(

@@ -6,15 +6,17 @@ import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:math';
 import '../../providers/theme_provider.dart';
+import 'emergency_contacts_page.dart';
 
-class SOSPage extends StatefulWidget {
-  const SOSPage({super.key});
+class SOSPageUpdated extends StatefulWidget {
+  const SOSPageUpdated({super.key});
 
   @override
-  State<SOSPage> createState() => _SOSPageState();
+  State<SOSPageUpdated> createState() => _SOSPageUpdatedState();
 }
 
-class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
+class _SOSPageUpdatedState extends State<SOSPageUpdated>
+    with TickerProviderStateMixin {
   final supabase = Supabase.instance.client;
 
   bool _isSending = false;
@@ -30,6 +32,9 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
   List<EmergencyService> _nearbyServices = [];
   bool _loadingServices = false;
 
+  List<EmergencyContact> _emergencyContacts = [];
+  int _activeContactsCount = 0;
+
   late AnimationController _pulseController;
   late Animation<double> _pulseAnim;
   late AnimationController _successController;
@@ -41,6 +46,7 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
     _setupAnimations();
     _initLocation();
     _loadMyAlerts();
+    _loadEmergencyContacts();
   }
 
   void _setupAnimations() {
@@ -57,10 +63,6 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-    _successScaleAnim = CurvedAnimation(
-      parent: _successController,
-      curve: Curves.elasticOut,
-    );
   }
 
   @override
@@ -68,6 +70,30 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
     _pulseController.dispose();
     _successController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadEmergencyContacts() async {
+    try {
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) return;
+
+      final data = await supabase
+          .from('emergency_contacts')
+          .select()
+          .eq('user_id', userId)
+          .eq('is_active', true)
+          .order('priority', ascending: true);
+
+      if (mounted) {
+        setState(() {
+          _emergencyContacts =
+              (data as List).map((e) => EmergencyContact.fromMap(e)).toList();
+          _activeContactsCount = _emergencyContacts.length;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading emergency contacts: $e');
+    }
   }
 
   Future<void> _initLocation() async {
@@ -570,12 +596,22 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
     setState(() => _isSending = true);
 
     try {
-      await supabase.from('sos_alerts').insert({
+      // Create SOS alert
+      final alertData = await supabase.from('sos_alerts').insert({
         'user_id': userId,
         'latitude': _latitude,
         'longitude': _longitude,
         'status': 'active',
-      });
+      }).select();
+
+      if (alertData.isNotEmpty) {
+        final alertId = alertData[0]['id'];
+
+        // Notify emergency contacts
+        if (_emergencyContacts.isNotEmpty) {
+          await _notifyEmergencyContacts(alertId, userId);
+        }
+      }
 
       if (mounted) {
         setState(() {
@@ -595,14 +631,82 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
       if (mounted) {
         setState(() => _isSending = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to send SOS'),
+          SnackBar(
+            content: Text('Error: $e'),
             backgroundColor: Colors.redAccent,
             behavior: SnackBarBehavior.floating,
-            margin: EdgeInsets.all(16),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
+    }
+  }
+
+  Future<void> _notifyEmergencyContacts(String alertId, String userId) async {
+    try {
+      // Get user profile for message
+      final userProfile = await supabase
+          .from('profiles')
+          .select('full_name, phone_number')
+          .eq('id', userId)
+          .single();
+
+      final userName = userProfile['full_name'] ?? 'Someone';
+      final userLocation = 'Latitude: $_latitude, Longitude: $_longitude';
+
+      // For each emergency contact, store the notification record
+      for (var contact in _emergencyContacts) {
+        try {
+          // Insert into sos_alert_contacts table
+          await supabase.from('sos_alert_contacts').insert({
+            'alert_id': alertId,
+            'contact_id': contact.id,
+            'contact_phone': contact.contactPhone,
+            'contact_name': contact.contactName,
+            'notification_sent': false,
+            'notification_status': 'pending',
+          });
+
+          // Call the Edge Function to send SMS
+          await _sendSMSNotification(
+            contact.contactPhone,
+            userName,
+            userLocation,
+            contact.contactName,
+          );
+        } catch (e) {
+          debugPrint('Error notifying ${contact.contactName}: $e');
+        }
+      }
+    } catch (e) {
+      debugPrint('Error in _notifyEmergencyContacts: $e');
+    }
+  }
+
+  Future<void> _sendSMSNotification(
+    String phoneNumber,
+    String userName,
+    String location,
+    String contactName,
+  ) async {
+    try {
+      // Call Supabase Edge Function to send SMS
+      final response = await supabase.functions.invoke(
+        'send-sos-sms',
+        body: {
+          'phone': phoneNumber,
+          'userName': userName,
+          'location': location,
+          'contactName': contactName,
+        },
+      );
+
+      //if (response['success'] == true) {
+      //debugPrint('SMS sent successfully to $phoneNumber');
+      //}
+      debugPrint('SMS request sent to $phoneNumber');
+    } catch (e) {
+      debugPrint('Error sending SMS to $phoneNumber: $e');
     }
   }
 
@@ -680,6 +784,69 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
             ],
           ),
         ),
+        actions: [
+          if (_activeContactsCount > 0)
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const EmergencyContactsPage(),
+                  ),
+                ).then((_) => _loadEmergencyContacts());
+              },
+              child: Container(
+                margin: const EdgeInsets.only(right: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.blueAccent.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.blueAccent.withOpacity(0.2),
+                    width: 0.5,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.people,
+                        color: Colors.blueAccent, size: 16),
+                    const SizedBox(width: 6),
+                    Text(
+                      '$_activeContactsCount',
+                      style: const TextStyle(
+                        color: Colors.blueAccent,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const EmergencyContactsPage(),
+                  ),
+                ).then((_) => _loadEmergencyContacts());
+              },
+              child: Container(
+                margin: const EdgeInsets.only(right: 16),
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: surfaceBorder, width: 0.5),
+                ),
+                child: Icon(Icons.person_add, color: accentColor, size: 18),
+              ),
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
@@ -834,7 +1001,7 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
             Center(
               child: _alertSent
                   ? ScaleTransition(
-                      scale: _successScaleAnim,
+                      scale: _successController,
                       child: _buildSuccessState(
                         accentColor,
                         isDark,
@@ -852,6 +1019,63 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
             ),
 
             const SizedBox(height: 40),
+
+            // Emergency Contacts Info
+            if (_activeContactsCount > 0)
+              Container(
+                padding: const EdgeInsets.all(14),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.greenAccent.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.greenAccent.withOpacity(0.2),
+                    width: 0.5,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.check_circle,
+                      color: Colors.greenAccent,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: '$_activeContactsCount contact',
+                              style: TextStyle(
+                                color: Colors.greenAccent,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            TextSpan(
+                              text: _activeContactsCount > 1
+                                  ? 's will '
+                                  : ' will ',
+                              style: TextStyle(
+                                color: Colors.greenAccent,
+                                fontSize: 12,
+                              ),
+                            ),
+                            TextSpan(
+                              text: 'be notified when you send SOS',
+                              style: TextStyle(
+                                color: Colors.greenAccent.withOpacity(0.8),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
             // Info cards
             _buildInfoCard(
@@ -877,7 +1101,7 @@ class _SOSPageState extends State<SOSPage> with TickerProviderStateMixin {
             _buildInfoCard(
               Icons.people_outline_rounded,
               'Alert Broadcast',
-              'Nearby users will be notified',
+              'Emergency contacts will be notified',
               Colors.orange,
               isDark,
               textPrimary,
@@ -1252,6 +1476,35 @@ class EmergencyService {
       phone: map['phone'] ?? '',
       lat: (map['lat'] ?? 0).toDouble(),
       lng: (map['lng'] ?? 0).toDouble(),
+    );
+  }
+}
+
+class EmergencyContact {
+  final String id;
+  final String contactName;
+  final String contactPhone;
+  final String? relationship;
+  final bool isActive;
+  final int priority;
+
+  EmergencyContact({
+    required this.id,
+    required this.contactName,
+    required this.contactPhone,
+    this.relationship,
+    required this.isActive,
+    required this.priority,
+  });
+
+  factory EmergencyContact.fromMap(Map<String, dynamic> map) {
+    return EmergencyContact(
+      id: map['id'] ?? '',
+      contactName: map['contact_name'] ?? 'Unknown',
+      contactPhone: map['contact_phone'] ?? '',
+      relationship: map['relationship'],
+      isActive: map['is_active'] ?? true,
+      priority: map['priority'] ?? 0,
     );
   }
 }

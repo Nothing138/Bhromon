@@ -1,6 +1,7 @@
 // screens/home/create_post_screen.dart
-// screens/home/create_post_screen.dart (UPDATED)
+// ✅ FULLY FIXED FOR WEB + MOBILE
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -259,7 +260,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Selected Image Preview
+            // Selected Image Preview - ✅ WEB COMPATIBLE
             if (_selectedImage != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
@@ -267,12 +268,27 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(14),
-                      child: Image.file(
-                        File(_selectedImage!.path),
-                        height: 220,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
+                      // ✅ Conditional image loading for web/mobile
+                      child: kIsWeb
+                          ? Image.network(
+                              _selectedImage!.path,
+                              height: 220,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                height: 220,
+                                color: Colors.grey.withOpacity(0.2),
+                                child: const Center(
+                                  child: Text('Image preview unavailable'),
+                                ),
+                              ),
+                            )
+                          : Image.file(
+                              File(_selectedImage!.path),
+                              height: 220,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            ),
                     ),
                     Positioned(
                       right: 8,
