@@ -1,8 +1,7 @@
 name: bhromon_app
-description: "A new Flutter project."
+description: "Bhromon - Travel, Connect, Explore."
 
-publish_to: 'none' 
-
+publish_to: 'none'
 
 version: 1.0.0+1
 
@@ -12,55 +11,69 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
+  # Core Dependencies
   provider: ^6.1.1
   cupertino_icons: ^1.0.2
+
+  # Supabase & Auth
   supabase_flutter: ^2.12.4
-  image_picker: ^1.1.2
-  google_generative_ai: ^0.4.0
-  flutter_dotenv: ^6.0.1
+  
+  # HTTP & Networking
   http: ^1.2.0
+  
+  # Environment Variables
+  flutter_dotenv: ^5.1.0
+
+  # File & Image Handling
+  image_picker: ^1.1.2
+  cached_network_image: ^3.3.1
+
+  # Maps & Location
   flutter_map: ^8.3.0
   latlong2: ^0.9.0
   geolocator: ^14.0.2
   google_maps_flutter: ^2.7.0
+
+  # Utilities
   url_launcher: ^6.2.0
   permission_handler: ^12.0.3
   intl: ^0.20.2
   webview_flutter: ^4.4.2
-  cached_network_image: ^3.3.1
   connectivity_plus: ^7.1.1
+
+  # JSON Serialization
   json_annotation: ^4.8.0
+
+  # AI Integration
+  google_generative_ai: ^0.4.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
   flutter_lints: ^6.0.0
   build_runner: ^2.4.0
   json_serializable: ^6.7.0
 
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
-
-# The following section is specific to Flutter packages.
 flutter:
-
-  # The following line ensures that the Material Icons font is
-  # included with your application, so that you can use the icons in
-  # the material Icons class.
   uses-material-design: true
 
-  # ✅ Uncomment if you have assets
+  # Assets
   assets:
-  - .env
-  #  - assets/images/
-  #  - assets/icons/
+    - .env
 
-  # ✅ Uncomment if you have fonts
+  # Uncomment if you have images
+  # assets:
+  #   - assets/images/
+  #   - assets/icons/
+
+  # Uncomment if you have fonts
   # fonts:
-  #  - family: Poppins
-  #    fonts:
-  #      - asset: assets/fonts/Poppins-Regular.ttf
-  #      - asset: assets/fonts/Poppins-Bold.ttf
-  #        weight: 700
-  #      - asset: assets/fonts/Poppins-SemiBold.ttf
-  #        weight: 600
+  #   - family: Poppins
+  #     fonts:
+  #       - asset: assets/fonts/Poppins-Regular.ttf
+  #       - asset: assets/fonts/Poppins-Bold.ttf
+  #         weight: 700
+  #       - asset: assets/fonts/Poppins-SemiBold.ttf
+  #         weight: 600

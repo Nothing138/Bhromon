@@ -85,7 +85,7 @@ class CartPage extends StatelessWidget {
           Icon(
             Icons.shopping_cart_outlined,
             size: 64,
-            color: textColor.withOpacity(0.3),
+            color: textColor.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 16),
           Text(
@@ -99,7 +99,8 @@ class CartPage extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             "Add some gear to get started!",
-            style: TextStyle(color: textColor.withOpacity(0.6), fontSize: 14),
+            style: TextStyle(
+                color: textColor.withValues(alpha: 0.6), fontSize: 14),
           ),
           const SizedBox(height: 32),
           ElevatedButton.icon(
@@ -135,7 +136,7 @@ class CartPage extends StatelessWidget {
         boxShadow: [
           if (!isDark)
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -297,7 +298,7 @@ class CartPage extends StatelessWidget {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 12,
             offset: const Offset(0, -2),
           ),
@@ -326,7 +327,7 @@ class CartPage extends StatelessWidget {
                 : "৳${cartProvider.deliveryCharges.toStringAsFixed(2)}",
             textColor,
           ),
-          Divider(color: textColor.withOpacity(0.2), height: 20),
+          Divider(color: textColor.withValues(alpha: 0.2), height: 20),
           _buildSummaryRow(
             "Grand Total",
             "৳${cartProvider.grandTotal.toStringAsFixed(2)}",
@@ -396,7 +397,7 @@ class CartPage extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            color: textColor.withOpacity(0.7),
+            color: textColor.withValues(alpha: 0.7),
             fontSize: fontSize,
             fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
           ),

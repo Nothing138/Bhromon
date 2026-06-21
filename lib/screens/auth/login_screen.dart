@@ -1,4 +1,5 @@
 // screens/auth/login_screen.dart
+// screens/auth/login_screen.dart - UPDATED WITH SMART ROUTING
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
@@ -6,7 +7,8 @@ import '../../services/auth_service.dart';
 import 'register_screen.dart';
 import 'password_reset_screen.dart';
 import 'otp_verification_screen.dart';
-import '../main_wrapper.dart';
+import '../main_wrapper.dart'; // User wrapper
+import '../agency/agency_main_wrapper.dart'; // Agency wrapper ✅
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -47,16 +49,25 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!mounted) return;
 
-      // Check if OTP verification is needed (for agencies)
+      // ✅ SMART ROUTING BASED ON USER TYPE
       if (authService.isOtpRequired) {
+        // Agency needs OTP verification
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => const OtpVerificationScreen(),
           ),
         );
+      } else if (authService.isAgency) {
+        // ✅ Agency user - go to AgencyMainWrapper
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AgencyMainWrapper(),
+          ),
+        );
       } else {
-        // Direct navigation for users and verified agencies
+        // ✅ Regular user - go to MainWrapper
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -118,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 gradient: LinearGradient(
                   colors: [
                     themeProvider.accentColor,
-                    themeProvider.accentColor.withOpacity(0.7),
+                    themeProvider.accentColor.withValues(alpha: 0.7),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,

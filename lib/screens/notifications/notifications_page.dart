@@ -103,14 +103,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
     final bg = isDark ? const Color(0xFF080C18) : const Color(0xFFF5F7FF);
     final surface = isDark ? const Color(0xFF111827) : Colors.white;
     final surfaceBorder = isDark
-        ? const Color(0xFF1E2A42).withOpacity(0.8)
-        : Colors.black.withOpacity(0.06);
-    final textPrimary = isDark
-        ? const Color(0xFFE2E8F4)
-        : const Color(0xFF0D1117);
-    final textSecondary = isDark
-        ? const Color(0xFF4A5478)
-        : const Color(0xFF8892A4);
+        ? const Color(0xFF1E2A42).withValues(alpha: 0.8)
+        : Colors.black.withValues(alpha: 0.06);
+    final textPrimary =
+        isDark ? const Color(0xFFE2E8F4) : const Color(0xFF0D1117);
+    final textSecondary =
+        isDark ? const Color(0xFF4A5478) : const Color(0xFF8892A4);
 
     final newCount = _notifications.where((n) => n['isNew'] == true).length;
 
@@ -157,10 +155,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   vertical: 7,
                 ),
                 decoration: BoxDecoration(
-                  color: accentColor.withOpacity(0.08),
+                  color: accentColor.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: accentColor.withOpacity(0.15),
+                    color: accentColor.withValues(alpha: 0.15),
                     width: 0.5,
                   ),
                 ),
@@ -184,9 +182,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
           if (_notifications.any((n) => n['isNew'] == true)) ...[
             _buildSectionLabel('New', textSecondary),
             const SizedBox(height: 8),
-            ..._notifications
-                .where((n) => n['isNew'] == true)
-                .map(
+            ..._notifications.where((n) => n['isNew'] == true).map(
                   (n) => _buildNotifItem(
                     n,
                     isDark,
@@ -200,9 +196,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
           ],
           _buildSectionLabel('Earlier', textSecondary),
           const SizedBox(height: 8),
-          ..._notifications
-              .where((n) => n['isNew'] == false)
-              .map(
+          ..._notifications.where((n) => n['isNew'] == false).map(
                 (n) => _buildNotifItem(
                   n,
                   isDark,
@@ -241,7 +235,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
     final iconColor = Color(notif['colorHex'] as int);
     final iconBg = isDark
         ? Color(notif['bgHex'] as int)
-        : iconColor.withOpacity(0.08);
+        : iconColor.withValues(alpha: 0.08);
 
     return GestureDetector(
       onTap: () {
@@ -255,7 +249,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
           color: surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isNew ? iconColor.withOpacity(0.15) : surfaceBorder,
+            color: isNew ? iconColor.withValues(alpha: 0.15) : surfaceBorder,
             width: 0.5,
           ),
         ),
@@ -288,13 +282,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
                           child: Text(
                             notif['title'] as String,
                             style: TextStyle(
-                              fontWeight: isNew
-                                  ? FontWeight.w600
-                                  : FontWeight.w500,
+                              fontWeight:
+                                  isNew ? FontWeight.w600 : FontWeight.w500,
                               fontSize: 13,
                               color: isNew
                                   ? textPrimary
-                                  : textPrimary.withOpacity(0.7),
+                                  : textPrimary.withValues(alpha: 0.7),
                               letterSpacing: -0.1,
                             ),
                             maxLines: 1,

@@ -247,7 +247,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: LinearGradient(colors: [
-                        accentColor.withOpacity(0.5),
+                        accentColor.withValues(alpha: 0.5),
                         accentColor,
                       ]),
                     ),
@@ -261,7 +261,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           : CircleAvatar(
                               radius: 53,
                               backgroundImage: _avatarProvider(),
-                              backgroundColor: accentColor.withOpacity(0.12),
+                              backgroundColor:
+                                  accentColor.withValues(alpha: 0.12),
                               child: _avatarProvider() == null
                                   ? Text(
                                       displayName.isNotEmpty
@@ -287,7 +288,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         border: Border.all(color: cardColor, width: 2.5),
                         boxShadow: [
                           BoxShadow(
-                              color: accentColor.withOpacity(0.35),
+                              color: accentColor.withValues(alpha: 0.35),
                               blurRadius: 10)
                         ],
                       ),

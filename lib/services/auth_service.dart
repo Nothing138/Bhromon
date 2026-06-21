@@ -1,17 +1,28 @@
 // services/auth_service.dart
+// services/auth_service.dart - WITH BACKEND API INTEGRATION
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../models/travel_agency_model.dart';
 import 'email_service.dart';
 
 class AuthService extends ChangeNotifier {
   final supabase = Supabase.instance.client;
-  final emailService = EmailService();
+  late EmailService emailService;
+
+  // ✅ Backend API URL - Change this to your backend
+  static const String BACKEND_URL = 'http://localhost:3000/api/auth';
+  // For production: 'https://your-backend.com/api/auth'
 
   User? _currentUser;
   TravelAgency? _currentAgency;
   String? _userType; // 'user' or 'agency'
   bool _isOtpRequired = false;
+
+  AuthService() {
+    emailService = EmailService();
+  }
 
   User? get currentUser => _currentUser;
   TravelAgency? get currentAgency => _currentAgency;
@@ -22,7 +33,7 @@ class AuthService extends ChangeNotifier {
   bool get isUser => _userType == 'user';
 
   // ========================
-  // USER REGISTRATION
+  // USER REGISTRATION (Via Backend)
   // ========================
   Future<bool> registerUser({
     required String fullName,
@@ -30,154 +41,104 @@ class AuthService extends ChangeNotifier {
     required String password,
   }) async {
     try {
-      // Sign up with Supabase Auth
-      final response = await supabase.auth.signUp(
-        email: email.trim(),
-        password: password.trim(),
-        data: {
-          'full_name': fullName.trim(),
-        },
-      );
+      print('🔄 Starting user registration via backend for: $email');
 
-      if (response.user == null) {
-        throw Exception('Registration failed: User creation failed');
+      final response = await http
+          .post(
+            Uri.parse('$BACKEND_URL/register/user'),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'fullName': fullName.trim(),
+              'email': email.trim(),
+              'password': password.trim(),
+            }),
+          )
+          .timeout(Duration(seconds: 30));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print('✅ Backend registration successful: ${data['userId']}');
+
+        // Try to login after registration
+        await Future.delayed(Duration(seconds: 2));
+        await smartLogin(email: email, password: password);
+        return true;
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['message'] ?? 'Registration failed');
       }
-
-      // Create user profile
-      await supabase.from('profiles').insert({
-        'id': response.user!.id,
-        'full_name': fullName.trim(),
-        'username': email.trim().split('@')[0],
-        'user_type': 'user',
-      });
-
-      _currentUser = response.user;
-      _userType = 'user';
-      _isOtpRequired = false;
-      notifyListeners();
-
-      return true;
     } catch (e) {
+      print('❌ User registration error: $e');
       throw Exception('User registration error: $e');
     }
   }
 
   // ========================
-  // AGENCY REGISTRATION - SIMPLIFIED (OTP ONLY, NO APPROVAL)
+  // AGENCY REGISTRATION (Via Backend)
   // ========================
   Future<bool> registerAgency({
     required AgencyRegistrationRequest request,
-    required Map<String, String> documentUrls, // {docType: url}
+    required Map<String, String> documentUrls,
   }) async {
     try {
-      // Step 1: Sign up with Supabase Auth
-      final authResponse = await supabase.auth.signUp(
-        email: request.ownerEmail.trim(),
-        password: request.password.trim(),
-        data: {
-          'full_name': request.ownerFullName.trim(),
-        },
-      );
+      print(
+          '🔄 Starting agency registration via backend for: ${request.ownerEmail}');
 
-      if (authResponse.user == null) {
-        throw Exception('Agency registration failed: Auth creation failed');
+      final response = await http
+          .post(
+            Uri.parse('$BACKEND_URL/register/agency'),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'agencyName': request.agencyName,
+              'ownerFullName': request.ownerFullName,
+              'ownerEmail': request.ownerEmail,
+              'ownerPhone': request.ownerPhone,
+              'password': request.password,
+              'officeAddress': request.officeAddress,
+              'officePhone': request.officePhone,
+              'businessLicenseNumber': request.businessLicenseNumber,
+              'taxId': request.taxId,
+              'websiteUrl': request.websiteUrl,
+              'bankAccountHolder': request.bankAccountHolder,
+              'bankAccountNumber': request.bankAccountNumber,
+              'bankName': request.bankName,
+              'branchName': request.branchName,
+            }),
+          )
+          .timeout(Duration(seconds: 30));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print('✅ Backend agency registration successful: ${data['agencyId']}');
+
+        // Try to login after registration
+        await Future.delayed(Duration(seconds: 2));
+        await smartLogin(email: request.ownerEmail, password: request.password);
+        return true;
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['message'] ?? 'Agency registration failed');
       }
-
-      final userId = authResponse.user!.id;
-
-      // Step 2: Create user profile with 'agency' type
-      await supabase.from('profiles').insert({
-        'id': userId,
-        'full_name': request.ownerFullName.trim(),
-        'username': request.ownerEmail.trim().split('@')[0],
-        'user_type': 'agency',
-      });
-
-      // Step 3: Create travel agency record - DIRECTLY APPROVED (NO WAITING)
-      final agencyResponse = await supabase
-          .from('travel_agencies')
-          .insert({
-            'user_id': userId,
-            'agency_name': request.agencyName.trim(),
-            'owner_full_name': request.ownerFullName.trim(),
-            'owner_email': request.ownerEmail.trim(),
-            'owner_phone': request.ownerPhone.trim(),
-            'office_address': request.officeAddress.trim(),
-            'office_phone': request.officePhone,
-            'business_license_number': request.businessLicenseNumber,
-            'tax_id': request.taxId,
-            'website_url': request.websiteUrl,
-            'bank_account_holder': request.bankAccountHolder,
-            'bank_account_number': request.bankAccountNumber,
-            'bank_name': request.bankName,
-            'branch_name': request.branchName,
-            'verification_status': 'approved',
-            'verified_at': DateTime.now().toIso8601String(),
-            'otp_verified': false,
-          })
-          .select('id')
-          .single();
-
-      final agencyId = agencyResponse['id'];
-
-      // Step 4: Upload documents (if any)
-      if (documentUrls.isNotEmpty) {
-        for (final entry in documentUrls.entries) {
-          await supabase.from('agency_documents').insert({
-            'agency_id': agencyId,
-            'document_type': entry.key,
-            'document_url': entry.value,
-            'verification_status': 'pending',
-          });
-        }
-      }
-
-      // Step 5: Generate and send OTP (first login verification)
-      final otp = _generateOtp();
-      final expiresAt = DateTime.now().add(Duration(minutes: 10));
-
-      await supabase.from('agency_otp').insert({
-        'agency_id': agencyId,
-        'otp_code': otp,
-        'expires_at': expiresAt.toIso8601String(),
-      });
-
-      // ✅ CRITICAL FIX: Send OTP via email but DON'T FAIL if email fails
-      try {
-        await emailService.sendAgencyRegistrationOtp(
-          email: request.ownerEmail.trim(),
-          agencyName: request.agencyName.trim(),
-          otp: otp,
-        );
-        print('✅ OTP email sent successfully');
-      } catch (emailError) {
-        print('⚠️ Email failed (non-critical): $emailError');
-        // Continue - OTP is stored in database, user can ask for resend
-      }
-
-      // Sign out after registration
-      await supabase.auth.signOut();
-
-      _currentUser = authResponse.user;
-      _userType = 'agency';
-      _isOtpRequired = false;
-      notifyListeners();
-
-      return true;
     } catch (e) {
+      print('❌ Agency registration error: $e');
       throw Exception('Agency registration error: $e');
     }
   }
 
   // ========================
-  // SMART LOGIN (USER + AGENCY) - SIMPLIFIED
+  // SMART LOGIN (USER + AGENCY)
   // ========================
   Future<bool> smartLogin({
     required String email,
     required String password,
   }) async {
     try {
-      // Authenticate with Supabase Auth
+      print('🔄 Starting login for: $email');
+
       final authResponse = await supabase.auth.signInWithPassword(
         email: email.trim(),
         password: password.trim(),
@@ -188,8 +149,9 @@ class AuthService extends ChangeNotifier {
       }
 
       _currentUser = authResponse.user;
+      print('✅ User authenticated: ${authResponse.user!.id}');
 
-      // Fetch user profile to determine type
+      // Fetch user profile
       final profile = await supabase
           .from('profiles')
           .select('user_type')
@@ -197,6 +159,7 @@ class AuthService extends ChangeNotifier {
           .single();
 
       _userType = profile['user_type'];
+      print('✅ User type: $_userType');
 
       // If agency, check OTP status
       if (_userType == 'agency') {
@@ -208,12 +171,13 @@ class AuthService extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
+      print('❌ Login error: $e');
       throw Exception('Login error: $e');
     }
   }
 
   // ========================
-  // AGENCY LOGIN HANDLER - SIMPLIFIED (NO APPROVAL CHECK)
+  // AGENCY LOGIN HANDLER
   // ========================
   Future<void> _handleAgencyLogin(String userId) async {
     try {
@@ -224,90 +188,82 @@ class AuthService extends ChangeNotifier {
           .single();
 
       _currentAgency = TravelAgency.fromJson(agency);
+      print('✅ Agency loaded: ${_currentAgency!.agencyName}');
 
-      // Check if OTP verification is needed (first login)
       if (!_currentAgency!.otpVerified) {
         _isOtpRequired = true;
+        print('⚠️ OTP verification required');
       } else {
         _isOtpRequired = false;
-        // Log successful login
         await supabase.from('agency_login_history').insert({
           'agency_id': _currentAgency!.id,
           'login_method': 'password',
         });
+        print('✅ OTP already verified, login successful');
       }
     } catch (e) {
+      print('❌ Agency login check error: $e');
       throw Exception('Agency login check error: $e');
     }
   }
 
   // ========================
-  // OTP VERIFICATION (Agency First Login)
+  // OTP VERIFICATION (Via Backend)
   // ========================
   Future<bool> verifyOtp({
     required String otpCode,
   }) async {
     try {
-      if (_currentUser == null || !isAgency) {
-        throw Exception('Invalid OTP verification request');
+      if (_currentAgency == null) {
+        throw Exception('No agency found');
       }
 
-      // Fetch the latest OTP for this agency
-      final otpRecord = await supabase
-          .from('agency_otp')
-          .select()
-          .eq('agency_id', _currentAgency!.id)
-          .eq('is_used', false)
-          .order('created_at', ascending: false)
-          .limit(1)
-          .single();
+      print('🔄 Verifying OTP via backend for agency: ${_currentAgency!.id}');
 
-      // Validate OTP
-      if (otpRecord['otp_code'] != otpCode.trim()) {
-        throw Exception('Invalid OTP code');
+      final response = await http
+          .post(
+            Uri.parse('$BACKEND_URL/verify-otp'),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'agencyId': _currentAgency!.id,
+              'otpCode': otpCode.trim(),
+            }),
+          )
+          .timeout(Duration(seconds: 30));
+
+      if (response.statusCode == 200) {
+        print('✅ OTP verified successfully via backend');
+
+        // Update local agency object
+        _currentAgency = _currentAgency!.copyWith(
+          otpVerified: true,
+          otpVerifiedAt: DateTime.now(),
+        );
+
+        // Log successful OTP verification
+        await supabase.from('agency_login_history').insert({
+          'agency_id': _currentAgency!.id,
+          'login_method': 'otp',
+        });
+
+        _isOtpRequired = false;
+        notifyListeners();
+
+        return true;
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['message'] ?? 'OTP verification failed');
       }
-
-      // Check expiration
-      final expiresAt = DateTime.parse(otpRecord['expires_at']);
-      if (DateTime.now().isAfter(expiresAt)) {
-        throw Exception('OTP has expired');
-      }
-
-      // Mark OTP as used
-      await supabase.from('agency_otp').update({
-        'is_used': true,
-        'used_at': DateTime.now().toIso8601String()
-      }).eq('id', otpRecord['id']);
-
-      // Update agency OTP verification status
-      await supabase.from('travel_agencies').update({
-        'otp_verified': true,
-        'otp_verified_at': DateTime.now().toIso8601String(),
-      }).eq('id', _currentAgency!.id);
-
-      // Update agency object
-      _currentAgency = _currentAgency!.copyWith(
-        otpVerified: true,
-        otpVerifiedAt: DateTime.now(),
-      );
-
-      // Log successful OTP verification login
-      await supabase.from('agency_login_history').insert({
-        'agency_id': _currentAgency!.id,
-        'login_method': 'otp',
-      });
-
-      _isOtpRequired = false;
-      notifyListeners();
-
-      return true;
     } catch (e) {
+      print('❌ OTP verification error: $e');
       throw Exception('OTP verification error: $e');
     }
   }
 
   // ========================
-  // RESEND OTP - IMPROVED WITH ERROR HANDLING
+  // RESEND OTP (Via Backend)
   // ========================
   Future<bool> resendOtp() async {
     try {
@@ -315,32 +271,29 @@ class AuthService extends ChangeNotifier {
         throw Exception('No agency found');
       }
 
-      // Generate new OTP (6 digits)
-      final newOtp = _generateOtp();
-      final expiresAt = DateTime.now().add(Duration(minutes: 10));
+      print('🔄 Resending OTP via backend for agency: ${_currentAgency!.id}');
 
-      // Insert new OTP record
-      await supabase.from('agency_otp').insert({
-        'agency_id': _currentAgency!.id,
-        'otp_code': newOtp,
-        'expires_at': expiresAt.toIso8601String(),
-      });
+      final response = await http
+          .post(
+            Uri.parse('$BACKEND_URL/resend-otp'),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'agencyId': _currentAgency!.id,
+            }),
+          )
+          .timeout(Duration(seconds: 30));
 
-      // ✅ Send OTP to email but handle failure gracefully
-      try {
-        await emailService.sendAgencyOtpResend(
-          email: _currentAgency!.ownerEmail,
-          agencyName: _currentAgency!.agencyName,
-          otp: newOtp,
-        );
-        print('✅ Resend OTP email sent successfully');
-      } catch (emailError) {
-        print('⚠️ Resend email failed: $emailError');
-        // Don't throw - OTP is in database
+      if (response.statusCode == 200) {
+        print('✅ OTP resent successfully via backend');
+        return true;
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['message'] ?? 'Resend OTP failed');
       }
-
-      return true;
     } catch (e) {
+      print('❌ Resend OTP error: $e');
       throw Exception('Resend OTP error: $e');
     }
   }
@@ -352,12 +305,14 @@ class AuthService extends ChangeNotifier {
     required String email,
   }) async {
     try {
-      await supabase.auth.resetPasswordForEmail(
-        email.trim(),
-        redirectTo: 'com.bhromon.app://reset-password',
-      );
+      print('🔄 Password reset requested for: $email');
+
+      await supabase.auth.resetPasswordForEmail(email.trim());
+
+      print('✅ Password reset email sent');
       return true;
     } catch (e) {
+      print('❌ Password reset request error: $e');
       throw Exception('Password reset request error: $e');
     }
   }
@@ -369,8 +324,10 @@ class AuthService extends ChangeNotifier {
       await supabase.auth.updateUser(
         UserAttributes(password: newPassword.trim()),
       );
+      print('✅ Password updated successfully');
       return true;
     } catch (e) {
+      print('❌ Password update error: $e');
       throw Exception('Password update error: $e');
     }
   }
@@ -386,7 +343,9 @@ class AuthService extends ChangeNotifier {
       _userType = null;
       _isOtpRequired = false;
       notifyListeners();
+      print('✅ Logged out successfully');
     } catch (e) {
+      print('❌ Logout error: $e');
       throw Exception('Logout error: $e');
     }
   }
@@ -399,6 +358,7 @@ class AuthService extends ChangeNotifier {
       final session = supabase.auth.currentSession;
       if (session != null) {
         _currentUser = session.user;
+        print('✅ Session found for: ${session.user.email}');
 
         final profile = await supabase
             .from('profiles')
@@ -407,6 +367,7 @@ class AuthService extends ChangeNotifier {
             .single();
 
         _userType = profile['user_type'];
+        print('✅ User type: $_userType');
 
         if (_userType == 'agency') {
           await _handleAgencyLogin(session.user.id);
@@ -414,14 +375,7 @@ class AuthService extends ChangeNotifier {
       }
       notifyListeners();
     } catch (e) {
-      print('Auth status check error: $e');
+      print('⚠️ Auth status check error: $e');
     }
-  }
-
-  // ========================
-  // HELPER: OTP GENERATOR
-  // ========================
-  String _generateOtp() {
-    return (100000 + (DateTime.now().millisecond % 900000)).toString();
   }
 }

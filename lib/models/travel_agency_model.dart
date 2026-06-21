@@ -1,4 +1,5 @@
 // models/travel_agency_model.dart
+// models/travel_agency_model.dart - FIXED VERSION
 import 'package:json_annotation/json_annotation.dart';
 
 class TravelAgency {
@@ -69,66 +70,89 @@ class TravelAgency {
 
   factory TravelAgency.fromJson(Map<String, dynamic> json) {
     return TravelAgency(
-      id: json['id'] as String,
-      userId: json['userId'] as String,
-      agencyName: json['agencyName'] as String,
-      ownerFullName: json['ownerFullName'] as String,
-      ownerEmail: json['ownerEmail'] as String,
-      ownerPhone: json['ownerPhone'] as String,
-      officeAddress: json['officeAddress'] as String?,
-      officePhone: json['officePhone'] as String?,
-      businessLicenseNumber: json['businessLicenseNumber'] as String?,
-      taxId: json['taxId'] as String?,
-      websiteUrl: json['websiteUrl'] as String?,
-      businessLicenseUrl: json['businessLicenseUrl'] as String?,
-      taxCertificateUrl: json['taxCertificateUrl'] as String?,
-      insuranceCertificateUrl: json['insuranceCertificateUrl'] as String?,
-      bankAccountHolder: json['bankAccountHolder'] as String?,
-      bankAccountNumber: json['bankAccountNumber'] as String?,
-      bankName: json['bankName'] as String?,
-      branchName: json['branchName'] as String?,
-      commissionRate: (json['commissionRate'] as num?)?.toDouble() ?? 5.0,
-      verificationStatus: json['verificationStatus'] as String,
-      verificationNotes: json['verificationNotes'] as String?,
-      otpVerified: json['otpVerified'] as bool,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
-      verifiedAt: json['verifiedAt'] == null
+      // ✅ FIXED: Map database snake_case to Dart camelCase
+      id: json['id'] as String? ?? '',
+      userId: json['user_id'] as String? ?? '', // ✅ Changed from 'userId'
+      agencyName:
+          json['agency_name'] as String? ?? '', // ✅ Changed from 'agencyName'
+      ownerFullName: json['owner_full_name'] as String? ??
+          '', // ✅ Changed from 'ownerFullName'
+      ownerEmail:
+          json['owner_email'] as String? ?? '', // ✅ Changed from 'ownerEmail'
+      ownerPhone:
+          json['owner_phone'] as String? ?? '', // ✅ Changed from 'ownerPhone'
+
+      officeAddress:
+          json['office_address'] as String?, // ✅ Changed from 'officeAddress'
+      officePhone:
+          json['office_phone'] as String?, // ✅ Changed from 'officePhone'
+
+      businessLicenseNumber:
+          json['business_license_number'] as String?, // ✅ Changed
+      taxId: json['tax_id'] as String?, // ✅ Changed from 'taxId'
+      websiteUrl: json['website_url'] as String?, // ✅ Changed from 'websiteUrl'
+
+      businessLicenseUrl: json['business_license_url'] as String?, // ✅ Changed
+      taxCertificateUrl: json['tax_certificate_url'] as String?, // ✅ Changed
+      insuranceCertificateUrl:
+          json['insurance_certificate_url'] as String?, // ✅ Changed
+
+      bankAccountHolder: json['bank_account_holder'] as String?, // ✅ Changed
+      bankAccountNumber: json['bank_account_number'] as String?, // ✅ Changed
+      bankName: json['bank_name'] as String?, // ✅ Changed from 'bankName'
+      branchName: json['branch_name'] as String?, // ✅ Changed from 'branchName'
+
+      commissionRate:
+          (json['commission_rate'] as num?)?.toDouble() ?? 5.0, // ✅ Changed
+
+      verificationStatus:
+          json['verification_status'] as String? ?? 'approved', // ✅ Changed
+      verificationNotes: json['verification_notes'] as String?, // ✅ Changed
+      otpVerified: (json['otp_verified'] as bool?) ?? false, // ✅ Changed
+
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : DateTime.now(), // ✅ Added fallback
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : DateTime.now(), // ✅ Added fallback
+      verifiedAt: json['verified_at'] == null
           ? null
-          : DateTime.parse(json['verifiedAt'] as String),
-      otpVerifiedAt: json['otpVerifiedAt'] == null
-          ? null
-          : DateTime.parse(json['otpVerifiedAt'] as String),
+          : DateTime.parse(json['verified_at'] as String),
+      otpVerifiedAt:
+          json['otp_verified_at'] == null // ✅ Changed from 'otpVerifiedAt'
+              ? null
+              : DateTime.parse(json['otp_verified_at'] as String),
     );
   }
 
   Map<String, dynamic> toJson() => {
         'id': id,
-        'userId': userId,
-        'agencyName': agencyName,
-        'ownerFullName': ownerFullName,
-        'ownerEmail': ownerEmail,
-        'ownerPhone': ownerPhone,
-        'officeAddress': officeAddress,
-        'officePhone': officePhone,
-        'businessLicenseNumber': businessLicenseNumber,
-        'taxId': taxId,
-        'websiteUrl': websiteUrl,
-        'businessLicenseUrl': businessLicenseUrl,
-        'taxCertificateUrl': taxCertificateUrl,
-        'insuranceCertificateUrl': insuranceCertificateUrl,
-        'bankAccountHolder': bankAccountHolder,
-        'bankAccountNumber': bankAccountNumber,
-        'bankName': bankName,
-        'branchName': branchName,
-        'commissionRate': commissionRate,
-        'verificationStatus': verificationStatus,
-        'verificationNotes': verificationNotes,
-        'otpVerified': otpVerified,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt.toIso8601String(),
-        'verifiedAt': verifiedAt?.toIso8601String(),
-        'otpVerifiedAt': otpVerifiedAt?.toIso8601String(),
+        'user_id': userId, // ✅ Changed from 'userId'
+        'agency_name': agencyName, // ✅ Changed from 'agencyName'
+        'owner_full_name': ownerFullName, // ✅ Changed from 'ownerFullName'
+        'owner_email': ownerEmail, // ✅ Changed from 'ownerEmail'
+        'owner_phone': ownerPhone, // ✅ Changed from 'ownerPhone'
+        'office_address': officeAddress, // ✅ Changed from 'officeAddress'
+        'office_phone': officePhone, // ✅ Changed from 'officePhone'
+        'business_license_number': businessLicenseNumber, // ✅ Changed
+        'tax_id': taxId, // ✅ Changed from 'taxId'
+        'website_url': websiteUrl, // ✅ Changed from 'websiteUrl'
+        'business_license_url': businessLicenseUrl, // ✅ Changed
+        'tax_certificate_url': taxCertificateUrl, // ✅ Changed
+        'insurance_certificate_url': insuranceCertificateUrl, // ✅ Changed
+        'bank_account_holder': bankAccountHolder, // ✅ Changed
+        'bank_account_number': bankAccountNumber, // ✅ Changed
+        'bank_name': bankName, // ✅ Changed from 'bankName'
+        'branch_name': branchName, // ✅ Changed from 'branchName'
+        'commission_rate': commissionRate, // ✅ Changed
+        'verification_status': verificationStatus, // ✅ Changed
+        'verification_notes': verificationNotes, // ✅ Changed
+        'otp_verified': otpVerified, // ✅ Changed
+        'created_at': createdAt.toIso8601String(),
+        'updated_at': updatedAt.toIso8601String(),
+        'verified_at': verifiedAt?.toIso8601String(),
+        'otp_verified_at': otpVerifiedAt?.toIso8601String(), // ✅ Changed
       };
 
   bool get isApproved => verificationStatus == 'approved';
@@ -223,26 +247,29 @@ class AgencyDocument {
 
   factory AgencyDocument.fromJson(Map<String, dynamic> json) {
     return AgencyDocument(
-      id: json['id'] as String,
-      agencyId: json['agencyId'] as String,
-      documentType: json['documentType'] as String,
-      documentUrl: json['documentUrl'] as String,
-      fileName: json['fileName'] as String?,
-      verificationStatus: json['verificationStatus'] as String,
-      rejectedReason: json['rejectedReason'] as String?,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      id: json['id'] as String? ?? '',
+      agencyId: json['agency_id'] as String? ?? '', // ✅ Changed from 'agencyId'
+      documentType: json['document_type'] as String? ?? '', // ✅ Changed
+      documentUrl: json['document_url'] as String? ?? '', // ✅ Changed
+      fileName: json['file_name'] as String?, // ✅ Changed from 'fileName'
+      verificationStatus:
+          json['verification_status'] as String? ?? 'pending', // ✅ Changed
+      rejectedReason: json['rejected_reason'] as String?, // ✅ Changed
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : DateTime.now(),
     );
   }
 
   Map<String, dynamic> toJson() => {
         'id': id,
-        'agencyId': agencyId,
-        'documentType': documentType,
-        'documentUrl': documentUrl,
-        'fileName': fileName,
-        'verificationStatus': verificationStatus,
-        'rejectedReason': rejectedReason,
-        'createdAt': createdAt.toIso8601String(),
+        'agency_id': agencyId, // ✅ Changed from 'agencyId'
+        'document_type': documentType, // ✅ Changed
+        'document_url': documentUrl, // ✅ Changed
+        'file_name': fileName, // ✅ Changed from 'fileName'
+        'verification_status': verificationStatus, // ✅ Changed
+        'rejected_reason': rejectedReason, // ✅ Changed
+        'created_at': createdAt.toIso8601String(),
       };
 
   bool get isVerified => verificationStatus == 'verified';

@@ -131,8 +131,8 @@ class _BDMapPageState extends State<BDMapPage> with TickerProviderStateMixin {
     final bg = isDark ? const Color(0xFF080C18) : const Color(0xFFF5F7FF);
     final surface = isDark ? const Color(0xFF111827) : Colors.white;
     final surfaceBorder = isDark
-        ? const Color(0xFF1E2A42).withOpacity(0.8)
-        : Colors.black.withOpacity(0.06);
+        ? const Color(0xFF1E2A42).withValues(alpha: 0.8)
+        : Colors.black.withValues(alpha: 0.06);
     final textPrimary =
         isDark ? const Color(0xFFE2E8F4) : const Color(0xFF0D1117);
     final textSecondary =
@@ -181,10 +181,10 @@ class _BDMapPageState extends State<BDMapPage> with TickerProviderStateMixin {
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.1),
+              color: accentColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: accentColor.withOpacity(0.2),
+                color: accentColor.withValues(alpha: 0.2),
                 width: 0.5,
               ),
             ),
@@ -274,12 +274,12 @@ class _BDMapPageState extends State<BDMapPage> with TickerProviderStateMixin {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: surface.withOpacity(0.95),
+                color: surface.withValues(alpha: 0.95),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: surfaceBorder, width: 0.5),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -349,13 +349,13 @@ class _BDMapPageState extends State<BDMapPage> with TickerProviderStateMixin {
               shape: BoxShape.circle,
               border: Border.all(
                 color: isSelected
-                    ? accentColor.withOpacity(0.5)
-                    : accentColor.withOpacity(0.3),
+                    ? accentColor.withValues(alpha: 0.5)
+                    : accentColor.withValues(alpha: 0.3),
                 width: isSelected ? 2.5 : 1.5,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: accentColor.withOpacity(isSelected ? 0.5 : 0.25),
+                  color: accentColor.withValues(alpha: isSelected ? 0.5 : 0.25),
                   blurRadius: isSelected ? 14 : 8,
                   spreadRadius: isSelected ? 2 : 0,
                 ),
@@ -372,7 +372,8 @@ class _BDMapPageState extends State<BDMapPage> with TickerProviderStateMixin {
             width: 2,
             height: 8,
             decoration: BoxDecoration(
-              color: isSelected ? accentColor : accentColor.withOpacity(0.5),
+              color:
+                  isSelected ? accentColor : accentColor.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(1),
             ),
           ),
@@ -404,7 +405,7 @@ class _BDMapPageState extends State<BDMapPage> with TickerProviderStateMixin {
         border: Border.all(color: surfaceBorder, width: 0.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.4 : 0.12),
+            color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.12),
             blurRadius: 24,
             offset: const Offset(0, -4),
           ),
@@ -490,10 +491,10 @@ class _BDMapPageState extends State<BDMapPage> with TickerProviderStateMixin {
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: accentColor.withOpacity(0.1),
+                                color: accentColor.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
-                                  color: accentColor.withOpacity(0.2),
+                                  color: accentColor.withValues(alpha: 0.2),
                                   width: 0.5,
                                 ),
                               ),
@@ -609,7 +610,7 @@ class _BDMapPageState extends State<BDMapPage> with TickerProviderStateMixin {
       color: isDark ? const Color(0xFF1E2A42) : const Color(0xFFEEF0F5),
       child: Icon(
         Icons.image_not_supported_outlined,
-        color: accentColor.withOpacity(0.4),
+        color: accentColor.withValues(alpha: 0.4),
         size: 28,
       ),
     );

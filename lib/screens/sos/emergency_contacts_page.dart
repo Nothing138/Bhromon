@@ -110,8 +110,8 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
     final bg = isDark ? const Color(0xFF080C18) : const Color(0xFFF5F7FF);
     final surface = isDark ? const Color(0xFF111827) : Colors.white;
     final surfaceBorder = isDark
-        ? const Color(0xFF1E2A42).withOpacity(0.8)
-        : Colors.black.withOpacity(0.06);
+        ? const Color(0xFF1E2A42).withValues(alpha: 0.8)
+        : Colors.black.withValues(alpha: 0.06);
     final textPrimary =
         isDark ? const Color(0xFFE2E8F4) : const Color(0xFF0D1117);
     final textSecondary =
@@ -158,10 +158,10 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: accentColor.withOpacity(0.1),
+                  color: accentColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: accentColor.withOpacity(0.2),
+                    color: accentColor.withValues(alpha: 0.2),
                     width: 0.5,
                   ),
                 ),
@@ -182,10 +182,10 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: Colors.blueAccent.withOpacity(0.08),
+                      color: Colors.blueAccent.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: Colors.blueAccent.withOpacity(0.2),
+                        color: Colors.blueAccent.withValues(alpha: 0.2),
                         width: 0.5,
                       ),
                     ),
@@ -201,7 +201,7 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                           child: Text(
                             'These contacts will be notified when you send an SOS alert',
                             style: TextStyle(
-                              color: Colors.blueAccent.withOpacity(0.8),
+                              color: Colors.blueAccent.withValues(alpha: 0.8),
                               fontSize: 12,
                               height: 1.5,
                             ),
@@ -220,7 +220,7 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                           Icon(
                             Icons.person_add_outlined,
                             size: 48,
-                            color: textSecondary.withOpacity(0.5),
+                            color: textSecondary.withValues(alpha: 0.5),
                           ),
                           const SizedBox(height: 16),
                           Text(
@@ -312,10 +312,10 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: Colors.blueAccent.withOpacity(0.1),
+                    color: Colors.blueAccent.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Colors.blueAccent.withOpacity(0.2),
+                      color: Colors.blueAccent.withValues(alpha: 0.2),
                       width: 0.5,
                     ),
                   ),
@@ -358,8 +358,8 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                   ),
                   decoration: BoxDecoration(
                     color: contact.isActive
-                        ? Colors.greenAccent.withOpacity(0.1)
-                        : Colors.grey.withOpacity(0.1),
+                        ? Colors.greenAccent.withValues(alpha: 0.1)
+                        : Colors.grey.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -392,10 +392,10 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
-                        color: Colors.blueAccent.withOpacity(0.1),
+                        color: Colors.blueAccent.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: Colors.blueAccent.withOpacity(0.2),
+                          color: Colors.blueAccent.withValues(alpha: 0.2),
                           width: 0.5,
                         ),
                       ),
@@ -425,13 +425,13 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
                         color: contact.isActive
-                            ? Colors.redAccent.withOpacity(0.1)
-                            : Colors.greenAccent.withOpacity(0.1),
+                            ? Colors.redAccent.withValues(alpha: 0.1)
+                            : Colors.greenAccent.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: contact.isActive
-                              ? Colors.redAccent.withOpacity(0.2)
-                              : Colors.greenAccent.withOpacity(0.2),
+                              ? Colors.redAccent.withValues(alpha: 0.2)
+                              : Colors.greenAccent.withValues(alpha: 0.2),
                           width: 0.5,
                         ),
                       ),
@@ -470,10 +470,10 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: Colors.redAccent.withOpacity(0.1),
+                      color: Colors.redAccent.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: Colors.redAccent.withOpacity(0.2),
+                        color: Colors.redAccent.withValues(alpha: 0.2),
                         width: 0.5,
                       ),
                     ),

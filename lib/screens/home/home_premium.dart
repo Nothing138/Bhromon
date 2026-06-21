@@ -63,8 +63,8 @@ class _HomePremiumState extends State<HomePremium>
     final bg = isDark ? const Color(0xFF080C18) : const Color(0xFFF5F7FF);
     final surface = isDark ? const Color(0xFF111827) : Colors.white;
     final surfaceBorder = isDark
-        ? const Color(0xFF1E2A42).withOpacity(0.8)
-        : Colors.black.withOpacity(0.06);
+        ? const Color(0xFF1E2A42).withValues(alpha: 0.8)
+        : Colors.black.withValues(alpha: 0.06);
     final textPrimary =
         isDark ? const Color(0xFFE2E8F4) : const Color(0xFF0D1117);
     final textSecondary =
@@ -241,7 +241,8 @@ class _HomePremiumState extends State<HomePremium>
                     border: Border.all(color: surfaceBorder, width: 0.5),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+                        color:
+                            Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),
@@ -271,7 +272,8 @@ class _HomePremiumState extends State<HomePremium>
                     border: Border.all(color: surfaceBorder, width: 0.5),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+                        color:
+                            Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),
@@ -331,7 +333,7 @@ class _HomePremiumState extends State<HomePremium>
         border: Border.all(color: surfaceBorder, width: 0.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.15 : 0.04),
+            color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.04),
             blurRadius: 12,
             offset: const Offset(0, 2),
           ),
@@ -368,10 +370,10 @@ class _HomePremiumState extends State<HomePremium>
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.08),
+              color: accentColor.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(9),
               border: Border.all(
-                color: accentColor.withOpacity(0.15),
+                color: accentColor.withValues(alpha: 0.15),
                 width: 0.5,
               ),
             ),
@@ -391,10 +393,11 @@ class _HomePremiumState extends State<HomePremium>
       decoration: BoxDecoration(
         color: const Color(0xFF0A1628),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: accentColor.withOpacity(0.15), width: 0.5),
+        border:
+            Border.all(color: accentColor.withValues(alpha: 0.15), width: 0.5),
         boxShadow: [
           BoxShadow(
-            color: accentColor.withOpacity(0.08),
+            color: accentColor.withValues(alpha: 0.08),
             blurRadius: 24,
             offset: const Offset(0, 4),
           ),
@@ -416,7 +419,10 @@ class _HomePremiumState extends State<HomePremium>
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
-                  colors: [accentColor.withOpacity(0.12), Colors.transparent],
+                  colors: [
+                    accentColor.withValues(alpha: 0.12),
+                    Colors.transparent
+                  ],
                 ),
               ),
             ),
@@ -431,7 +437,10 @@ class _HomePremiumState extends State<HomePremium>
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
-                  colors: [accentColor.withOpacity(0.07), Colors.transparent],
+                  colors: [
+                    accentColor.withValues(alpha: 0.07),
+                    Colors.transparent
+                  ],
                 ),
               ),
             ),
@@ -453,10 +462,10 @@ class _HomePremiumState extends State<HomePremium>
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: accentColor.withOpacity(0.12),
+                          color: accentColor.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: accentColor.withOpacity(0.25),
+                            color: accentColor.withValues(alpha: 0.25),
                             width: 0.5,
                           ),
                         ),
@@ -511,7 +520,7 @@ class _HomePremiumState extends State<HomePremium>
                             borderRadius: BorderRadius.circular(10),
                             boxShadow: [
                               BoxShadow(
-                                color: accentColor.withOpacity(0.35),
+                                color: accentColor.withValues(alpha: 0.35),
                                 blurRadius: 12,
                                 offset: const Offset(0, 3),
                               ),
@@ -549,10 +558,10 @@ class _HomePremiumState extends State<HomePremium>
                       width: 56,
                       height: 56,
                       decoration: BoxDecoration(
-                        color: accentColor.withOpacity(0.1),
+                        color: accentColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(18),
                         border: Border.all(
-                          color: accentColor.withOpacity(0.2),
+                          color: accentColor.withValues(alpha: 0.2),
                           width: 0.5,
                         ),
                       ),
@@ -568,10 +577,10 @@ class _HomePremiumState extends State<HomePremium>
                       height: 38,
                       margin: const EdgeInsets.only(left: 16),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
+                        color: Colors.white.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.08),
+                          color: Colors.white.withValues(alpha: 0.08),
                           width: 0.5,
                         ),
                       ),
@@ -619,7 +628,7 @@ class _HomePremiumState extends State<HomePremium>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: textSecondary.withOpacity(0.08),
+                color: textSecondary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -720,7 +729,7 @@ class _HomePremiumState extends State<HomePremium>
           border: Border.all(color: surfaceBorder, width: 0.5),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.18),
+              color: Colors.black.withValues(alpha: 0.18),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -762,10 +771,10 @@ class _HomePremiumState extends State<HomePremium>
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                     width: 0.5,
                   ),
                 ),
@@ -902,7 +911,7 @@ class _HomePremiumState extends State<HomePremium>
               border: Border.all(color: surfaceBorder, width: 0.5),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(isDark ? 0.15 : 0.04),
+                  color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.04),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
@@ -943,7 +952,7 @@ class _HomePremiumState extends State<HomePremium>
         border: Border.all(color: surfaceBorder, width: 0.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.15 : 0.04),
+            color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.04),
             blurRadius: 12,
             offset: const Offset(0, 2),
           ),
@@ -955,10 +964,10 @@ class _HomePremiumState extends State<HomePremium>
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.08),
+              color: accentColor.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: accentColor.withOpacity(0.15),
+                color: accentColor.withValues(alpha: 0.15),
                 width: 0.5,
               ),
             ),
@@ -986,7 +995,7 @@ class _HomePremiumState extends State<HomePremium>
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.1),
+                        color: Colors.orange.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(5),
                       ),
                       child: const Text(
@@ -1021,7 +1030,7 @@ class _HomePremiumState extends State<HomePremium>
                 borderRadius: BorderRadius.circular(11),
                 boxShadow: [
                   BoxShadow(
-                    color: accentColor.withOpacity(0.3),
+                    color: accentColor.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -1061,12 +1070,12 @@ class _HomePremiumState extends State<HomePremium>
             color: const Color(0xFF0A1628),
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: accentColor.withOpacity(0.28),
+              color: accentColor.withValues(alpha: 0.28),
               width: 0.8,
             ),
             boxShadow: [
               BoxShadow(
-                color: accentColor.withOpacity(0.12),
+                color: accentColor.withValues(alpha: 0.12),
                 blurRadius: 20,
                 offset: const Offset(0, 6),
               ),
@@ -1091,10 +1100,10 @@ class _HomePremiumState extends State<HomePremium>
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: accentColor.withOpacity(0.12),
+                        color: accentColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: accentColor.withOpacity(0.22),
+                          color: accentColor.withValues(alpha: 0.22),
                           width: 0.5,
                         ),
                       ),
@@ -1134,12 +1143,12 @@ class _HomePremiumState extends State<HomePremium>
                       width: 26,
                       height: 26,
                       decoration: BoxDecoration(
-                        color: accentColor.withOpacity(0.1),
+                        color: accentColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.arrow_forward_rounded,
-                        color: accentColor.withOpacity(0.7),
+                        color: accentColor.withValues(alpha: 0.7),
                         size: 14,
                       ),
                     ),
@@ -1162,7 +1171,7 @@ class _GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color.withOpacity(0.045)
+      ..color = color.withValues(alpha: 0.045)
       ..strokeWidth = 0.5;
     const step = 28.0;
     for (double x = 0; x < size.width; x += step) {

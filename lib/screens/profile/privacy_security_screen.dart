@@ -138,9 +138,8 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: ctrl.text == 'DELETE'
-                        ? Colors.red
-                        : Colors.grey,
+                    backgroundColor:
+                        ctrl.text == 'DELETE' ? Colors.red : Colors.grey,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -339,7 +338,7 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
               decoration: BoxDecoration(
                 color: cardColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.red.withOpacity(0.25)),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.25)),
               ),
               child: ListTile(
                 contentPadding: const EdgeInsets.symmetric(
@@ -350,7 +349,7 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
+                    color: Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
@@ -390,28 +389,28 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
   }
 
   Widget _label(String text, bool isDark) => Text(
-    text,
-    style: TextStyle(
-      color: isDark ? Colors.white38 : Colors.grey[400],
-      fontSize: 11,
-      fontWeight: FontWeight.bold,
-      letterSpacing: 1.5,
-    ),
-  );
+        text,
+        style: TextStyle(
+          color: isDark ? Colors.white38 : Colors.grey[400],
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.5,
+        ),
+      );
 
   BoxDecoration _card(Color cardColor, bool isDark) => BoxDecoration(
-    color: cardColor,
-    borderRadius: BorderRadius.circular(16),
-    boxShadow: [
-      BoxShadow(
-        color: isDark
-            ? Colors.black.withOpacity(0.25)
-            : Colors.black.withOpacity(0.04),
-        blurRadius: 14,
-        offset: const Offset(0, 4),
-      ),
-    ],
-  );
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.25)
+                : Colors.black.withValues(alpha: 0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      );
 
   Widget _passField({
     required TextEditingController controller,
@@ -498,7 +497,7 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(11),
         ),
         child: Icon(icon, color: color, size: 20),

@@ -184,13 +184,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          amberColor.withOpacity(0.15),
-                          amberColor.withOpacity(0.05),
+                          amberColor.withValues(alpha: 0.15),
+                          amberColor.withValues(alpha: 0.05),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: amberColor.withOpacity(0.3),
+                        color: amberColor.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -200,7 +200,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           width: 44,
                           height: 44,
                           decoration: BoxDecoration(
-                            color: amberColor.withOpacity(0.15),
+                            color: amberColor.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(
@@ -407,8 +407,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         boxShadow: [
           BoxShadow(
             color: isDark
-                ? Colors.black.withOpacity(0.25)
-                : Colors.black.withOpacity(0.04),
+                ? Colors.black.withValues(alpha: 0.25)
+                : Colors.black.withValues(alpha: 0.04),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
@@ -429,8 +429,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   height: 42,
                   decoration: BoxDecoration(
                     color: item.enabled
-                        ? item.color.withOpacity(0.12)
-                        : Colors.grey.withOpacity(0.08),
+                        ? item.color.withValues(alpha: 0.12)
+                        : Colors.grey.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(

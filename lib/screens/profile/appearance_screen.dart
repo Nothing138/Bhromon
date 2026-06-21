@@ -141,7 +141,7 @@ class AppearanceScreen extends StatelessWidget {
     ThemeProvider provider,
     Color color,
   ) {
-    bool isSelected = provider.accentColor.value == color.value;
+    bool isSelected = provider.accentColor.toARGB32() == color.toARGB32();
     return GestureDetector(
       onTap: () => provider.updateAccentColor(color),
       child: AnimatedContainer(
@@ -158,7 +158,7 @@ class AppearanceScreen extends StatelessWidget {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: color.withOpacity(0.4),
+                    color: color.withValues(alpha: 0.4),
                     blurRadius: 8,
                     spreadRadius: 2,
                   ),

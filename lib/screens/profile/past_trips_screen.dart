@@ -35,7 +35,7 @@ class PastTripsScreen extends StatelessWidget {
                   Icon(
                     Icons.history_rounded,
                     size: 60,
-                    color: Colors.grey.withOpacity(0.5),
+                    color: Colors.grey.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 10),
                   Text(
@@ -63,7 +63,7 @@ class PastTripsScreen extends StatelessWidget {
                     boxShadow: [
                       if (!isDark)
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -89,7 +89,7 @@ class PastTripsScreen extends StatelessWidget {
                                   Container(
                                 width: 60,
                                 height: 60,
-                                color: accentColor.withOpacity(0.2),
+                                color: accentColor.withValues(alpha: 0.2),
                                 child: Icon(
                                   Icons.image,
                                   color: accentColor,

@@ -274,8 +274,8 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
     final isDark = themeProvider.isDarkMode;
     final surface = isDark ? const Color(0xFF111827) : Colors.white;
     final surfaceBorder = isDark
-        ? const Color(0xFF1E2A42).withOpacity(0.8)
-        : Colors.black.withOpacity(0.06);
+        ? const Color(0xFF1E2A42).withValues(alpha: 0.8)
+        : Colors.black.withValues(alpha: 0.06);
     final textPrimary =
         isDark ? const Color(0xFFE2E8F4) : const Color(0xFF0D1117);
     final textSecondary =
@@ -409,10 +409,10 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: typeColor.withOpacity(0.1),
+                  color: typeColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: typeColor.withOpacity(0.2),
+                    color: typeColor.withValues(alpha: 0.2),
                     width: 0.5,
                   ),
                 ),
@@ -451,7 +451,7 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: typeColor.withOpacity(0.1),
+                  color: typeColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -481,10 +481,10 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
-                      color: typeColor.withOpacity(0.1),
+                      color: typeColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: typeColor.withOpacity(0.3),
+                        color: typeColor.withValues(alpha: 0.3),
                         width: 0.5,
                       ),
                     ),
@@ -513,10 +513,10 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
-                      color: typeColor.withOpacity(0.15),
+                      color: typeColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: typeColor.withOpacity(0.3),
+                        color: typeColor.withValues(alpha: 0.3),
                         width: 0.5,
                       ),
                     ),
@@ -735,8 +735,8 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
     final bg = isDark ? const Color(0xFF080C18) : const Color(0xFFF5F7FF);
     final surface = isDark ? const Color(0xFF111827) : Colors.white;
     final surfaceBorder = isDark
-        ? const Color(0xFF1E2A42).withOpacity(0.8)
-        : Colors.black.withOpacity(0.06);
+        ? const Color(0xFF1E2A42).withValues(alpha: 0.8)
+        : Colors.black.withValues(alpha: 0.06);
     final textPrimary =
         isDark ? const Color(0xFFE2E8F4) : const Color(0xFF0D1117);
     final textSecondary =
@@ -800,10 +800,10 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.blueAccent.withOpacity(0.1),
+                  color: Colors.blueAccent.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Colors.blueAccent.withOpacity(0.2),
+                    color: Colors.blueAccent.withValues(alpha: 0.2),
                     width: 0.5,
                   ),
                 ),
@@ -857,10 +857,10 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.redAccent.withOpacity(0.08),
+                color: Colors.redAccent.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Colors.redAccent.withOpacity(0.2),
+                  color: Colors.redAccent.withValues(alpha: 0.2),
                   width: 0.5,
                 ),
               ),
@@ -896,10 +896,10 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 20),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.08),
+                  color: Colors.orange.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Colors.orange.withOpacity(0.2),
+                    color: Colors.orange.withValues(alpha: 0.2),
                     width: 0.5,
                   ),
                 ),
@@ -936,10 +936,10 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 20),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.08),
+                  color: Colors.blue.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Colors.blue.withOpacity(0.2),
+                    color: Colors.blue.withValues(alpha: 0.2),
                     width: 0.5,
                   ),
                 ),
@@ -971,10 +971,10 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 20),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.08),
+                  color: Colors.green.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Colors.green.withOpacity(0.2),
+                    color: Colors.green.withValues(alpha: 0.2),
                     width: 0.5,
                   ),
                 ),
@@ -1026,10 +1026,10 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
                 padding: const EdgeInsets.all(14),
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: Colors.greenAccent.withOpacity(0.08),
+                  color: Colors.greenAccent.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: Colors.greenAccent.withOpacity(0.2),
+                    color: Colors.greenAccent.withValues(alpha: 0.2),
                     width: 0.5,
                   ),
                 ),
@@ -1065,7 +1065,8 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
                             TextSpan(
                               text: 'be notified when you send SOS',
                               style: TextStyle(
-                                color: Colors.greenAccent.withOpacity(0.8),
+                                color:
+                                    Colors.greenAccent.withValues(alpha: 0.8),
                                 fontSize: 12,
                               ),
                             ),
@@ -1146,7 +1147,7 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: Colors.redAccent.withOpacity(0.15),
+                color: Colors.redAccent.withValues(alpha: 0.15),
                 width: 12,
               ),
             ),
@@ -1157,7 +1158,7 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: Colors.redAccent.withOpacity(0.25),
+                color: Colors.redAccent.withValues(alpha: 0.25),
                 width: 6,
               ),
             ),
@@ -1170,7 +1171,7 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
               color: Colors.redAccent,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.redAccent.withOpacity(0.5),
+                  color: Colors.redAccent.withValues(alpha: 0.5),
                   blurRadius: 24,
                   spreadRadius: 4,
                 ),
@@ -1230,7 +1231,7 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: Colors.greenAccent.withOpacity(0.15),
+                  color: Colors.greenAccent.withValues(alpha: 0.15),
                   width: 12,
                 ),
               ),
@@ -1243,7 +1244,7 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
                 color:
                     isDark ? const Color(0xFF1E2A42) : const Color(0xFFEEF0F5),
                 border: Border.all(
-                  color: Colors.greenAccent.withOpacity(0.3),
+                  color: Colors.greenAccent.withValues(alpha: 0.3),
                   width: 2,
                 ),
               ),
@@ -1275,10 +1276,10 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.greenAccent.withOpacity(0.15),
+              color: Colors.greenAccent.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Colors.greenAccent.withOpacity(0.3),
+                color: Colors.greenAccent.withValues(alpha: 0.3),
                 width: 0.5,
               ),
             ),
@@ -1306,10 +1307,10 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.redAccent.withOpacity(0.08),
+                color: Colors.redAccent.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Colors.redAccent.withOpacity(0.2),
+                  color: Colors.redAccent.withValues(alpha: 0.2),
                   width: 0.5,
                 ),
               ),
@@ -1338,8 +1339,8 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
   ) {
     final surface = isDark ? const Color(0xFF111827) : Colors.white;
     final surfaceBorder = isDark
-        ? const Color(0xFF1E2A42).withOpacity(0.8)
-        : Colors.black.withOpacity(0.06);
+        ? const Color(0xFF1E2A42).withValues(alpha: 0.8)
+        : Colors.black.withValues(alpha: 0.06);
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -1354,9 +1355,10 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: iconColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(11),
-              border: Border.all(color: iconColor.withOpacity(0.2), width: 0.5),
+              border: Border.all(
+                  color: iconColor.withValues(alpha: 0.2), width: 0.5),
             ),
             child: Icon(icon, color: iconColor, size: 18),
           ),
@@ -1398,8 +1400,8 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final surface = isDark ? const Color(0xFF111827) : Colors.white;
     final surfaceBorder = isDark
-        ? const Color(0xFF1E2A42).withOpacity(0.8)
-        : Colors.black.withOpacity(0.06);
+        ? const Color(0xFF1E2A42).withValues(alpha: 0.8)
+        : Colors.black.withValues(alpha: 0.06);
 
     final status = alert['status'] as String? ?? 'active';
     final isActive = status == 'active';

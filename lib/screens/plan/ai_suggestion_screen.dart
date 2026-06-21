@@ -129,7 +129,7 @@ class _AISuggestionScreenState extends State<AISuggestionScreen>
                   width: 4,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: accentColor.withOpacity(0.5),
+                    color: accentColor.withValues(alpha: 0.5),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -158,9 +158,8 @@ class _AISuggestionScreenState extends State<AISuggestionScreen>
               style: TextStyle(
                 fontSize: 13,
                 height: 1.6,
-                color: isDark
-                    ? const Color(0xFF6B7A9F)
-                    : const Color(0xFF334155),
+                color:
+                    isDark ? const Color(0xFF6B7A9F) : const Color(0xFF334155),
               ),
             ),
           ),
@@ -179,14 +178,12 @@ class _AISuggestionScreenState extends State<AISuggestionScreen>
     final bg = isDark ? const Color(0xFF080C18) : const Color(0xFFF5F7FF);
     final surface = isDark ? const Color(0xFF111827) : Colors.white;
     final surfaceBorder = isDark
-        ? const Color(0xFF1E2A42).withOpacity(0.8)
-        : Colors.black.withOpacity(0.06);
-    final textPrimary = isDark
-        ? const Color(0xFFE2E8F4)
-        : const Color(0xFF0D1117);
-    final textSecondary = isDark
-        ? const Color(0xFF4A5478)
-        : const Color(0xFF8892A4);
+        ? const Color(0xFF1E2A42).withValues(alpha: 0.8)
+        : Colors.black.withValues(alpha: 0.06);
+    final textPrimary =
+        isDark ? const Color(0xFFE2E8F4) : const Color(0xFF0D1117);
+    final textSecondary =
+        isDark ? const Color(0xFF4A5478) : const Color(0xFF8892A4);
 
     return Scaffold(
       backgroundColor: bg,
@@ -239,10 +236,10 @@ class _AISuggestionScreenState extends State<AISuggestionScreen>
                           width: 72,
                           height: 72,
                           decoration: BoxDecoration(
-                            color: accentColor.withOpacity(0.08),
+                            color: accentColor.withValues(alpha: 0.08),
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: accentColor.withOpacity(0.2),
+                              color: accentColor.withValues(alpha: 0.2),
                               width: 0.5,
                             ),
                           ),
@@ -272,7 +269,7 @@ class _AISuggestionScreenState extends State<AISuggestionScreen>
                     const SizedBox(height: 32),
                     LinearProgressIndicator(
                       color: accentColor,
-                      backgroundColor: accentColor.withOpacity(0.08),
+                      backgroundColor: accentColor.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ],
@@ -292,10 +289,10 @@ class _AISuggestionScreenState extends State<AISuggestionScreen>
                       width: 64,
                       height: 64,
                       decoration: BoxDecoration(
-                        color: Colors.redAccent.withOpacity(0.08),
+                        color: Colors.redAccent.withValues(alpha: 0.08),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: Colors.redAccent.withOpacity(0.15),
+                          color: Colors.redAccent.withValues(alpha: 0.15),
                           width: 0.5,
                         ),
                       ),
@@ -329,10 +326,10 @@ class _AISuggestionScreenState extends State<AISuggestionScreen>
                           vertical: 12,
                         ),
                         decoration: BoxDecoration(
-                          color: accentColor.withOpacity(0.08),
+                          color: accentColor.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: accentColor.withOpacity(0.2),
+                            color: accentColor.withValues(alpha: 0.2),
                             width: 0.5,
                           ),
                         ),
@@ -410,10 +407,10 @@ class _AISuggestionScreenState extends State<AISuggestionScreen>
                         width: 42,
                         height: 42,
                         decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.08),
+                          color: Colors.green.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(13),
                           border: Border.all(
-                            color: Colors.green.withOpacity(0.15),
+                            color: Colors.green.withValues(alpha: 0.15),
                             width: 0.5,
                           ),
                         ),
@@ -451,10 +448,10 @@ class _AISuggestionScreenState extends State<AISuggestionScreen>
                           vertical: 5,
                         ),
                         decoration: BoxDecoration(
-                          color: accentColor.withOpacity(0.08),
+                          color: accentColor.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(9),
                           border: Border.all(
-                            color: accentColor.withOpacity(0.15),
+                            color: accentColor.withValues(alpha: 0.15),
                             width: 0.5,
                           ),
                         ),
@@ -552,10 +549,10 @@ class _AISuggestionScreenState extends State<AISuggestionScreen>
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       margin: const EdgeInsets.only(bottom: 14),
                       decoration: BoxDecoration(
-                        color: accentColor.withOpacity(0.06),
+                        color: accentColor.withValues(alpha: 0.06),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: accentColor.withOpacity(0.15),
+                          color: accentColor.withValues(alpha: 0.15),
                           width: 0.5,
                         ),
                       ),
@@ -628,9 +625,9 @@ class _AISuggestionScreenState extends State<AISuggestionScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.15), width: 0.5),
+        border: Border.all(color: color.withValues(alpha: 0.15), width: 0.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

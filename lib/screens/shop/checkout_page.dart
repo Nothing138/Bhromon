@@ -268,7 +268,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
             Icon(
               Icons.shopping_cart_outlined,
               size: 64,
-              color: textColor.withOpacity(0.3),
+              color: textColor.withValues(alpha: 0.3),
             ),
             const SizedBox(height: 16),
             Text(
@@ -430,7 +430,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     backgroundColor: accentColor,
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    disabledBackgroundColor: accentColor.withOpacity(0.5),
+                    disabledBackgroundColor: accentColor.withValues(alpha: 0.5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -461,7 +461,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
+                  color: Colors.blue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Colors.blue),
                 ),
@@ -535,7 +535,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
-              color: textColor.withOpacity(0.5),
+              color: textColor.withValues(alpha: 0.5),
               fontSize: 13,
             ),
             prefixIcon:
@@ -544,11 +544,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
             fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: textColor.withOpacity(0.1)),
+              borderSide: BorderSide(color: textColor.withValues(alpha: 0.1)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: textColor.withOpacity(0.1)),
+              borderSide: BorderSide(color: textColor.withValues(alpha: 0.1)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -580,11 +580,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: accentColor.withOpacity(0.2)),
+        border: Border.all(color: accentColor.withValues(alpha: 0.2)),
         boxShadow: [
           if (!isDark)
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -614,7 +614,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: textColor.withOpacity(0.7),
+                            color: textColor.withValues(alpha: 0.7),
                             fontSize: 13,
                           ),
                         ),
@@ -660,10 +660,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: accentColor.withOpacity(0.3)),
+        border: Border.all(color: accentColor.withValues(alpha: 0.3)),
         boxShadow: [
           if (!isDark)
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05), blurRadius: 10),
         ],
       ),
       child: Column(
@@ -687,7 +688,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 : "৳${cartProvider.deliveryCharges.toStringAsFixed(2)}",
             textColor,
           ),
-          Divider(color: textColor.withOpacity(0.2), height: 16),
+          Divider(color: textColor.withValues(alpha: 0.2), height: 16),
           _buildSummaryRow(
             "Grand Total",
             "৳${cartProvider.grandTotal.toStringAsFixed(2)}",
@@ -713,7 +714,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         Text(
           label,
           style: TextStyle(
-            color: textColor.withOpacity(0.7),
+            color: textColor.withValues(alpha: 0.7),
             fontSize: fontSize,
             fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
           ),
@@ -803,7 +804,7 @@ class _PaymentWebViewState extends State<PaymentWebView> {
           if (_isLoading)
             Center(
               child: Container(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 child: const CircularProgressIndicator(),
               ),
             ),

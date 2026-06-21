@@ -107,8 +107,8 @@ class _ChatScreenState extends State<ChatScreen> {
     final bg = isDark ? const Color(0xFF080C18) : const Color(0xFFF5F7FF);
     final surface = isDark ? const Color(0xFF111827) : Colors.white;
     final surfaceBorder = isDark
-        ? const Color(0xFF1E2A42).withOpacity(0.8)
-        : Colors.black.withOpacity(0.06);
+        ? const Color(0xFF1E2A42).withValues(alpha: 0.8)
+        : Colors.black.withValues(alpha: 0.06);
     final textPrimary =
         isDark ? const Color(0xFFE2E8F4) : const Color(0xFF0D1117);
     final textSecondary =
@@ -132,10 +132,10 @@ class _ChatScreenState extends State<ChatScreen> {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: accentColor.withOpacity(0.12),
+                color: accentColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: accentColor.withOpacity(0.2),
+                  color: accentColor.withValues(alpha: 0.2),
                   width: 0.5,
                 ),
               ),
@@ -201,7 +201,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       'Online',
                       style: TextStyle(
                         fontSize: 10,
-                        color: Colors.green.withOpacity(0.8),
+                        color: Colors.green.withValues(alpha: 0.8),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -263,14 +263,15 @@ class _ChatScreenState extends State<ChatScreen> {
                           width: 64,
                           height: 64,
                           decoration: BoxDecoration(
-                            color: accentColor.withOpacity(0.08),
+                            color: accentColor.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: accentColor.withOpacity(0.15),
+                              color: accentColor.withValues(alpha: 0.15),
                             ),
                           ),
                           child: Icon(Icons.chat_outlined,
-                              color: accentColor.withOpacity(0.6), size: 28),
+                              color: accentColor.withValues(alpha: 0.6),
+                              size: 28),
                         ),
                         const SizedBox(height: 14),
                         Text(
@@ -330,7 +331,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: accentColor.withOpacity(0.08),
+                      color: accentColor.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(Icons.emoji_emotions_outlined,
@@ -379,7 +380,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     decoration: BoxDecoration(
                       color: (_isTyping && !_isSending)
                           ? accentColor
-                          : accentColor.withOpacity(0.2),
+                          : accentColor.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: _isSending
@@ -431,7 +432,7 @@ class _ChatScreenState extends State<ChatScreen> {
               height: 28,
               margin: const EdgeInsets.only(right: 6),
               decoration: BoxDecoration(
-                color: accentColor.withOpacity(0.12),
+                color: accentColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Center(
@@ -496,7 +497,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           timeStr,
                           style: TextStyle(
                             color: isSentByMe
-                                ? Colors.white.withOpacity(0.65)
+                                ? Colors.white.withValues(alpha: 0.65)
                                 : textSecondary,
                             fontSize: 10,
                           ),
@@ -511,7 +512,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             size: 13,
                             color: isRead
                                 ? Colors.white
-                                : Colors.white.withOpacity(0.5),
+                                : Colors.white.withValues(alpha: 0.5),
                           ),
                         ],
                       ],
@@ -581,7 +582,7 @@ class _ChatScreenState extends State<ChatScreen> {
               width: 48,
               height: 4,
               decoration: BoxDecoration(
-                color: textSecondary.withOpacity(0.2),
+                color: textSecondary.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -591,7 +592,7 @@ class _ChatScreenState extends State<ChatScreen> {
               width: 70,
               height: 70,
               decoration: BoxDecoration(
-                color: themeProvider.accentColor.withOpacity(0.12),
+                color: themeProvider.accentColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Center(

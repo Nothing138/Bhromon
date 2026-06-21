@@ -101,8 +101,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final bg = isDark ? const Color(0xFF080C18) : const Color(0xFFF5F7FF);
     final surface = isDark ? const Color(0xFF111827) : Colors.white;
     final surfaceBorder = isDark
-        ? const Color(0xFF1E2A42).withOpacity(0.8)
-        : Colors.black.withOpacity(0.06);
+        ? const Color(0xFF1E2A42).withValues(alpha: 0.8)
+        : Colors.black.withValues(alpha: 0.06);
     final textPrimary =
         isDark ? const Color(0xFFE2E8F4) : const Color(0xFF0D1117);
     final textSecondary =
@@ -161,10 +161,10 @@ class _HomeScreenState extends State<HomeScreen> {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: Colors.redAccent.withOpacity(0.08),
+                color: Colors.redAccent.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Colors.redAccent.withOpacity(0.12),
+                  color: Colors.redAccent.withValues(alpha: 0.12),
                   width: 0.5,
                 ),
               ),
@@ -219,17 +219,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     width: 72,
                     height: 72,
                     decoration: BoxDecoration(
-                      color: accentColor.withOpacity(0.08),
+                      color: accentColor.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(22),
                       border: Border.all(
-                        color: accentColor.withOpacity(0.15),
+                        color: accentColor.withValues(alpha: 0.15),
                         width: 0.5,
                       ),
                     ),
                     child: Icon(
                       Icons.photo_camera_back_outlined,
                       size: 32,
-                      color: accentColor.withOpacity(0.6),
+                      color: accentColor.withValues(alpha: 0.6),
                     ),
                   ),
                   const SizedBox(height: 18),
@@ -271,7 +271,8 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: BoxDecoration(
           color: accentColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: accentColor.withOpacity(0.3), width: 0.5),
+          border:
+              Border.all(color: accentColor.withValues(alpha: 0.3), width: 0.5),
         ),
         child: Material(
           color: Colors.transparent,
@@ -364,12 +365,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     decoration: BoxDecoration(
                       color: isAnonymous
                           ? const Color(0xFF1E2A42)
-                          : accentColor.withOpacity(0.1),
+                          : accentColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(13),
                       border: Border.all(
                         color: isAnonymous
                             ? const Color(0xFF2E3A56)
-                            : accentColor.withOpacity(0.2),
+                            : accentColor.withValues(alpha: 0.2),
                         width: 0.5,
                       ),
                     ),
@@ -427,10 +428,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.08),
+                        color: Colors.orange.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: Colors.orange.withOpacity(0.2),
+                          color: Colors.orange.withValues(alpha: 0.2),
                           width: 0.5,
                         ),
                       ),
@@ -616,13 +617,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: isLiked
-                      ? Colors.red.withOpacity(0.15)
-                      : accentColor.withOpacity(0.07),
+                      ? Colors.red.withValues(alpha: 0.15)
+                      : accentColor.withValues(alpha: 0.07),
                   borderRadius: BorderRadius.circular(9),
                   border: Border.all(
                     color: isLiked
-                        ? Colors.red.withOpacity(0.3)
-                        : accentColor.withOpacity(0.12),
+                        ? Colors.red.withValues(alpha: 0.3)
+                        : accentColor.withValues(alpha: 0.12),
                     width: 0.5,
                   ),
                 ),
@@ -669,10 +670,10 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: accentColor.withOpacity(0.12),
+          color: accentColor.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(9),
           border: Border.all(
-            color: accentColor.withOpacity(0.2),
+            color: accentColor.withValues(alpha: 0.2),
             width: 0.5,
           ),
         ),
@@ -723,10 +724,10 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.green.withOpacity(0.12),
+          color: Colors.green.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(9),
           border: Border.all(
-            color: Colors.green.withOpacity(0.2),
+            color: Colors.green.withValues(alpha: 0.2),
             width: 0.5,
           ),
         ),
@@ -773,10 +774,10 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: accentColor.withOpacity(0.07),
+          color: accentColor.withValues(alpha: 0.07),
           borderRadius: BorderRadius.circular(9),
           border: Border.all(
-            color: accentColor.withOpacity(0.12),
+            color: accentColor.withValues(alpha: 0.12),
             width: 0.5,
           ),
         ),
@@ -846,7 +847,7 @@ class _HomeScreenState extends State<HomeScreen> {
               width: 48,
               height: 4,
               decoration: BoxDecoration(
-                color: textSecondary.withOpacity(0.2),
+                color: textSecondary.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -857,10 +858,10 @@ class _HomeScreenState extends State<HomeScreen> {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: accentColor.withOpacity(0.12),
+                color: accentColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(
-                  color: accentColor.withOpacity(0.2),
+                  color: accentColor.withValues(alpha: 0.2),
                   width: 1,
                 ),
               ),

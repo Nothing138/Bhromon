@@ -45,9 +45,8 @@ class GearShopPage extends StatelessWidget {
     final textColor = isDark ? Colors.white : Colors.black87;
 
     return Scaffold(
-      backgroundColor: isDark
-          ? const Color(0xFF0F172A)
-          : const Color(0xFFF8FAFC),
+      backgroundColor:
+          isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: Text(
           "Travel Gear Shop",
@@ -131,7 +130,7 @@ class GearShopPage extends StatelessWidget {
               boxShadow: [
                 if (!isDark)
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),

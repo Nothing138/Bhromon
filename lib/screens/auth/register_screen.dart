@@ -73,7 +73,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   borderRadius: BorderRadius.circular(15),
                   color: _selectedRole == 'user'
-                      ? themeProvider.accentColor.withOpacity(0.05)
+                      ? themeProvider.accentColor.withValues(alpha: 0.05)
                       : Colors.transparent,
                 ),
                 child: Column(
@@ -82,7 +82,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       width: 70,
                       height: 70,
                       decoration: BoxDecoration(
-                        color: themeProvider.accentColor.withOpacity(0.1),
+                        color: themeProvider.accentColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(15),
                       ),
                       child: Icon(
@@ -152,7 +152,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   borderRadius: BorderRadius.circular(15),
                   color: _selectedRole == 'agency'
-                      ? themeProvider.accentColor.withOpacity(0.05)
+                      ? themeProvider.accentColor.withValues(alpha: 0.05)
                       : Colors.transparent,
                 ),
                 child: Column(
@@ -161,7 +161,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       width: 70,
                       height: 70,
                       decoration: BoxDecoration(
-                        color: themeProvider.accentColor.withOpacity(0.1),
+                        color: themeProvider.accentColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(15),
                       ),
                       child: Icon(

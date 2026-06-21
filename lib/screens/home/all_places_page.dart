@@ -93,8 +93,8 @@ class AllPlacesPage extends StatelessWidget {
                     boxShadow: [
                       BoxShadow(
                         color: isDark
-                            ? Colors.black.withOpacity(0.3)
-                            : Colors.grey.withOpacity(0.1),
+                            ? Colors.black.withValues(alpha: 0.3)
+                            : Colors.grey.withValues(alpha: 0.1),
                         blurRadius: 10,
                         spreadRadius: 2,
                       ),
@@ -114,14 +114,12 @@ class AllPlacesPage extends StatelessWidget {
                             width: double.infinity,
                             errorBuilder: (context, error, stackTrace) =>
                                 Container(
-                                  color: isDark
-                                      ? Colors.white10
-                                      : Colors.grey[200],
-                                  child: const Icon(
-                                    Icons.image_not_supported,
-                                    color: Colors.grey,
-                                  ),
-                                ),
+                              color: isDark ? Colors.white10 : Colors.grey[200],
+                              child: const Icon(
+                                Icons.image_not_supported,
+                                color: Colors.grey,
+                              ),
+                            ),
                           ),
                         ),
                       ),

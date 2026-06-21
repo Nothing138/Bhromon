@@ -568,10 +568,10 @@ class _AgencyRegisterScreenState extends State<AgencyRegisterScreen> {
           Container(
             padding: const EdgeInsets.all(15),
             decoration: BoxDecoration(
-              color: themeProvider.accentColor.withOpacity(0.1),
+              color: themeProvider.accentColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: themeProvider.accentColor.withOpacity(0.3),
+                color: themeProvider.accentColor.withValues(alpha: 0.3),
               ),
             ),
             child: Column(

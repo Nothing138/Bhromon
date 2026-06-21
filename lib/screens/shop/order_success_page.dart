@@ -56,9 +56,8 @@ class _OrderSuccessPageState extends State<OrderSuccessPage>
     return WillPopScope(
       onWillPop: () async => false,
       child: Scaffold(
-        backgroundColor: isDark
-            ? const Color(0xFF0F172A)
-            : const Color(0xFFF8FAFC),
+        backgroundColor:
+            isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
         body: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(20),
@@ -77,7 +76,7 @@ class _OrderSuccessPageState extends State<OrderSuccessPage>
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: accentColor.withOpacity(0.3),
+                          color: accentColor.withValues(alpha: 0.3),
                           blurRadius: 20,
                           spreadRadius: 5,
                         ),
@@ -107,7 +106,7 @@ class _OrderSuccessPageState extends State<OrderSuccessPage>
                   "Thank you for your purchase",
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: textColor.withOpacity(0.7),
+                    color: textColor.withValues(alpha: 0.7),
                     fontSize: 16,
                   ),
                 ),
@@ -122,7 +121,7 @@ class _OrderSuccessPageState extends State<OrderSuccessPage>
                     boxShadow: [
                       if (!isDark)
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                         ),
                     ],
@@ -150,7 +149,8 @@ class _OrderSuccessPageState extends State<OrderSuccessPage>
                         textColor,
                         accentColor,
                       ),
-                      Divider(color: textColor.withOpacity(0.2), height: 20),
+                      Divider(
+                          color: textColor.withValues(alpha: 0.2), height: 20),
                       Text(
                         "Ordered Items",
                         style: TextStyle(
@@ -170,7 +170,7 @@ class _OrderSuccessPageState extends State<OrderSuccessPage>
                                 child: Text(
                                   "${item.name} x${item.quantity}",
                                   style: TextStyle(
-                                    color: textColor.withOpacity(0.8),
+                                    color: textColor.withValues(alpha: 0.8),
                                     fontSize: 13,
                                   ),
                                 ),
@@ -201,7 +201,7 @@ class _OrderSuccessPageState extends State<OrderSuccessPage>
                     boxShadow: [
                       if (!isDark)
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                         ),
                     ],
@@ -227,7 +227,8 @@ class _OrderSuccessPageState extends State<OrderSuccessPage>
                             : "৳${widget.order.deliveryCharges.toStringAsFixed(2)}",
                         textColor,
                       ),
-                      Divider(color: textColor.withOpacity(0.2), height: 16),
+                      Divider(
+                          color: textColor.withValues(alpha: 0.2), height: 16),
                       _buildSummaryRow(
                         "Grand Total",
                         "৳${widget.order.grandTotal.toStringAsFixed(2)}",
@@ -244,7 +245,7 @@ class _OrderSuccessPageState extends State<OrderSuccessPage>
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: accentColor.withOpacity(0.1),
+                    color: accentColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: accentColor),
                   ),
@@ -273,7 +274,7 @@ class _OrderSuccessPageState extends State<OrderSuccessPage>
                       Text(
                         widget.order.deliveryAddress,
                         style: TextStyle(
-                          color: textColor.withOpacity(0.8),
+                          color: textColor.withValues(alpha: 0.8),
                           fontSize: 13,
                           height: 1.5,
                         ),
@@ -282,7 +283,7 @@ class _OrderSuccessPageState extends State<OrderSuccessPage>
                       Text(
                         "📱 Contact: ${widget.order.customerPhone}",
                         style: TextStyle(
-                          color: textColor.withOpacity(0.8),
+                          color: textColor.withValues(alpha: 0.8),
                           fontSize: 12,
                         ),
                       ),
@@ -371,12 +372,13 @@ class _OrderSuccessPageState extends State<OrderSuccessPage>
       children: [
         Text(
           label,
-          style: TextStyle(color: textColor.withOpacity(0.7), fontSize: 13),
+          style:
+              TextStyle(color: textColor.withValues(alpha: 0.7), fontSize: 13),
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: accentColor.withOpacity(0.1),
+            color: accentColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: accentColor),
           ),
@@ -406,7 +408,7 @@ class _OrderSuccessPageState extends State<OrderSuccessPage>
         Text(
           label,
           style: TextStyle(
-            color: textColor.withOpacity(0.7),
+            color: textColor.withValues(alpha: 0.7),
             fontSize: fontSize,
             fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
           ),

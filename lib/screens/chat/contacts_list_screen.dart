@@ -41,8 +41,8 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
     final bg = isDark ? const Color(0xFF080C18) : const Color(0xFFF5F7FF);
     final surface = isDark ? const Color(0xFF111827) : Colors.white;
     final surfaceBorder = isDark
-        ? const Color(0xFF1E2A42).withOpacity(0.8)
-        : Colors.black.withOpacity(0.06);
+        ? const Color(0xFF1E2A42).withValues(alpha: 0.8)
+        : Colors.black.withValues(alpha: 0.06);
     final textPrimary =
         isDark ? const Color(0xFFE2E8F4) : const Color(0xFF0D1117);
     final textSecondary =
@@ -159,16 +159,16 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
                           width: 72,
                           height: 72,
                           decoration: BoxDecoration(
-                            color: accentColor.withOpacity(0.08),
+                            color: accentColor.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: accentColor.withOpacity(0.15),
+                              color: accentColor.withValues(alpha: 0.15),
                               width: 0.5,
                             ),
                           ),
                           child: Icon(
                             Icons.message_outlined,
-                            color: accentColor.withOpacity(0.6),
+                            color: accentColor.withValues(alpha: 0.6),
                             size: 32,
                           ),
                         ),
@@ -289,10 +289,10 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: accentColor.withOpacity(0.1),
+                  color: accentColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: accentColor.withOpacity(0.15),
+                    color: accentColor.withValues(alpha: 0.15),
                     width: 0.5,
                   ),
                 ),

@@ -130,7 +130,7 @@ class _MyPlacesScreenState extends State<MyPlacesScreen> {
               icon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: accentColor.withOpacity(0.1),
+                  color: accentColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(Icons.add, color: accentColor, size: 20),
@@ -179,7 +179,7 @@ class _MyPlacesScreenState extends State<MyPlacesScreen> {
                   Icon(
                     Icons.location_on_outlined,
                     size: 64,
-                    color: accentColor.withOpacity(0.3),
+                    color: accentColor.withValues(alpha: 0.3),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -193,7 +193,7 @@ class _MyPlacesScreenState extends State<MyPlacesScreen> {
                   const SizedBox(height: 8),
                   Text(
                     'Add places to build your travel memory',
-                    style: TextStyle(color: textColor.withOpacity(0.6)),
+                    style: TextStyle(color: textColor.withValues(alpha: 0.6)),
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
@@ -251,7 +251,7 @@ class _MyPlacesScreenState extends State<MyPlacesScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -268,7 +268,7 @@ class _MyPlacesScreenState extends State<MyPlacesScreen> {
                 place['image_url'],
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(
-                  color: accentColor.withOpacity(0.1),
+                  color: accentColor.withValues(alpha: 0.1),
                   child: Icon(Icons.image_not_supported, color: accentColor),
                 ),
               ),
@@ -301,7 +301,7 @@ class _MyPlacesScreenState extends State<MyPlacesScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.1),
+                          color: Colors.red.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(
@@ -329,7 +329,7 @@ class _MyPlacesScreenState extends State<MyPlacesScreen> {
                           child: Text(
                             place['location'],
                             style: TextStyle(
-                              color: textColor.withOpacity(0.7),
+                              color: textColor.withValues(alpha: 0.7),
                               fontSize: 12,
                             ),
                             maxLines: 1,
@@ -347,7 +347,7 @@ class _MyPlacesScreenState extends State<MyPlacesScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: accentColor.withOpacity(0.1),
+                        color: accentColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(

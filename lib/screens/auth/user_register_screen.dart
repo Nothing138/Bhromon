@@ -102,17 +102,31 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Registration Successful! Welcome to Bhromon!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const LoginScreen(),
+      // Show success message
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text('Registration Successful! 🎉'),
+          content: const Text(
+            'Your account has been created.\n\n'
+            'A welcome email has been sent to your inbox.\n\n'
+            'You can now login and start exploring!',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const LoginScreen(),
+                  ),
+                );
+              },
+              child: const Text('Go to Login'),
+            ),
+          ],
         ),
       );
     } catch (e) {
@@ -128,6 +142,12 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
   String _extractErrorMessage(String error) {
     if (error.contains('already registered')) {
       return 'This email is already registered. Please login instead.';
+    }
+    if (error.contains('Error sending confirmation email')) {
+      return 'Account created but email delivery failed. You can still login.';
+    }
+    if (error.contains('weak password')) {
+      return 'Password is too weak. Use uppercase, numbers, and at least 8 characters.';
     }
     return error
         .replaceAll('Exception: ', '')

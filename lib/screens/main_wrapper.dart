@@ -113,8 +113,9 @@ class _MainWrapperState extends State<MainWrapper> {
         curve: Curves.easeInOut,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color:
-              isSelected ? accentColor.withOpacity(0.12) : Colors.transparent,
+          color: isSelected
+              ? accentColor.withValues(alpha: 0.12)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -166,12 +167,12 @@ class _MainWrapperState extends State<MainWrapper> {
               decoration: BoxDecoration(
                 color: isSelected
                     ? Colors.redAccent
-                    : Colors.redAccent.withOpacity(0.85),
+                    : Colors.redAccent.withValues(alpha: 0.85),
                 borderRadius: BorderRadius.circular(9),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.redAccent.withOpacity(
-                      isSelected ? 0.55 : 0.3,
+                    color: Colors.redAccent.withValues(
+                      alpha: isSelected ? 0.55 : 0.3,
                     ),
                     blurRadius: isSelected ? 14 : 8,
                     spreadRadius: isSelected ? 1 : 0,
@@ -196,7 +197,7 @@ class _MainWrapperState extends State<MainWrapper> {
               style: TextStyle(
                 color: isSelected
                     ? Colors.redAccent
-                    : Colors.redAccent.withOpacity(0.6),
+                    : Colors.redAccent.withValues(alpha: 0.6),
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
               ),

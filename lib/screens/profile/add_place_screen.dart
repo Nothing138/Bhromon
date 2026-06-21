@@ -315,10 +315,10 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: accentColor.withOpacity(0.1),
+                  color: accentColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: accentColor.withOpacity(0.2),
+                    color: accentColor.withValues(alpha: 0.2),
                   ),
                 ),
                 child: Row(
@@ -347,7 +347,7 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
                   onPressed: _isLoading ? null : _submitForm,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: accentColor,
-                    disabledBackgroundColor: accentColor.withOpacity(0.5),
+                    disabledBackgroundColor: accentColor.withValues(alpha: 0.5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -393,7 +393,7 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
           color: cardColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: accentColor.withOpacity(0.3),
+            color: accentColor.withValues(alpha: 0.3),
             width: 2,
           ),
         ),
@@ -419,7 +419,7 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
                     Text(
                       'Optional',
                       style: TextStyle(
-                        color: textColor.withOpacity(0.5),
+                        color: textColor.withValues(alpha: 0.5),
                         fontSize: 12,
                       ),
                     ),
@@ -497,17 +497,17 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
           style: TextStyle(color: textColor),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(color: textColor.withOpacity(0.5)),
+            hintStyle: TextStyle(color: textColor.withValues(alpha: 0.5)),
             prefixIcon: Icon(icon, color: accentColor),
             filled: true,
             fillColor: cardColor,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: accentColor.withOpacity(0.2)),
+              borderSide: BorderSide(color: accentColor.withValues(alpha: 0.2)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: accentColor.withOpacity(0.2)),
+              borderSide: BorderSide(color: accentColor.withValues(alpha: 0.2)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -541,7 +541,7 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
         DropdownButtonFormField<String>(
           initialValue: _selectedCategory,
           hint: Text('Select category',
-              style: TextStyle(color: textColor.withOpacity(0.5))),
+              style: TextStyle(color: textColor.withValues(alpha: 0.5))),
           items: _categories
               .map((cat) => DropdownMenuItem(
                     value: cat,
@@ -555,11 +555,11 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
             fillColor: cardColor,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: accentColor.withOpacity(0.2)),
+              borderSide: BorderSide(color: accentColor.withValues(alpha: 0.2)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: accentColor.withOpacity(0.2)),
+              borderSide: BorderSide(color: accentColor.withValues(alpha: 0.2)),
             ),
             prefixIcon: Icon(Icons.category, color: accentColor),
           ),

@@ -100,7 +100,7 @@ class _PastShoppingScreenState extends State<PastShoppingScreen> {
                   Icon(
                     Icons.shopping_bag_outlined,
                     size: 64,
-                    color: accentColor.withOpacity(0.3),
+                    color: accentColor.withValues(alpha: 0.3),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -114,7 +114,7 @@ class _PastShoppingScreenState extends State<PastShoppingScreen> {
                   const SizedBox(height: 8),
                   Text(
                     'Start shopping to see your history',
-                    style: TextStyle(color: textColor.withOpacity(0.6)),
+                    style: TextStyle(color: textColor.withValues(alpha: 0.6)),
                   ),
                 ],
               ),
@@ -153,7 +153,7 @@ class _PastShoppingScreenState extends State<PastShoppingScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -178,7 +178,7 @@ class _PastShoppingScreenState extends State<PastShoppingScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: Colors.green.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -198,7 +198,7 @@ class _PastShoppingScreenState extends State<PastShoppingScreen> {
           Text(
             '${items.length} items',
             style: TextStyle(
-              color: textColor.withOpacity(0.7),
+              color: textColor.withValues(alpha: 0.7),
               fontSize: 12,
             ),
           ),
@@ -212,7 +212,7 @@ class _PastShoppingScreenState extends State<PastShoppingScreen> {
                       child: Text(
                         '${item['name']} x${item['quantity']}',
                         style: TextStyle(
-                          color: textColor.withOpacity(0.8),
+                          color: textColor.withValues(alpha: 0.8),
                           fontSize: 12,
                         ),
                         maxLines: 1,
@@ -242,7 +242,7 @@ class _PastShoppingScreenState extends State<PastShoppingScreen> {
           const SizedBox(height: 12),
 
           // Divider
-          Divider(color: textColor.withOpacity(0.1)),
+          Divider(color: textColor.withValues(alpha: 0.1)),
           const SizedBox(height: 12),
 
           // Footer
@@ -255,7 +255,7 @@ class _PastShoppingScreenState extends State<PastShoppingScreen> {
                   Text(
                     'Total',
                     style: TextStyle(
-                      color: textColor.withOpacity(0.6),
+                      color: textColor.withValues(alpha: 0.6),
                       fontSize: 12,
                     ),
                   ),
@@ -273,7 +273,7 @@ class _PastShoppingScreenState extends State<PastShoppingScreen> {
               Text(
                 formattedDate,
                 style: TextStyle(
-                  color: textColor.withOpacity(0.5),
+                  color: textColor.withValues(alpha: 0.5),
                   fontSize: 12,
                 ),
               ),

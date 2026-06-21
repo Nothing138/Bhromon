@@ -339,7 +339,7 @@ class _PlaceDetailsPageState extends State<PlaceDetailsPage> {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: themeProvider.accentColor.withOpacity(0.12),
+            color: themeProvider.accentColor.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, color: themeProvider.accentColor, size: 20),
@@ -393,7 +393,7 @@ class _PlaceDetailsPageState extends State<PlaceDetailsPage> {
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -409,11 +409,11 @@ class _PlaceDetailsPageState extends State<PlaceDetailsPage> {
                 gradient: LinearGradient(
                   colors: place.type == 'hotel'
                       ? [
-                          themeProvider.accentColor.withOpacity(0.8),
+                          themeProvider.accentColor.withValues(alpha: 0.8),
                           themeProvider.accentColor,
                         ]
                       : [
-                          Colors.orange.withOpacity(0.8),
+                          Colors.orange.withValues(alpha: 0.8),
                           Colors.deepOrange,
                         ],
                   begin: Alignment.topLeft,
@@ -427,7 +427,7 @@ class _PlaceDetailsPageState extends State<PlaceDetailsPage> {
                   Center(
                     child: Icon(
                       place.type == 'hotel' ? Icons.hotel : Icons.restaurant,
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withValues(alpha: 0.3),
                       size: 50,
                     ),
                   ),
@@ -567,7 +567,7 @@ class _PlaceDetailsPageState extends State<PlaceDetailsPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
@@ -689,7 +689,7 @@ class _PlaceDetailsPageState extends State<PlaceDetailsPage> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: Colors.amber.withOpacity(0.15),
+                    color: Colors.amber.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
@@ -717,7 +717,7 @@ class _PlaceDetailsPageState extends State<PlaceDetailsPage> {
                 color: (place.type == 'hotel'
                         ? themeProvider.accentColor
                         : Colors.deepOrange)
-                    .withOpacity(0.15),
+                    .withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -837,9 +837,9 @@ class _PlaceDetailsPageState extends State<PlaceDetailsPage> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.25)),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Column(
         children: [
@@ -947,7 +947,7 @@ class _PlaceDetailsPageState extends State<PlaceDetailsPage> {
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.grey[100],
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,

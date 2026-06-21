@@ -104,8 +104,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     final bg = isDark ? const Color(0xFF080C18) : const Color(0xFFF5F7FF);
     final surface = isDark ? const Color(0xFF111827) : Colors.white;
     final surfaceBorder = isDark
-        ? const Color(0xFF1E2A42).withOpacity(0.8)
-        : Colors.black.withOpacity(0.06);
+        ? const Color(0xFF1E2A42).withValues(alpha: 0.8)
+        : Colors.black.withValues(alpha: 0.06);
     final textPrimary =
         isDark ? const Color(0xFFE2E8F4) : const Color(0xFF0D1117);
     final textSecondary =
@@ -193,8 +193,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     height: 44,
                     decoration: BoxDecoration(
                       color: _isAnonymous
-                          ? Colors.grey.withOpacity(0.2)
-                          : accentColor.withOpacity(0.1),
+                          ? Colors.grey.withValues(alpha: 0.2)
+                          : accentColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -277,7 +277,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                               fit: BoxFit.cover,
                               errorBuilder: (_, __, ___) => Container(
                                 height: 220,
-                                color: Colors.grey.withOpacity(0.2),
+                                color: Colors.grey.withValues(alpha: 0.2),
                                 child: const Center(
                                   child: Text('Image preview unavailable'),
                                 ),
@@ -298,7 +298,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.6),
+                            color: Colors.black.withValues(alpha: 0.6),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Icon(
@@ -405,8 +405,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                           height: 40,
                           decoration: BoxDecoration(
                             color: _isGroupTour
-                                ? accentColor.withOpacity(0.1)
-                                : Colors.grey.withOpacity(0.1),
+                                ? accentColor.withValues(alpha: 0.1)
+                                : Colors.grey.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Icon(
@@ -464,8 +464,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                           height: 40,
                           decoration: BoxDecoration(
                             color: _isAnonymous
-                                ? Colors.blue.withOpacity(0.1)
-                                : Colors.grey.withOpacity(0.1),
+                                ? Colors.blue.withValues(alpha: 0.1)
+                                : Colors.grey.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Icon(
@@ -520,10 +520,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
-                  color: accentColor.withOpacity(0.08),
+                  color: accentColor.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: accentColor.withOpacity(0.3),
+                    color: accentColor.withValues(alpha: 0.3),
                     width: 0.5,
                   ),
                 ),

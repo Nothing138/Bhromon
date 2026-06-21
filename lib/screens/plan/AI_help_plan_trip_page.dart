@@ -132,8 +132,8 @@ class _AITripPageState extends State<AITripPage> {
     final bg = isDark ? const Color(0xFF080C18) : const Color(0xFFF5F7FF);
     final surface = isDark ? const Color(0xFF111827) : Colors.white;
     final surfaceBorder = isDark
-        ? const Color(0xFF1E2A42).withOpacity(0.8)
-        : Colors.black.withOpacity(0.06);
+        ? const Color(0xFF1E2A42).withValues(alpha: 0.8)
+        : Colors.black.withValues(alpha: 0.06);
     final textPrimary =
         isDark ? const Color(0xFFE2E8F4) : const Color(0xFF0D1117);
     final textSecondary =
@@ -182,10 +182,10 @@ class _AITripPageState extends State<AITripPage> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: accentColor.withOpacity(0.06),
+                color: accentColor.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: accentColor.withOpacity(0.12),
+                  color: accentColor.withValues(alpha: 0.12),
                   width: 0.5,
                 ),
               ),
@@ -266,7 +266,7 @@ class _AITripPageState extends State<AITripPage> {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: accentColor.withOpacity(0.08),
+                        color: accentColor.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
@@ -339,10 +339,10 @@ class _AITripPageState extends State<AITripPage> {
                     width: 42,
                     height: 42,
                     decoration: BoxDecoration(
-                      color: accentColor.withOpacity(0.08),
+                      color: accentColor.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(13),
                       border: Border.all(
-                        color: accentColor.withOpacity(0.15),
+                        color: accentColor.withValues(alpha: 0.15),
                         width: 0.5,
                       ),
                     ),
@@ -485,7 +485,7 @@ class _AITripPageState extends State<AITripPage> {
             width: 34,
             height: 34,
             decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.08),
+              color: accentColor.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: accentColor, size: 16),
@@ -526,7 +526,7 @@ class _AITripPageState extends State<AITripPage> {
             () => setState(() {
               if (_days > 1) _days--;
             }),
-            textSecondary.withOpacity(0.15),
+            textSecondary.withValues(alpha: 0.15),
             textSecondary,
           ),
           const SizedBox(width: 28),
@@ -551,7 +551,7 @@ class _AITripPageState extends State<AITripPage> {
           _circleBtn(
             Icons.add_rounded,
             () => setState(() => _days++),
-            accentColor.withOpacity(0.1),
+            accentColor.withValues(alpha: 0.1),
             accentColor,
           ),
         ],
@@ -596,11 +596,12 @@ class _AITripPageState extends State<AITripPage> {
             duration: const Duration(milliseconds: 180),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: isSelected ? accentColor.withOpacity(0.1) : surface,
+              color: isSelected ? accentColor.withValues(alpha: 0.1) : surface,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color:
-                    isSelected ? accentColor.withOpacity(0.35) : surfaceBorder,
+                color: isSelected
+                    ? accentColor.withValues(alpha: 0.35)
+                    : surfaceBorder,
                 width: isSelected ? 1 : 0.5,
               ),
             ),
