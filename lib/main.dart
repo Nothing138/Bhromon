@@ -1,5 +1,4 @@
 // main.dart
-// ✅ সম্পূর্ণ FIXED VERSION - সব Provider সঠিকভাবে setup করা
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -9,9 +8,13 @@ import 'providers/cart_provider.dart';
 import 'screens/splash/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/main_wrapper.dart';
+import 'services/auth_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await dotenv.load(fileName: ".env");
 
   // Supabase Initialize
   await Supabase.initialize(
@@ -25,6 +28,10 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(
           create: (context) => ThemeProvider(),
+        ),
+        // ✅ AuthService Provider যোগ করুন
+        ChangeNotifierProvider(
+          create: (_) => AuthService(),
         ),
         ChangeNotifierProvider(
           create: (context) => CartProvider(),
