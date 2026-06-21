@@ -48,7 +48,8 @@ class NearbyPlace {
 }
 
 class NearbyPlacesService {
-  static const String _apiKey = '';
+  static const String _apiKey =
+      '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';
   static const String _apiUrl =
       'https://api.groq.com/openai/v1/chat/completions';
   static const String _model = 'llama-3.3-70b-versatile';
