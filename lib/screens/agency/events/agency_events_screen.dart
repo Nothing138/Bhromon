@@ -1,4 +1,4 @@
-// agency/events/agency_events_screen.dart
+// screens/agency/events/agency_events_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/theme_provider.dart';
@@ -236,8 +236,8 @@ class _AgencyEventsScreenState extends State<AgencyEventsScreen> {
                                 context,
                                 listen: false);
                             await eventService.deleteEvent(
-                              eventId: event.id,
-                              agencyId: authService.currentAgency!.id,
+                              event.id,
+                              authService.currentAgency!.id,
                             );
                           }
                         }

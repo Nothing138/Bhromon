@@ -131,16 +131,16 @@ class _AgencyRegisterScreenState extends State<AgencyRegisterScreen> {
 
       if (!mounted) return;
 
-      // ✅ UPDATED: Direct to OTP verification (no admin approval)
+      // ✅ UPDATED: Better dialog message
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => AlertDialog(
-          title: const Text('Registration Successful!'),
+          title: const Text('✅ Registration Successful!'),
           content: const Text(
-            'Your agency account has been created.\n\n'
-            'An OTP has been sent to your email.\n\n'
-            'Click "Continue" to verify your email and complete setup.',
+            'Your agency account has been created successfully.\n\n'
+            'An OTP has been sent to your email address.\n\n'
+            'Please verify your email with the OTP to complete the setup and log in.',
           ),
           actions: [
             TextButton(
@@ -153,7 +153,7 @@ class _AgencyRegisterScreenState extends State<AgencyRegisterScreen> {
                   ),
                 );
               },
-              child: const Text('Continue to OTP'),
+              child: const Text('Verify OTP'),
             ),
           ],
         ),
@@ -587,7 +587,7 @@ class _AgencyRegisterScreenState extends State<AgencyRegisterScreen> {
                     const SizedBox(width: 10),
                     const Expanded(
                       child: Text(
-                        'Next Steps',
+                        'What Happens Next',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
@@ -599,7 +599,8 @@ class _AgencyRegisterScreenState extends State<AgencyRegisterScreen> {
                 const SizedBox(height: 10),
                 _infoPoint('Account created successfully'),
                 _infoPoint('OTP sent to your email'),
-                _infoPoint('Verify OTP to complete setup'),
+                _infoPoint('Verify OTP to unlock your account'),
+                _infoPoint('Log in with your credentials'),
               ],
             ),
           ),

@@ -1,4 +1,4 @@
-// agency/feed/create_post_screen.dart
+// screens/agency/feed/create_post_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/theme_provider.dart';
@@ -101,7 +101,12 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
       await eventService.createEvent(
         agencyId: authService.currentAgency!.id,
-        request: request,
+        title: request.title,
+        description: request.description ?? '',
+        location: request.location ?? '',
+        eventDate: request.eventDate,
+        price: request.price,
+        capacity: request.capacity ?? 0,
       );
 
       if (!mounted) return;

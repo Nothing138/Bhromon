@@ -1,5 +1,4 @@
 // screens/auth/login_screen.dart
-// screens/auth/login_screen.dart - UPDATED WITH SMART ROUTING
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
@@ -8,7 +7,7 @@ import 'register_screen.dart';
 import 'password_reset_screen.dart';
 import 'otp_verification_screen.dart';
 import '../main_wrapper.dart'; // User wrapper
-import '../agency/agency_main_wrapper.dart'; // Agency wrapper ✅
+import '../agency/agency_main_wrapper.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -42,6 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final authService = Provider.of<AuthService>(context, listen: false);
 
       // Smart login - detects user vs agency
+      print('🔄 Attempting login...');
       await authService.smartLogin(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
@@ -49,9 +49,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!mounted) return;
 
+      print('✅ Login successful');
+      print('User Type: ${authService.userType}');
+      print('Is Agency: ${authService.isAgency}');
+      print('Is OTP Required: ${authService.isOtpRequired}');
+
       // ✅ SMART ROUTING BASED ON USER TYPE
       if (authService.isOtpRequired) {
         // Agency needs OTP verification
+        print('→ Routing to OTP Verification Screen');
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -60,6 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       } else if (authService.isAgency) {
         // ✅ Agency user - go to AgencyMainWrapper
+        print('→ Routing to AgencyMainWrapper');
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -68,6 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       } else {
         // ✅ Regular user - go to MainWrapper
+        print('→ Routing to MainWrapper');
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -76,6 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } catch (e) {
+      print('❌ Login error: $e');
       if (!mounted) return;
       _showErrorDialog(_extractErrorMessage(e.toString()));
     } finally {

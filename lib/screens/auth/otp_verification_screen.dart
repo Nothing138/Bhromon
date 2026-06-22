@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'dart:async';
 import '../../providers/theme_provider.dart';
 import '../../services/auth_service.dart';
+import '../main_wrapper.dart';
+import '../agency/agency_main_wrapper.dart';
 import 'login_screen.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
@@ -68,30 +70,43 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
+
+      print('🔄 Verifying OTP: $otpCode');
       await authService.verifyOtp(otpCode: otpCode);
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ OTP Verified Successfully! Please log in again.'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
+      print('✅ OTP verified successfully');
+
+      // ✅ Show success dialog then navigate to login screen
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text('✅ Verification Successful!'),
+          content: const Text(
+            'Your email has been verified successfully.\n\n'
+            'You can now log in with your credentials.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+                // ✅ Navigate to Login Screen
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const LoginScreen(),
+                  ),
+                );
+              },
+              child: const Text('Go to Login'),
+            ),
+          ],
         ),
       );
-
-      // ✅ Redirect back to LoginScreen for manual login
-      await Future.delayed(Duration(milliseconds: 500));
-
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const LoginScreen(),
-          ),
-        );
-      }
     } catch (e) {
+      print('❌ OTP verification error: $e');
       if (!mounted) return;
       _showErrorDialog(_extractErrorMessage(e.toString()));
     } finally {
@@ -108,13 +123,17 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
+
+      print('🔄 Resending OTP...');
       await authService.resendOtp();
 
       if (!mounted) return;
 
+      print('✅ OTP resent successfully');
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('✅ OTP has been resent to your email'),
+          content: Text('OTP has been resent to your email'),
           backgroundColor: Colors.green,
           duration: Duration(seconds: 2),
         ),
@@ -127,6 +146,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
       _startResendTimer();
     } catch (e) {
+      print('❌ Resend OTP error: $e');
       if (!mounted) return;
       _showErrorDialog(_extractErrorMessage(e.toString()));
     } finally {
@@ -146,7 +166,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Verification Error'),
+        title: const Text('Error'),
         content: Text(message),
         actions: [
           TextButton(
@@ -224,31 +244,27 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 decoration: BoxDecoration(
                   color: isDark ? Colors.white10 : Colors.grey[100],
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isDark ? Colors.white30 : Colors.grey[300]!,
-                  ),
                 ),
                 child: Row(
                   children: [
                     Icon(
-                      Icons.mail_outline,
+                      Icons.info_outline,
                       color: themeProvider.accentColor,
-                      size: 20,
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         'Code sent to: ${authService.currentAgency?.ownerEmail ?? "your email"}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 13,
-                          color: isDark ? Colors.white70 : Colors.grey[600],
+                          color: Colors.grey,
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 50),
+              const SizedBox(height: 40),
 
               // OTP Input Fields
               Row(
@@ -274,9 +290,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: isDark ? Colors.white : Colors.grey[300]!,
-                          ),
+                          borderSide: BorderSide.none,
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -294,16 +308,15 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           FocusScope.of(context).previousFocus();
                         }
                       },
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: themeProvider.accentColor,
                       ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 50),
+              const SizedBox(height: 40),
 
               // Verify Button
               SizedBox(
@@ -339,11 +352,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               // Resend OTP
               Column(
                 children: [
-                  Text(
+                  const Text(
                     'Didn\'t receive the code?',
                     style: TextStyle(
                       fontSize: 14,
-                      color: isDark ? Colors.white70 : Colors.grey[600],
+                      color: Colors.grey,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -363,7 +376,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     Text(
                       'Resend in ${_resendCountdown}s',
                       style: TextStyle(
-                        color: isDark ? Colors.white38 : Colors.grey[400],
+                        color: Colors.grey[400],
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
                       ),
@@ -371,40 +384,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 ],
               ),
               const SizedBox(height: 30),
-
-              // Info Box
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: themeProvider.accentColor.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: themeProvider.accentColor.withValues(alpha: 0.2),
-                  ),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      color: themeProvider.accentColor,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'After verification, you\'ll be redirected to login. Please log in with your credentials to access your account.',
-                        style: TextStyle(
-                          color:
-                              themeProvider.accentColor.withValues(alpha: 0.8),
-                          fontSize: 12,
-                          height: 1.5,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
         ),
