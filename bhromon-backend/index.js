@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
+import postsRouter from './routes/posts.js';
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 // ROUTES
 // ========================
 app.use('/api/auth', authRoutes);
+app.use('/api/posts', postsRouter);
 
 // ========================
 // HEALTH CHECK

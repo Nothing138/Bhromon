@@ -9,6 +9,8 @@ import '../shop/gear_shop_page.dart';
 import '../plan/AI_help_plan_trip_page.dart';
 import '../notifications/notifications_page.dart';
 import '../map/map_page.dart';
+import '../agencies/all_agencies_page.dart';
+import '../agencies/agency_details_modal.dart';
 
 class HomePremium extends StatefulWidget {
   const HomePremium({super.key});
@@ -155,6 +157,28 @@ class _HomePremiumState extends State<HomePremium>
                       textPrimary,
                       textSecondary,
                     ),
+                    const SizedBox(height: 28),
+                    // ── NEW: TRAVEL AGENCIES SECTION ──
+                    _buildSectionHeader(
+                      'Travel agencies',
+                      'See all',
+                      textPrimary,
+                      textSecondary,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const AllAgenciesPage(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    _buildTravelAgencies(
+                      accentColor,
+                      isDark,
+                      surface,
+                      surfaceBorder,
+                      context,
+                    ),
                     const SizedBox(height: 140),
                   ],
                 ),
@@ -238,7 +262,11 @@ class _HomePremiumState extends State<HomePremium>
                   decoration: BoxDecoration(
                     color: surface,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: surfaceBorder, width: 0.5),
+                    border: Border.all(
+                        color: isDark
+                            ? const Color(0xFF1E2A42).withValues(alpha: 0.8)
+                            : Colors.black.withValues(alpha: 0.06),
+                        width: 0.5),
                     boxShadow: [
                       BoxShadow(
                         color:
@@ -250,7 +278,7 @@ class _HomePremiumState extends State<HomePremium>
                   ),
                   child: Icon(
                     Icons.map_outlined,
-                    color: accentColor,
+                    color: const Color(0xFFF4B400),
                     size: 20,
                   ),
                 ),
@@ -269,7 +297,11 @@ class _HomePremiumState extends State<HomePremium>
                   decoration: BoxDecoration(
                     color: surface,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: surfaceBorder, width: 0.5),
+                    border: Border.all(
+                        color: isDark
+                            ? const Color(0xFF1E2A42).withValues(alpha: 0.8)
+                            : Colors.black.withValues(alpha: 0.06),
+                        width: 0.5),
                     boxShadow: [
                       BoxShadow(
                         color:
@@ -284,7 +316,7 @@ class _HomePremiumState extends State<HomePremium>
                     children: [
                       Icon(
                         Icons.notifications_outlined,
-                        color: accentColor,
+                        color: const Color(0xFFF4B400),
                         size: 20,
                       ),
                       Positioned(
@@ -1047,6 +1079,220 @@ class _HomePremiumState extends State<HomePremium>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
+  //  TRAVEL AGENCIES SECTION (NEW)
+  // ───────────────────────────────────────────────────────────────────────────
+  Widget _buildTravelAgencies(
+    Color accentColor,
+    bool isDark,
+    Color surface,
+    Color surfaceBorder,
+    BuildContext context,
+  ) {
+    return SizedBox(
+      height: 240,
+      child: FutureBuilder<List<Map<String, dynamic>>>(
+        future: supabase
+            .from('travel_agencies')
+            .select()
+            .eq('verification_status', 'approved'),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                'Could not load agencies',
+                style: TextStyle(
+                  color: isDark ? const Color(0xFF4A5478) : Colors.black38,
+                  fontSize: 13,
+                ),
+              ),
+            );
+          }
+          if (!snapshot.hasData) {
+            return ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: 3,
+              itemBuilder: (_, __) =>
+                  _buildAgencySkeletonCard(isDark, surface, surfaceBorder),
+            );
+          }
+
+          final agencies = snapshot.data!;
+          if (agencies.isEmpty) {
+            return Center(
+              child: Text(
+                'No agencies available',
+                style: TextStyle(
+                  color: isDark ? const Color(0xFF4A5478) : Colors.black38,
+                  fontSize: 13,
+                ),
+              ),
+            );
+          }
+
+          return ListView.builder(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: agencies.length,
+            itemBuilder: (_, index) => _buildAgencyCard(
+              agencies[index],
+              accentColor,
+              isDark,
+              surface,
+              surfaceBorder,
+              context,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildAgencySkeletonCard(
+      bool isDark, Color surface, Color surfaceBorder) {
+    final shimmer = isDark ? const Color(0xFF1A2240) : const Color(0xFFEEF0F5);
+    return Container(
+      width: 200,
+      margin: const EdgeInsets.only(right: 12),
+      decoration: BoxDecoration(
+        color: shimmer,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: surfaceBorder, width: 0.5),
+      ),
+    );
+  }
+
+  Widget _buildAgencyCard(
+    Map<String, dynamic> agency,
+    Color accentColor,
+    bool isDark,
+    Color surface,
+    Color surfaceBorder,
+    BuildContext context,
+  ) {
+    final agencyName = agency['agency_name'] ?? 'Unknown Agency';
+    final location = agency['office_address'] ?? 'Location not available';
+    final phone = agency['owner_phone'] ?? agency['office_phone'] ?? '';
+
+    return GestureDetector(
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          backgroundColor: Colors.transparent,
+          isScrollControlled: true,
+          builder: (_) => AgencyDetailsModal(
+            agency: agency,
+            accentColor: accentColor,
+            isDark: isDark,
+          ),
+        );
+      },
+      child: Container(
+        width: 200,
+        margin: const EdgeInsets.only(right: 12),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: surface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: surfaceBorder, width: 0.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Agency Logo/Avatar
+            Container(
+              width: double.infinity,
+              height: 120,
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: accentColor.withValues(alpha: 0.15),
+                  width: 0.5,
+                ),
+              ),
+              child: Icon(
+                Icons.travel_explore_rounded,
+                color: accentColor,
+                size: 40,
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            // Agency Name
+            Text(
+              agencyName,
+              style: const TextStyle(
+                color: Color(0xFFE2E8F4),
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                letterSpacing: -0.2,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 6),
+
+            // Location
+            Row(
+              children: [
+                const Icon(
+                  Icons.location_on_outlined,
+                  color: Color(0xFF6A7A9A),
+                  size: 11,
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    location,
+                    style: const TextStyle(
+                      color: Color(0xFF6A7A9A),
+                      fontSize: 10,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+
+            // View Details Button
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: accentColor.withValues(alpha: 0.2),
+                  width: 0.5,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  'View Details',
+                  style: TextStyle(
+                    color: accentColor,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

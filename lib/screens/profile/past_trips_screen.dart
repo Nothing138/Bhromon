@@ -9,13 +9,11 @@ class PastTripsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // থিম প্রোভাইডার থেকে ডাটা নেওয়া হচ্ছে
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = themeProvider.isDarkMode;
     final accentColor = themeProvider.accentColor;
 
     return Scaffold(
-      // ডাইনামিক ব্যাকগ্রাউন্ড কালার
       backgroundColor:
           isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
       appBar: AppBar(

@@ -1,4 +1,5 @@
 // main.dart
+// main.dart - UPDATED WITH LOGOUT FIX
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
@@ -9,8 +10,8 @@ import 'services/event_service.dart';
 import 'screens/splash/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/main_wrapper.dart';
+import 'screens/agency/agency_main_wrapper.dart';
 import 'services/auth_service.dart';
-import 'services/event_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,9 +40,6 @@ Future<void> main() async {
         ),
         ChangeNotifierProvider(
           create: (context) => CartProvider(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => EventService(),
         ),
       ],
       child: const BhromonApp(),
@@ -117,9 +115,67 @@ class BhromonApp extends StatelessWidget {
 
       initialRoute: '/',
       routes: {
-        '/': (context) => const SplashScreen(),
+        '/': (context) =>
+            const AuthWrapper(), // ✅ CHANGED: Use AuthWrapper instead of SplashScreen
         '/login': (context) => const LoginScreen(),
         '/main': (context) => const MainWrapper(),
+      },
+    );
+  }
+}
+
+// ✅ NEW: Auth Navigation Wrapper - Handles all routing based on auth state
+class AuthWrapper extends StatefulWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  @override
+  void initState() {
+    super.initState();
+    _checkAuthStatus();
+  }
+
+  Future<void> _checkAuthStatus() async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    await authService.checkAuthStatus();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthService>(
+      builder: (context, authService, _) {
+        // If explicitly logged out is not provided by AuthService, rely on isAuthenticated
+
+        // Not authenticated - show login
+        if (!authService.isAuthenticated) {
+          return const LoginScreen();
+        }
+
+        // OTP verification required - show OTP screen
+        if (authService.isOtpRequired) {
+          // Navigate to OTP screen instead of splash
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Navigator.of(context).pushNamedAndRemoveUntil(
+              '/otp',
+              (route) => false,
+            );
+          });
+          return const SplashScreen();
+        }
+
+        // ✅ Authenticated: Route based on user type
+        if (authService.isAgency) {
+          return const AgencyMainWrapper();
+        } else if (authService.isUser) {
+          return const MainWrapper();
+        }
+
+        // Default splash while loading
+        return const SplashScreen();
       },
     );
   }

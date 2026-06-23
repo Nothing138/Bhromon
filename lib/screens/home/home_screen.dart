@@ -1,10 +1,13 @@
 // screens/home/home_screen.dart
-// ✅ COMPLETELY FIXED: Service init + User profile + All buttons
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../providers/theme_provider.dart';
 import '../../services/likes_service.dart';
+import '../../services/feed_service.dart';
+import '../../models/post_model.dart';
+import '../../models/event_model.dart';
 import '../auth/login_screen.dart';
 import 'create_post_screen.dart';
 import '../profile/profile_screen.dart';
@@ -19,19 +22,56 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final supabase = Supabase.instance.client;
-  late final LikesService _likesService; // ✅ Fixed: Use late final
+  late final LikesService _likesService;
+  late final FeedService _feedService;
   late String _currentUserId;
-
-  final Stream<List<Map<String, dynamic>>> _postStream = Supabase
-      .instance.client
-      .from('posts')
-      .stream(primaryKey: ['id']).order('created_at', ascending: false);
+  String? _debugInfo; // For showing debug messages
 
   @override
   void initState() {
     super.initState();
-    _likesService = LikesService(); // ✅ Initialize in initState
+    _likesService = LikesService();
+    _feedService = FeedService();
     _currentUserId = supabase.auth.currentUser?.id ?? '';
+
+    // ✅ DEBUG: Check database on init
+    _debugCheckDatabase();
+  }
+
+  /// Debug helper - check if data exists in database
+  Future<void> _debugCheckDatabase() async {
+    try {
+      debugPrint('🔍 Starting database debug check...');
+
+      // Check posts
+      final posts = await supabase
+          .from('posts')
+          .select()
+          .timeout(const Duration(seconds: 5));
+      debugPrint('📸 Posts count: ${posts.length}');
+      if (posts.isNotEmpty) {
+        debugPrint('📸 Sample post keys: ${posts.first.keys.toList()}');
+      }
+
+      // Check events
+      final events = await supabase
+          .from('agency_events')
+          .select()
+          .timeout(const Duration(seconds: 5));
+      debugPrint('🎫 Events count: ${events.length}');
+      if (events.isNotEmpty) {
+        debugPrint('🎫 Sample event keys: ${events.first.keys.toList()}');
+      }
+
+      setState(() {
+        _debugInfo = 'Posts: ${posts.length}, Events: ${events.length}';
+      });
+    } catch (e) {
+      debugPrint('❌ Database check failed: $e');
+      setState(() {
+        _debugInfo = 'DB Error: $e';
+      });
+    }
   }
 
   Future<void> _handleLogout(BuildContext context) async {
@@ -178,13 +218,31 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: _postStream,
+        stream: _feedService.getCombinedFeed(),
         builder: (context, snapshot) {
+          debugPrint('🔄 Stream state: ${snapshot.connectionState}');
+          debugPrint('📊 Snapshot has data: ${snapshot.hasData}');
+          debugPrint('❌ Snapshot has error: ${snapshot.hasError}');
+          if (snapshot.hasError) {
+            debugPrint('❌ Stream error: ${snapshot.error}');
+          }
+
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
-              child: CircularProgressIndicator(
-                color: accentColor,
-                strokeWidth: 2,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    color: accentColor,
+                    strokeWidth: 2,
+                  ),
+                  const SizedBox(height: 16),
+                  if (_debugInfo != null)
+                    Text(
+                      _debugInfo!,
+                      style: TextStyle(color: textSecondary, fontSize: 12),
+                    ),
+                ],
               ),
             );
           }
@@ -197,20 +255,44 @@ class _HomeScreenState extends State<HomeScreen> {
                   Icon(
                     Icons.error_outline_rounded,
                     size: 40,
-                    color: textSecondary,
+                    color: Colors.redAccent,
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Something went wrong',
+                    'Stream Error',
                     style: TextStyle(color: textSecondary, fontSize: 14),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: surface,
+                      border: Border.all(color: surfaceBorder),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '${snapshot.error}',
+                      style: TextStyle(
+                        color: textSecondary,
+                        fontSize: 11,
+                        fontFamily: 'monospace',
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => setState(() {}),
+                    child: const Text('Retry'),
                   ),
                 ],
               ),
             );
           }
 
-          final posts = snapshot.data;
-          if (posts == null || posts.isEmpty) {
+          final items = snapshot.data ?? [];
+          if (items.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -234,7 +316,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 18),
                   Text(
-                    'No posts yet',
+                    'No posts or events yet',
                     style: TextStyle(
                       color: textPrimary,
                       fontSize: 16,
@@ -252,18 +334,35 @@ class _HomeScreenState extends State<HomeScreen> {
           }
 
           return ListView.builder(
-            itemCount: posts.length,
+            itemCount: items.length,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
             physics: const BouncingScrollPhysics(),
-            itemBuilder: (_, index) => _buildPostCard(
-              posts[index],
-              accentColor,
-              isDark,
-              surface,
-              surfaceBorder,
-              textPrimary,
-              textSecondary,
-            ),
+            itemBuilder: (_, index) {
+              final item = items[index];
+              final itemType = item['type'] as String;
+
+              if (itemType == 'post') {
+                return _buildPostCard(
+                  item,
+                  accentColor,
+                  isDark,
+                  surface,
+                  surfaceBorder,
+                  textPrimary,
+                  textSecondary,
+                );
+              } else {
+                return _buildEventCard(
+                  item,
+                  accentColor,
+                  isDark,
+                  surface,
+                  surfaceBorder,
+                  textPrimary,
+                  textSecondary,
+                );
+              }
+            },
           );
         },
       ),
@@ -311,6 +410,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // POST CARD
+  // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildPostCard(
     Map<String, dynamic> post,
     Color accentColor,
@@ -340,9 +442,34 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ═══ HEADER SECTION WITH CLICKABLE PROFILE ═══
+          // TYPE BADGE
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+            padding: const EdgeInsets.only(left: 14, top: 10, right: 14),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: accentColor.withValues(alpha: 0.2),
+                  width: 0.5,
+                ),
+              ),
+              child: Text(
+                '📸 User Post',
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w600,
+                  color: accentColor,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ),
+          ),
+
+          // HEADER SECTION
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
             child: GestureDetector(
               onTap: () => _showUserProfile(
                 context,
@@ -388,7 +515,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // ✅ CLICKABLE USER NAME
                         Text(
                           isAnonymous ? 'Anonymous traveler' : userName,
                           style: TextStyle(
@@ -449,7 +575,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // ═══ CONTENT SECTION ═══
+          // CONTENT
           if (content.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
@@ -465,7 +591,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-          // ═══ IMAGE SECTION ═══
+          // IMAGE
           if (imageUrl != null && imageUrl.isNotEmpty)
             ClipRRect(
               borderRadius: BorderRadius.zero,
@@ -505,64 +631,48 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-          // ═══ ACTIONS SECTION WITH ALL BUTTONS ═══
+          // ACTIONS
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-            child: Column(
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    // ✅ LIKE BUTTON
-                    Expanded(
-                      child: _buildLikeButton(
-                        postId: postId,
-                        accentColor: accentColor,
-                        isDark: isDark,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-
-                    // ✅ MESSAGE BUTTON
-                    if (!isAnonymous &&
-                        contactNumber.isNotEmpty &&
-                        posterId != _currentUserId)
-                      Expanded(
-                        child: _buildMessageButton(
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ChatScreen(
-                                otherUserId: posterId,
-                                otherUserName: userName,
-                                otherUserPhone: contactNumber,
-                              ),
-                            ),
+                Expanded(
+                  child: _buildLikeButton(
+                    postId: postId,
+                    accentColor: accentColor,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                if (!isAnonymous && contactNumber.isNotEmpty)
+                  Expanded(
+                    child: _buildMessageButton(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChatScreen(
+                            otherUserId: posterId,
+                            otherUserName: userName,
+                            otherUserPhone: contactNumber,
                           ),
-                          accentColor: accentColor,
-                          isDark: isDark,
                         ),
                       ),
-
-                    // ✅ CONTACT BUTTON
-                    if (!isAnonymous &&
-                        contactNumber.isNotEmpty &&
-                        posterId != _currentUserId)
-                      Expanded(
-                        child: _buildContactButton(
-                          phone: contactNumber,
-                          accentColor: accentColor,
-                          isDark: isDark,
-                        ),
-                      ),
-
-                    // ✅ SHARE BUTTON
-                    Expanded(
-                      child: _buildShareButton(
-                        accentColor: accentColor,
-                        isDark: isDark,
-                      ),
+                      accentColor: accentColor,
                     ),
-                  ],
+                  ),
+                if (!isAnonymous && contactNumber.isNotEmpty)
+                  const SizedBox(width: 8),
+                if (!isAnonymous && contactNumber.isNotEmpty)
+                  Expanded(
+                    child: _buildContactButton(
+                      phone: contactNumber,
+                      accentColor: accentColor,
+                    ),
+                  ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildShareButton(
+                    accentColor: accentColor,
+                  ),
                 ),
               ],
             ),
@@ -573,12 +683,296 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // ✅ LIKE BUTTON
+  // EVENT CARD (NEW)
   // ═══════════════════════════════════════════════════════════════════════════
+  Widget _buildEventCard(
+    Map<String, dynamic> event,
+    Color accentColor,
+    bool isDark,
+    Color surface,
+    Color surfaceBorder,
+    Color textPrimary,
+    Color textSecondary,
+  ) {
+    final title = event['title'] as String? ?? 'Event';
+    final description = event['description'] as String? ?? '';
+    final location = event['location'] as String? ?? 'TBA';
+    final imageUrl = event['image_url'] as String?;
+    final price = event['price'] as num? ?? 0;
+    final eventId = event['id'] as String? ?? '';
+    final bookedCount = event['booked_count'] as int? ?? 0;
+    final capacity = event['capacity'] as int?;
+
+    final eventDate = event['event_date'] != null
+        ? DateTime.parse(event['event_date'] as String)
+        : DateTime.now();
+    final formattedDate =
+        DateFormat('MMM dd, yyyy - hh:mm a').format(eventDate);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: surfaceBorder, width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // TYPE BADGE
+          Padding(
+            padding: const EdgeInsets.only(left: 14, top: 10, right: 14),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: Colors.purple.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: Colors.purple.withValues(alpha: 0.2),
+                  width: 0.5,
+                ),
+              ),
+              child: Text(
+                '🎫 Agency Event',
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.purple,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ),
+          ),
+
+          // IMAGE
+          if (imageUrl != null && imageUrl.isNotEmpty)
+            ClipRRect(
+              borderRadius: BorderRadius.zero,
+              child: Image.network(
+                imageUrl,
+                height: 200,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  height: 200,
+                  color: isDark
+                      ? const Color(0xFF111827)
+                      : const Color(0xFFF0F2F8),
+                  child: Center(
+                    child: Icon(
+                      Icons.event_note,
+                      color: Colors.purple.withValues(alpha: 0.5),
+                      size: 40,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+          // CONTENT
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // TITLE
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    color: textPrimary,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+
+                // DESCRIPTION
+                if (description.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Text(
+                      description,
+                      style: TextStyle(
+                        fontSize: 12,
+                        height: 1.5,
+                        color: textSecondary,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+
+                // DATE & LOCATION INFO
+                Row(
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today_outlined,
+                            size: 13,
+                            color: Colors.blue,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              formattedDate,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: textSecondary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.location_on_outlined,
+                            size: 13,
+                            color: Colors.redAccent,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              location,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: textSecondary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // PRICE & CAPACITY
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.green.withValues(alpha: 0.2),
+                            width: 0.5,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Price',
+                              style: TextStyle(
+                                fontSize: 9,
+                                color: textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '৳${price.toStringAsFixed(0)}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.green,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    if (capacity != null)
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: Colors.orange.withValues(alpha: 0.2),
+                              width: 0.5,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Seats',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  color: textSecondary,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '$bookedCount/$capacity',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.orange,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // ACTION BUTTONS
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildEventBookButton(accentColor: accentColor),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildShareButton(accentColor: accentColor),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BUTTON BUILDERS
+  // ═══════════════════════════════════════════════════════════════════════════
+
   Widget _buildLikeButton({
     required String postId,
     required Color accentColor,
-    required bool isDark,
   }) {
     return StreamBuilder<bool>(
       stream: _likesService.streamUserLikeStatus(
@@ -656,13 +1050,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // ✅ MESSAGE BUTTON
-  // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildMessageButton({
     required VoidCallback onTap,
     required Color accentColor,
-    required bool isDark,
   }) {
     return InkWell(
       onTap: onTap,
@@ -700,13 +1090,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // ✅ CONTACT BUTTON
-  // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildContactButton({
     required String phone,
     required Color accentColor,
-    required bool isDark,
   }) {
     return InkWell(
       onTap: () {
@@ -754,12 +1140,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // ✅ SHARE BUTTON (NEW)
-  // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildShareButton({
     required Color accentColor,
-    required bool isDark,
   }) {
     return InkWell(
       onTap: () {
@@ -804,8 +1186,54 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildEventBookButton({
+    required Color accentColor,
+  }) {
+    return InkWell(
+      onTap: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Event booking coming soon!'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(9),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.purple.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(9),
+          border: Border.all(
+            color: Colors.purple.withValues(alpha: 0.3),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.event_available_rounded,
+              size: 14,
+              color: Colors.purple,
+            ),
+            const SizedBox(width: 3),
+            Text(
+              'Book',
+              style: TextStyle(
+                color: Colors.purple,
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ═══════════════════════════════════════════════════════════════════════════
-  // ✅ USER PROFILE SHEET (NEW FEATURE)
+  // USER PROFILE SHEET
   // ═══════════════════════════════════════════════════════════════════════════
   void _showUserProfile(
     BuildContext context,
@@ -842,7 +1270,6 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Drag indicator
             Container(
               width: 48,
               height: 4,
@@ -852,8 +1279,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(height: 20),
-
-            // Avatar
             Container(
               width: 80,
               height: 80,
@@ -877,8 +1302,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(height: 16),
-
-            // Name
             Text(
               userName,
               style: TextStyle(
@@ -896,8 +1319,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(height: 24),
-
-            // Contact Info
             if (contactNumber.isNotEmpty) ...[
               Container(
                 padding: const EdgeInsets.all(14),
@@ -958,8 +1379,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 12),
             ],
-
-            // Message Button
             if (posterId != _currentUserId)
               GestureDetector(
                 onTap: () {
@@ -991,9 +1410,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         size: 16,
                       ),
                       const SizedBox(width: 8),
-                      Text(
+                      const Text(
                         'Send Message',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -1003,7 +1422,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-
             const SizedBox(height: 12),
           ],
         ),

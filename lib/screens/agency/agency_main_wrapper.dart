@@ -1,4 +1,4 @@
-// agency/agency_main_wrapper.dart
+// screens/agency/agency_main_wrapper.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
@@ -28,7 +28,7 @@ class _AgencyMainWrapperState extends State<AgencyMainWrapper> {
   }
 
   final List<Widget> _pages = [
-    const AgencyFeedScreen(), // 0 - Feed
+    const AgencyFeedScreenPremium(), // 0 - Feed
     const AgencyMessagesScreen(), // 1 - Messages
     const AgencyEventsScreen(), // 2 - Events
     const AgencyProfileScreen(), // 3 - Profile
