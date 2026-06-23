@@ -115,7 +115,7 @@ class EventService extends ChangeNotifier {
           .select()
           .single();
 
-      final event = AgencyEvent.fromJson(response as Map<String, dynamic>);
+      final event = AgencyEvent.fromJson(response);
       print('✅ Event created: ${event.id}');
 
       // Refresh events

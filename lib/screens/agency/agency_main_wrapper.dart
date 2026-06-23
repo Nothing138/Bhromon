@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../services/event_service.dart';
 import 'feed/agency_feed_screen.dart';
-import 'messages/agency_messages_screen.dart';
+import 'messages/agency_message_page.dart';
 import 'events/agency_events_screen.dart';
 import 'profile/agency_profile_screen.dart';
 
@@ -28,8 +28,8 @@ class _AgencyMainWrapperState extends State<AgencyMainWrapper> {
   }
 
   final List<Widget> _pages = [
-    const AgencyFeedScreenPremium(), // 0 - Feed
-    const AgencyMessagesScreen(), // 1 - Messages
+    const AgencyFeedScreen(), // 0 - Feed
+    const AgencyMessagePage(), // 1 - Messages
     const AgencyEventsScreen(), // 2 - Events
     const AgencyProfileScreen(), // 3 - Profile
   ];

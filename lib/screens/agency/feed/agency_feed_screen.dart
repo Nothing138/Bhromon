@@ -1,693 +1,522 @@
 // screens/agency/feed/agency_feed_screen.dart
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/theme_provider.dart';
-import '../../../services/auth_service.dart';
-import '../../../services/event_service.dart';
-import '../../../services/post_service.dart' hide FeedItem;
-import '../../../models/event_model.dart';
-import '../../../models/post_model.dart';
-import 'create_post_screen.dart';
-import 'package:intl/intl.dart';
+import '../../../services/feed_service.dart';
+import '../../../services/likes_service.dart';
+import '../../chat/chat_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 
-class AgencyFeedScreenPremium extends StatefulWidget {
-  const AgencyFeedScreenPremium({super.key});
+class AgencyFeedScreen extends StatefulWidget {
+  const AgencyFeedScreen({super.key});
 
   @override
-  State<AgencyFeedScreenPremium> createState() =>
-      _AgencyFeedScreenPremiumState();
+  State<AgencyFeedScreen> createState() => _AgencyFeedScreenState();
 }
 
-class _AgencyFeedScreenPremiumState extends State<AgencyFeedScreenPremium> {
-  List<FeedItem> _feedItems = [];
-  bool _isLoading = false;
-  int _selectedLikeIndex = -1;
+class _AgencyFeedScreenState extends State<AgencyFeedScreen> {
+  final feedService = FeedService();
+  final likesService = LikesService();
+  final supabase = Supabase.instance.client;
 
   @override
   void initState() {
     super.initState();
-    _loadFeed();
+    feedService.debugFeedData();
   }
 
-  Future<void> _loadFeed() async {
-    setState(() => _isLoading = true);
+  Future<void> _initiateCall(String phoneNumber) async {
+    if (phoneNumber.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Phone number not available')),
+      );
+      return;
+    }
+
+    final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
 
     try {
-      final eventService = Provider.of<EventService>(context, listen: false);
-      final postService = Provider.of<PostService>(context, listen: false);
-
-      // Load events
-      await eventService.fetchAllEvents();
-
-      // Load posts
-      //await postService.fetchAllPosts();
-
-      // Combine and sort by date
-      //_feedItems =
-      //    _combineFeedItems(eventService.allEvents, postService.allPosts);
-
-      setState(() {});
+      if (await canLaunchUrl(launchUri)) {
+        await launchUrl(launchUri);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch call')),
+        );
+      }
     } catch (e) {
-      print('❌ Error loading feed: $e');
-    } finally {
-      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
     }
   }
 
-  List<FeedItem> _combineFeedItems(
-    List<AgencyEvent> events,
-    List<Post> posts,
-  ) {
-    final items = <FeedItem>[];
-
-    // Add events
-    for (var event in events) {
-      items.add(FeedItem(
-        id: event.id,
-        type: 'event',
-        data: event,
-      ));
+  Future<void> _initiateChat(
+      String userId, String userName, String userType) async {
+    final currentUser = supabase.auth.currentUser;
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please login to message')),
+      );
+      return;
     }
 
-    // Add posts
-    for (var post in posts) {
-      items.add(FeedItem(
-        id: post.id,
-        type: 'post',
-        data: post,
-      ));
+    try {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChatScreen(
+            otherUserId: userId,
+            otherUserName: userName,
+          ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error opening chat: $e')),
+      );
     }
+  }
 
-    // Sort by timestamp (newest first)
-    items.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+  Future<void> _sharePost(Map<String, dynamic> item) async {
+    final type = item['type'] ?? 'post';
+    final title = item['title'] ?? item['content'] ?? 'Check this out';
 
-    return items;
+    final shareText = type == 'event'
+        ? '📍 $title\n\nCheck out this amazing event on Bhromon!'
+        : '✈️ $title\n\nSharing this awesome travel post!';
+
+    try {
+      await Share.share(shareText);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error sharing: $e')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final accentColor = themeProvider.accentColor;
     final isDark = themeProvider.isDarkMode;
 
+    final bg = isDark ? const Color(0xFF080C18) : const Color(0xFFF5F7FF);
+    final surface = isDark ? const Color(0xFF111827) : Colors.white;
+    final surfaceBorder = isDark
+        ? const Color(0xFF1E2A42).withValues(alpha: 0.8)
+        : Colors.black.withValues(alpha: 0.06);
+    final textPrimary =
+        isDark ? const Color(0xFFE2E8F4) : const Color(0xFF0D1117);
+    final textSecondary =
+        isDark ? const Color(0xFF4A5478) : const Color(0xFF8892A4);
+
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: surface,
         elevation: 0,
-        backgroundColor: Colors.transparent,
+        centerTitle: false,
         title: Text(
-          'Feed',
+          'Agency Feed',
           style: TextStyle(
-            color: themeProvider.accentColor,
-            fontWeight: FontWeight.bold,
             fontSize: 24,
+            fontWeight: FontWeight.w800,
+            color: textPrimary,
+            letterSpacing: -0.6,
           ),
         ),
-        centerTitle: true,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(0.5),
+          child: Container(
+            color: surfaceBorder,
+            height: 0.5,
+          ),
+        ),
       ),
-      body: _isLoading
-          ? Center(
-              child: CircularProgressIndicator(
-                color: themeProvider.accentColor,
+      body: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: feedService.getCombinedFeed(),
+        builder: (context, snapshot) {
+          // Loading state
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(
+              child: SizedBox(
+                width: 40,
+                height: 40,
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(accentColor),
+                  strokeWidth: 2.5,
+                ),
               ),
-            )
-          : RefreshIndicator(
-              onRefresh: _loadFeed,
-              color: themeProvider.accentColor,
-              child: ListView.builder(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
-                itemCount: _feedItems.length + 1,
-                itemBuilder: (context, index) {
-                  // First item: Create post card
-                  if (index == 0) {
-                    return _buildCreatePostCard(themeProvider, isDark, context);
-                  }
+            );
+          }
 
-                  final feedItem = _feedItems[index - 1];
-
-                  if (feedItem.type == 'event') {
-                    return _buildEventCard(
-                      feedItem.data as AgencyEvent,
-                      themeProvider,
-                      isDark,
-                      context,
-                    );
-                  } else {
-                    return _buildPostCard(
-                      feedItem.data as Post,
-                      themeProvider,
-                      isDark,
-                      context,
-                    );
-                  }
-                },
+          // Error state
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline_rounded,
+                    color: textSecondary,
+                    size: 48,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Failed to load feed',
+                    style: TextStyle(
+                      color: textSecondary,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
               ),
-            ),
+            );
+          }
+
+          // Empty state
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.feed_outlined,
+                    color: textSecondary,
+                    size: 48,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No posts or events yet',
+                    style: TextStyle(
+                      color: textSecondary,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final feedItems = snapshot.data!;
+
+          return ListView.builder(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            itemCount: feedItems.length,
+            itemBuilder: (context, index) {
+              final item = feedItems[index];
+              final isEvent = item['type'] == 'event';
+
+              return _buildFeedItem(
+                item: item,
+                isEvent: isEvent,
+                accentColor: accentColor,
+                isDark: isDark,
+                surface: surface,
+                surfaceBorder: surfaceBorder,
+                textPrimary: textPrimary,
+                textSecondary: textSecondary,
+              );
+            },
+          );
+        },
+      ),
     );
   }
 
-  // ================== CREATE POST CARD ==================
-  Widget _buildCreatePostCard(
-    ThemeProvider themeProvider,
-    bool isDark,
-    BuildContext context,
-  ) {
-    final authService = Provider.of<AuthService>(context);
+  Widget _buildFeedItem({
+    required Map<String, dynamic> item,
+    required bool isEvent,
+    required Color accentColor,
+    required bool isDark,
+    required Color surface,
+    required Color surfaceBorder,
+    required Color textPrimary,
+    required Color textSecondary,
+  }) {
+    final currentUser = supabase.auth.currentUser;
+    final userId = currentUser?.id ?? '';
+
+    final title = item['title'] ?? item['user_name'] ?? 'Unknown';
+    final content = item['content'] ?? item['description'] ?? '';
+    const maxLines = 3;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: surfaceBorder, width: 0.5),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black45 : Colors.black12,
-            blurRadius: 8,
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+            blurRadius: 12,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: GestureDetector(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const CreatePostScreen()),
-        ),
-        child: Row(
-          children: [
-            // Agency avatar
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: themeProvider.accentColor.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(22),
-              ),
-              child: Icon(
-                Icons.location_city,
-                color: themeProvider.accentColor,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.white10 : Colors.grey[100],
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  'Share an event or update, ${authService.currentAgency?.agencyName?.split(' ').first ?? 'Agency'}...',
-                  style: TextStyle(
-                    color: isDark ? Colors.white54 : Colors.grey[600],
-                    fontSize: 13,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── HEADER ──
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                // Icon/Avatar
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    isEvent ? Icons.event_rounded : Icons.location_on_rounded,
+                    color: accentColor,
+                    size: 22,
                   ),
                 ),
+                const SizedBox(width: 12),
+
+                // Title + Type
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          color: textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.2,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        isEvent ? '📍 Event' : '✈️ Post',
+                        style: TextStyle(
+                          color: textSecondary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // ── CONTENT ──
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Text(
+              content,
+              style: TextStyle(
+                color: textPrimary,
+                fontSize: 13,
+                height: 1.5,
+              ),
+              maxLines: maxLines,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // ── EVENT DETAILS (if event) ──
+          if (isEvent)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: accentColor.withValues(alpha: 0.12),
+                    width: 0.5,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.calendar_today_rounded,
+                      color: accentColor,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        item['event_date']?.toString() ?? 'No date',
+                        style: TextStyle(
+                          color: accentColor,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (item['price'] != null)
+                      Text(
+                        '₹${item['price']}',
+                        style: TextStyle(
+                          color: accentColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+
+          if (isEvent) const SizedBox(height: 12),
+
+          // ── ACTION BUTTONS ──
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                // Like Button
+                Expanded(
+                  child: _buildActionButton(
+                    icon: Icons.favorite_outline_rounded,
+                    label: 'Like',
+                    onTap: () async {
+                      if (userId.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please login to like')),
+                        );
+                        return;
+                      }
+                      await likesService.toggleLike(
+                        postId: item['id'] ?? '',
+                        userId: userId,
+                      );
+                      setState(() {});
+                    },
+                    accentColor: accentColor,
+                    textSecondary: textSecondary,
+                    isDark: isDark,
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                // Call Button
+                Expanded(
+                  child: _buildActionButton(
+                    icon: Icons.phone_rounded,
+                    label: 'Call',
+                    onTap: () {
+                      // Get agency phone from item
+                      final agencyPhone =
+                          item['owner_phone'] ?? item['office_phone'] ?? '';
+                      if (agencyPhone.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Phone number not available')),
+                        );
+                        return;
+                      }
+                      _initiateCall(agencyPhone);
+                    },
+                    accentColor: accentColor,
+                    textSecondary: textSecondary,
+                    isDark: isDark,
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                // Message Button
+                Expanded(
+                  child: _buildActionButton(
+                    icon: Icons.message_rounded,
+                    label: 'Message',
+                    onTap: () {
+                      final userId = item['user_id'] ?? '';
+                      final agencyName =
+                          item['agency_name'] ?? item['user_name'] ?? 'Agency';
+                      if (userId.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Unable to message this item')),
+                        );
+                        return;
+                      }
+                      _initiateChat(userId, agencyName, 'agency');
+                    },
+                    accentColor: accentColor,
+                    textSecondary: textSecondary,
+                    isDark: isDark,
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                // Share Button
+                Expanded(
+                  child: _buildActionButton(
+                    icon: Icons.share_rounded,
+                    label: 'Share',
+                    onTap: () => _sharePost(item),
+                    accentColor: accentColor,
+                    textSecondary: textSecondary,
+                    isDark: isDark,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    required Color accentColor,
+    required Color textSecondary,
+    required bool isDark,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: textSecondary.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: textSecondary.withValues(alpha: 0.08),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              color: accentColor,
+              size: 16,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: accentColor,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
         ),
       ),
     );
-  }
-
-  // ================== EVENT CARD (Facebook Style) ==================
-  Widget _buildEventCard(
-    AgencyEvent event,
-    ThemeProvider themeProvider,
-    bool isDark,
-    BuildContext context,
-  ) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: isDark ? Colors.black45 : Colors.black12,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ✅ Header with agency profile
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: themeProvider.accentColor.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Icon(
-                    Icons.location_city,
-                    color: themeProvider.accentColor,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        event.agencyName ?? 'Travel Agency',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                        ),
-                      ),
-                      Text(
-                        _formatRelativeTime(event.createdAt),
-                        style: TextStyle(
-                          color: isDark ? Colors.white54 : Colors.grey[600],
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.more_vert,
-                      color: isDark ? Colors.white54 : Colors.grey[600]),
-                  onPressed: () {},
-                ),
-              ],
-            ),
-          ),
-
-          // ✅ Event image
-          if (event.imageUrl != null)
-            Container(
-              width: double.infinity,
-              height: 200,
-              decoration: BoxDecoration(
-                  color: isDark ? Colors.white10 : Colors.grey[200]),
-              child: Image.network(
-                event.imageUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    const SizedBox.expand(
-                  child: Icon(Icons.image_not_supported),
-                ),
-              ),
-            ),
-
-          // ✅ Event details
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Title
-                Text(
-                  event.title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                  ),
-                ),
-                const SizedBox(height: 6),
-
-                // Description
-                if (event.description != null)
-                  Text(
-                    event.description!,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: isDark ? Colors.white70 : Colors.grey[700],
-                      fontSize: 13,
-                      height: 1.4,
-                    ),
-                  ),
-                const SizedBox(height: 10),
-
-                // Event details row
-                Row(
-                  children: [
-                    Icon(
-                      Icons.calendar_today,
-                      size: 14,
-                      color: themeProvider.accentColor,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _formatEventDate(event.eventDate),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDark ? Colors.white70 : Colors.grey[700],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Icon(
-                      Icons.location_on,
-                      size: 14,
-                      color: themeProvider.accentColor,
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        event.location ?? 'Location TBA',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? Colors.white70 : Colors.grey[700],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Price
-                if (event.price > 0)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      '💰 TK ${event.price.toStringAsFixed(0)}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.green[600],
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-
-          // ✅ Action buttons (Like, Comment, Call, Share)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Row(
-              children: [
-                _buildFacebookButton(
-                  icon: Icons.favorite_outline,
-                  label: 'Like',
-                  onTap: () => _toggleLike(event.id),
-                  color: themeProvider.accentColor,
-                ),
-                _buildFacebookButton(
-                  icon: Icons.comment_outlined,
-                  label: 'Comment',
-                  onTap: () {},
-                  color: themeProvider.accentColor,
-                ),
-                _buildFacebookButton(
-                  icon: Icons.call,
-                  label: 'Call',
-                  onTap: () {},
-                  color: Colors.green[600]!,
-                ),
-                _buildFacebookButton(
-                  icon: Icons.share_outlined,
-                  label: 'Share',
-                  onTap: () {},
-                  color: themeProvider.accentColor,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ================== POST CARD (Facebook Style) ==================
-  Widget _buildPostCard(
-    Post post,
-    ThemeProvider themeProvider,
-    bool isDark,
-    BuildContext context,
-  ) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: isDark ? Colors.black45 : Colors.black12,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ✅ Header with user profile
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                // User avatar
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: themeProvider.accentColor.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20),
-                    image: post.userAvatar != null
-                        ? DecorationImage(
-                            image: NetworkImage(post.userAvatar!),
-                            fit: BoxFit.cover,
-                          )
-                        : null,
-                  ),
-                  child: post.userAvatar == null
-                      ? Icon(
-                          Icons.person,
-                          color: themeProvider.accentColor,
-                          size: 20,
-                        )
-                      : null,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        post.userFullName ?? post.userName ?? 'Anonymous',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                        ),
-                      ),
-                      Text(
-                        _formatRelativeTime(post.createdAt),
-                        style: TextStyle(
-                          color: isDark ? Colors.white54 : Colors.grey[600],
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.more_vert,
-                      color: isDark ? Colors.white54 : Colors.grey[600]),
-                  onPressed: () {},
-                ),
-              ],
-            ),
-          ),
-
-          // ✅ Post content
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            child: Text(
-              post.content,
-              style: TextStyle(
-                color: isDark ? Colors.white70 : Colors.black87,
-                fontSize: 14,
-                height: 1.5,
-              ),
-            ),
-          ),
-
-          // Location if available
-          if (post.location != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              child: Row(
-                children: [
-                  Icon(Icons.location_on,
-                      size: 14, color: themeProvider.accentColor),
-                  const SizedBox(width: 6),
-                  Text(
-                    post.location!,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDark ? Colors.white70 : Colors.grey[700],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-          // ✅ Post image
-          if (post.imageUrl != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Container(
-                width: double.infinity,
-                height: 200,
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.white10 : Colors.grey[200],
-                ),
-                child: Image.network(
-                  post.imageUrl!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const SizedBox.expand(
-                    child: Icon(Icons.image_not_supported),
-                  ),
-                ),
-              ),
-            ),
-
-          const SizedBox(height: 8),
-
-          // Like and comment count
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.favorite,
-                        size: 14, color: Colors.red.withValues(alpha: 0.7)),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${post.likesCount} likes',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDark ? Colors.white70 : Colors.grey[700],
-                      ),
-                    ),
-                  ],
-                ),
-                Text(
-                  '${post.commentsCount} comments',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDark ? Colors.white70 : Colors.grey[700],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Divider(height: 1),
-          ),
-
-          // ✅ Action buttons
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Row(
-              children: [
-                _buildFacebookButton(
-                  icon: post.isLikedByCurrentUser
-                      ? Icons.favorite
-                      : Icons.favorite_outline,
-                  label: 'Like',
-                  onTap: () => _toggleLike(post.id),
-                  color: post.isLikedByCurrentUser
-                      ? Colors.red
-                      : themeProvider.accentColor,
-                ),
-                _buildFacebookButton(
-                  icon: Icons.comment_outlined,
-                  label: 'Comment',
-                  onTap: () {},
-                  color: themeProvider.accentColor,
-                ),
-                _buildFacebookButton(
-                  icon: Icons.call,
-                  label: 'Call',
-                  onTap: () {},
-                  color: Colors.green[600]!,
-                ),
-                _buildFacebookButton(
-                  icon: Icons.share_outlined,
-                  label: 'Share',
-                  onTap: () {},
-                  color: themeProvider.accentColor,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ================== Facebook Button ==================
-  Widget _buildFacebookButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    required Color color,
-  }) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 18, color: color),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: color,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ================== Helper Functions ==================
-  void _toggleLike(String itemId) {
-    // Will call backend API
-    print('❤️ Toggled like for: $itemId');
-  }
-
-  String _formatRelativeTime(DateTime date) {
-    final now = DateTime.now();
-    final difference = now.difference(date);
-
-    if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m ago';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
-    } else {
-      return DateFormat('dd MMM').format(date);
-    }
-  }
-
-  String _formatEventDate(DateTime date) {
-    return DateFormat('dd MMM yyyy, hh:mm a').format(date);
   }
 }

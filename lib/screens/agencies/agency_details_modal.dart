@@ -22,7 +22,7 @@ class AgencyDetailsModal extends StatefulWidget {
 
 class _AgencyDetailsModalState extends State<AgencyDetailsModal> {
   final supabase = Supabase.instance.client;
-  bool _isLoading = false;
+  final bool _isLoading = false;
 
   Future<void> _initiateCall(String phoneNumber) async {
     if (phoneNumber.isEmpty) {

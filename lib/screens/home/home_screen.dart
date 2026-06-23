@@ -6,8 +6,6 @@ import 'package:intl/intl.dart';
 import '../../providers/theme_provider.dart';
 import '../../services/likes_service.dart';
 import '../../services/feed_service.dart';
-import '../../models/post_model.dart';
-import '../../models/event_model.dart';
 import '../auth/login_screen.dart';
 import 'create_post_screen.dart';
 import '../profile/profile_screen.dart';
