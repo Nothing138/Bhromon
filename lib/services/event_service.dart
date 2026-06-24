@@ -1,153 +1,135 @@
 // services/event_service.dart
-// services/event_service.dart - FIXED (AgencyEvent class removed)
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/event_model.dart'; // ✅ Import from models only
+import '../models/event_model.dart';
 
 class EventService extends ChangeNotifier {
   final supabase = Supabase.instance.client;
 
-  List<AgencyEvent> _allEvents = [];
-  List<AgencyEvent> _agencyEvents = [];
+  List<EventModel> _allEvents = [];
+  List<EventModel> _upcomingEvents = [];
+  List<EventModel> _pastEvents = [];
   bool _isLoading = false;
   String? _error;
 
-  List<AgencyEvent> get allEvents => _allEvents;
-  List<AgencyEvent> get agencyEvents => _agencyEvents;
+  List<EventModel> get allEvents => _allEvents;
+  List<EventModel> get upcomingEvents => _upcomingEvents;
+  List<EventModel> get pastEvents => _pastEvents;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  // ========================
-  // FETCH ALL EVENTS
-  // ========================
+  // Fetch all events for the current agency
   Future<void> fetchAllEvents() async {
     try {
       _isLoading = true;
       _error = null;
       notifyListeners();
 
-      print('🔄 Fetching all events...');
+      // Get current user (agency)
+      final user = supabase.auth.currentUser;
+      if (user == null) throw Exception('User not authenticated');
 
-      final response = await supabase
-          .from('agency_events')
-          .select()
-          .eq('status', 'active')
-          .order('event_date', ascending: true);
+      // Fetch agency_id from travel_agencies table
+      final agencyResponse = await supabase
+          .from('travel_agencies')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
 
-      _allEvents = (response as List<dynamic>)
-          .map((item) => AgencyEvent.fromJson(item as Map<String, dynamic>))
-          .toList();
+      final agencyId = agencyResponse['id'];
 
-      print('✅ Fetched ${_allEvents.length} events');
-      _isLoading = false;
-      notifyListeners();
-    } catch (e) {
-      print('❌ Error fetching events: $e');
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  // ========================
-  // FETCH AGENCY EVENTS
-  // ========================
-  Future<void> fetchAgencyEvents(String agencyId) async {
-    try {
-      _isLoading = true;
-      _error = null;
-      notifyListeners();
-
-      print('🔄 Fetching events for agency: $agencyId');
-
+      // Fetch all events for this agency
       final response = await supabase
           .from('agency_events')
           .select()
           .eq('agency_id', agencyId)
           .order('event_date', ascending: true);
 
-      _agencyEvents = (response as List<dynamic>)
-          .map((item) => AgencyEvent.fromJson(item as Map<String, dynamic>))
+      _allEvents = (response as List)
+          .map((event) => EventModel.fromJson(event))
           .toList();
 
-      print('✅ Fetched ${_agencyEvents.length} agency events');
+      _filterEvents();
       _isLoading = false;
       notifyListeners();
     } catch (e) {
-      print('❌ Error fetching agency events: $e');
       _error = e.toString();
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  // ========================
-  // CREATE EVENT
-  // ========================
-  Future<AgencyEvent?> createEvent({
-    required String agencyId,
+  // Create new event
+  Future<bool> createEvent({
     required String title,
     required String description,
     required String location,
     required DateTime eventDate,
     required double price,
     required int capacity,
+    required String category,
     String? imageUrl,
-    String category = 'general',
   }) async {
     try {
-      print('🔄 Creating event: $title');
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
 
-      final response = await supabase
-          .from('agency_events')
-          .insert({
-            'agency_id': agencyId,
-            'title': title,
-            'description': description,
-            'location': location,
-            'event_date': eventDate.toIso8601String(),
-            'price': price,
-            'capacity': capacity,
-            'image_url': imageUrl,
-            'category': category,
-            'status': 'active',
-          })
-          .select()
+      final user = supabase.auth.currentUser;
+      if (user == null) throw Exception('User not authenticated');
+
+      // Get agency_id
+      final agencyResponse = await supabase
+          .from('travel_agencies')
+          .select('id')
+          .eq('user_id', user.id)
           .single();
 
-      final event = AgencyEvent.fromJson(response);
-      print('✅ Event created: ${event.id}');
+      final agencyId = agencyResponse['id'];
 
-      // Refresh events
+      // Insert event
+      await supabase.from('agency_events').insert({
+        'agency_id': agencyId,
+        'title': title,
+        'description': description,
+        'location': location,
+        'event_date': eventDate.toIso8601String(),
+        'price': price,
+        'capacity': capacity,
+        'category': category,
+        'image_url': imageUrl,
+        'status': 'active',
+        'booked_count': 0,
+      });
+
       await fetchAllEvents();
-      await fetchAgencyEvents(agencyId);
-
-      return event;
-    } catch (e) {
-      print('❌ Error creating event: $e');
-      _error = e.toString();
+      _isLoading = false;
       notifyListeners();
-      return null;
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
   }
 
-  // ========================
-  // UPDATE EVENT
-  // ========================
+  // Update event
   Future<bool> updateEvent({
     required String eventId,
-    required String agencyId,
     required String title,
     required String description,
     required String location,
     required DateTime eventDate,
     required double price,
     required int capacity,
+    required String category,
     String? imageUrl,
-    String? category,
   }) async {
     try {
-      print('🔄 Updating event: $eventId');
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
 
       await supabase.from('agency_events').update({
         'title': title,
@@ -156,114 +138,117 @@ class EventService extends ChangeNotifier {
         'event_date': eventDate.toIso8601String(),
         'price': price,
         'capacity': capacity,
-        if (imageUrl != null) 'image_url': imageUrl,
-        if (category != null) 'category': category,
+        'category': category,
+        'image_url': imageUrl,
+        'updated_at': DateTime.now().toIso8601String(),
       }).eq('id', eventId);
 
-      print('✅ Event updated: $eventId');
-
-      // Refresh events
       await fetchAllEvents();
-      await fetchAgencyEvents(agencyId);
-
+      _isLoading = false;
+      notifyListeners();
       return true;
     } catch (e) {
-      print('❌ Error updating event: $e');
       _error = e.toString();
+      _isLoading = false;
       notifyListeners();
       return false;
     }
   }
 
-  // ========================
-  // DELETE EVENT - ✅ FIXED: Now takes eventId and agencyId
-  // ========================
-  Future<bool> deleteEvent(String eventId, String agencyId) async {
+  // Delete event
+  Future<bool> deleteEvent(String eventId) async {
     try {
-      print('🔄 Deleting event: $eventId');
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
 
       await supabase.from('agency_events').delete().eq('id', eventId);
 
-      print('✅ Event deleted: $eventId');
-
-      // Refresh events
       await fetchAllEvents();
-      await fetchAgencyEvents(agencyId);
-
+      _isLoading = false;
+      notifyListeners();
       return true;
     } catch (e) {
-      print('❌ Error deleting event: $e');
       _error = e.toString();
+      _isLoading = false;
       notifyListeners();
       return false;
     }
   }
 
-  // ========================
-  // CANCEL EVENT
-  // ========================
-  Future<bool> cancelEvent(String eventId, String agencyId) async {
+  // Cancel event (change status to cancelled)
+  Future<bool> cancelEvent(String eventId) async {
     try {
-      print('🔄 Cancelling event: $eventId');
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
 
       await supabase
           .from('agency_events')
           .update({'status': 'cancelled'}).eq('id', eventId);
 
-      print('✅ Event cancelled: $eventId');
-
-      // Refresh events
       await fetchAllEvents();
-      await fetchAgencyEvents(agencyId);
-
+      _isLoading = false;
+      notifyListeners();
       return true;
     } catch (e) {
-      print('❌ Error cancelling event: $e');
       _error = e.toString();
+      _isLoading = false;
       notifyListeners();
       return false;
     }
   }
 
-  // ========================
-  // SEARCH EVENTS
-  // ========================
-  List<AgencyEvent> searchEvents(String query) {
-    if (query.isEmpty) {
-      return _allEvents;
+  // Mark event as completed
+  Future<bool> completeEvent(String eventId) async {
+    try {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      await supabase
+          .from('agency_events')
+          .update({'status': 'completed'}).eq('id', eventId);
+
+      await fetchAllEvents();
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
+  }
 
-    return _allEvents
+  // Filter events into upcoming and past
+  void _filterEvents() {
+    final now = DateTime.now();
+    _upcomingEvents = _allEvents
+        .where(
+            (event) => event.eventDate.isAfter(now) && event.status == 'active')
+        .toList();
+    _pastEvents = _allEvents
         .where((event) =>
-            event.title.toLowerCase().contains(query.toLowerCase()) ||
-            event.description?.toLowerCase().contains(query.toLowerCase()) ==
-                true ||
-            event.location?.toLowerCase().contains(query.toLowerCase()) == true)
+            event.eventDate.isBefore(now) || event.status != 'active')
         .toList();
   }
 
-  // ========================
-  // FILTER EVENTS BY CATEGORY
-  // ========================
-  List<AgencyEvent> getEventsByCategory(String category) {
-    return _allEvents.where((event) => event.category == category).toList();
-  }
+  // Get event by ID
+  Future<EventModel?> getEventById(String eventId) async {
+    try {
+      final response = await supabase
+          .from('agency_events')
+          .select()
+          .eq('id', eventId)
+          .single();
 
-  // ========================
-  // FILTER EVENTS BY DATE RANGE
-  // ========================
-  List<AgencyEvent> getEventsByDateRange(DateTime start, DateTime end) {
-    return _allEvents
-        .where((event) =>
-            event.eventDate.isAfter(start) && event.eventDate.isBefore(end))
-        .toList();
-  }
-
-  // ========================
-  // CLEAR ERROR
-  // ========================
-  void clearError() {
-    _error = null;
-    notifyListeners();
+      return EventModel.fromJson(response);
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return null;
+    }
   }
 }

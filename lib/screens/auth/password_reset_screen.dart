@@ -1,4 +1,5 @@
 // screens/auth/password_reset_screen.dart
+// screens/auth/password_reset_screen.dart - UPDATED WITH TOKEN-BASED RESET
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
@@ -14,15 +15,25 @@ class PasswordResetScreen extends StatefulWidget {
 
 class _PasswordResetScreenState extends State<PasswordResetScreen> {
   final _emailController = TextEditingController();
+  final _tokenController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
   bool _isLoading = false;
   bool _emailSent = false;
+  bool _showNewPassword = false;
+  bool _showConfirmPassword = false;
 
   @override
   void dispose() {
     _emailController.dispose();
+    _tokenController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
+  // ✅ Step 1: Request Password Reset
   Future<void> _handleResetRequest() async {
     if (_emailController.text.isEmpty) {
       _showErrorDialog('Please enter your email address');
@@ -48,7 +59,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Password reset email has been sent'),
+          content: Text('✅ Password reset email has been sent'),
           backgroundColor: Colors.green,
         ),
       );
@@ -62,21 +73,105 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
     }
   }
 
+  // ✅ Step 2: Verify Token & Reset Password
+  Future<void> _handlePasswordReset() async {
+    if (_tokenController.text.isEmpty) {
+      _showErrorDialog('Please enter the reset code from your email');
+      return;
+    }
+
+    if (_newPasswordController.text.isEmpty) {
+      _showErrorDialog('Please enter a new password');
+      return;
+    }
+
+    if (_newPasswordController.text.length < 6) {
+      _showErrorDialog('Password must be at least 6 characters');
+      return;
+    }
+
+    if (_newPasswordController.text != _confirmPasswordController.text) {
+      _showErrorDialog('Passwords do not match');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      await authService.resetPasswordWithToken(
+        email: _emailController.text.trim(),
+        resetToken: _tokenController.text.trim(),
+        newPassword: _newPasswordController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      _showSuccessDialog(
+        'Password Reset Successful',
+        'Your password has been updated. You can now login with your new password.',
+        () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const LoginScreen(),
+            ),
+          );
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      _showErrorDialog(_extractErrorMessage(e.toString()));
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   String _extractErrorMessage(String error) {
+    if (error.contains('Token expired')) {
+      return 'Reset token has expired. Please request a new reset email.';
+    } else if (error.contains('Invalid token')) {
+      return 'Invalid reset code. Please check your email and try again.';
+    } else if (error.contains('Token not found')) {
+      return 'Reset code not found. Please request a new reset email.';
+    }
     return error
         .replaceAll('Exception: ', '')
-        .replaceAll('Password reset request error: ', '');
+        .replaceAll('Password reset error: ', '');
   }
 
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Error'),
+        title: const Text('❌ Error'),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSuccessDialog(
+    String title,
+    String message,
+    VoidCallback onConfirm,
+  ) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: onConfirm,
             child: const Text('OK'),
           ),
         ],
@@ -143,8 +238,8 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
             Center(
               child: Text(
                 _emailSent
-                    ? 'Check your email for password reset instructions'
-                    : 'Enter your email to receive password reset instructions',
+                    ? 'Check your email for the reset code and enter your new password'
+                    : 'Enter your email to receive a password reset code',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 14,
@@ -156,7 +251,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
             const SizedBox(height: 40),
 
             if (!_emailSent) ...[
-              // Email Field
+              // ✅ STEP 1: EMAIL VERIFICATION
               Text(
                 'Email Address',
                 style: TextStyle(
@@ -218,7 +313,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Enter the email address associated with your account. We\'ll send you a link to reset your password.',
+                        'Enter the email associated with your account. We\'ll send you a reset code that you can use to set a new password.',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[600],
@@ -251,7 +346,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                           elevation: 0,
                         ),
                         child: const Text(
-                          'Send Reset Link',
+                          'Send Reset Code',
                           style: TextStyle(
                             fontSize: 16,
                             color: Colors.white,
@@ -261,50 +356,9 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                       ),
               ),
             ] else ...[
-              // Success State
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.green.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.check_circle_outline,
-                      color: Colors.green,
-                      size: 50,
-                    ),
-                    const SizedBox(height: 15),
-                    Text(
-                      'Password Reset Email Sent',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green[700],
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Please check your email inbox for the password reset link. The link will expire in 24 hours.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey[600],
-                        height: 1.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 40),
-
-              // Tips Section
+              // ✅ STEP 2: PASSWORD RESET WITH TOKEN
               Text(
-                'Tips:',
+                'Reset Code',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -312,16 +366,203 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _tipItem(
-                      'Check your spam/junk folder if you don\'t see the email'),
-                  _tipItem('The reset link will expire in 24 hours'),
-                  _tipItem('Make sure to use a strong password'),
-                ],
+              TextFormField(
+                controller: _tokenController,
+                enabled: !_isLoading,
+                decoration: InputDecoration(
+                  hintText: 'Enter code from your email',
+                  prefixIcon: Icon(
+                    Icons.vpn_key_outlined,
+                    color: themeProvider.accentColor,
+                  ),
+                  filled: true,
+                  fillColor: isDark ? Colors.white10 : Colors.grey[100],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: themeProvider.accentColor,
+                      width: 2,
+                    ),
+                  ),
+                ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 20),
+
+              Text(
+                'New Password',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white70 : Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: _newPasswordController,
+                enabled: !_isLoading,
+                obscureText: !_showNewPassword,
+                decoration: InputDecoration(
+                  hintText: 'Enter new password',
+                  prefixIcon: Icon(
+                    Icons.lock_outline,
+                    color: themeProvider.accentColor,
+                  ),
+                  suffixIcon: IconButton(
+                    onPressed: () {
+                      setState(() => _showNewPassword = !_showNewPassword);
+                    },
+                    icon: Icon(
+                      _showNewPassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: themeProvider.accentColor,
+                    ),
+                  ),
+                  filled: true,
+                  fillColor: isDark ? Colors.white10 : Colors.grey[100],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: themeProvider.accentColor,
+                      width: 2,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              Text(
+                'Confirm Password',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white70 : Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: _confirmPasswordController,
+                enabled: !_isLoading,
+                obscureText: !_showConfirmPassword,
+                decoration: InputDecoration(
+                  hintText: 'Confirm new password',
+                  prefixIcon: Icon(
+                    Icons.lock_outline,
+                    color: themeProvider.accentColor,
+                  ),
+                  suffixIcon: IconButton(
+                    onPressed: () {
+                      setState(
+                          () => _showConfirmPassword = !_showConfirmPassword);
+                    },
+                    icon: Icon(
+                      _showConfirmPassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: themeProvider.accentColor,
+                    ),
+                  ),
+                  filled: true,
+                  fillColor: isDark ? Colors.white10 : Colors.grey[100],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: themeProvider.accentColor,
+                      width: 2,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 15),
+
+              // Info Box
+              Container(
+                padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.blue.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: Colors.blue[600],
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Password must be at least 6 characters and both passwords must match.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 30),
+
+              // Reset Password Button
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: _isLoading
+                    ? Center(
+                        child: CircularProgressIndicator(
+                          color: themeProvider.accentColor,
+                        ),
+                      )
+                    : ElevatedButton(
+                        onPressed: _handlePasswordReset,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: themeProvider.accentColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          'Reset Password',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+              ),
+              const SizedBox(height: 15),
 
               // Back to Login Button
               SizedBox(
@@ -360,32 +601,6 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
             const SizedBox(height: 30),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _tipItem(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.check,
-            color: Colors.green,
-            size: 20,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey[600],
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

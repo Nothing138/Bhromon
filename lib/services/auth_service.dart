@@ -1,5 +1,5 @@
 // services/auth_service.dart
-// services/auth_service.dart - WITH BACKEND API INTEGRATION
+// services/auth_service.dart - UPDATED WITH PASSWORD RESET
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -11,13 +11,11 @@ class AuthService extends ChangeNotifier {
   final supabase = Supabase.instance.client;
   late EmailService emailService;
 
-  // ✅ Backend API URL - Change this to your backend
   static const String BACKEND_URL = 'http://localhost:3000/api/auth';
-  // For production: 'https://your-backend.com/api/auth'
 
   User? _currentUser;
   TravelAgency? _currentAgency;
-  String? _userType; // 'user' or 'agency'
+  String? _userType;
   bool _isOtpRequired = false;
 
   AuthService() {
@@ -61,7 +59,6 @@ class AuthService extends ChangeNotifier {
         final data = jsonDecode(response.body);
         print('✅ Backend registration successful: ${data['userId']}');
 
-        // Try to login after registration
         await Future.delayed(Duration(seconds: 2));
         await smartLogin(email: email, password: password);
         return true;
@@ -115,7 +112,6 @@ class AuthService extends ChangeNotifier {
         final data = jsonDecode(response.body);
         print('✅ Backend agency registration successful: ${data['agencyId']}');
 
-        // Try to login after registration
         await Future.delayed(Duration(seconds: 2));
         await smartLogin(email: request.ownerEmail, password: request.password);
         return true;
@@ -151,7 +147,6 @@ class AuthService extends ChangeNotifier {
       _currentUser = authResponse.user;
       print('✅ User authenticated: ${authResponse.user!.id}');
 
-      // Fetch user profile
       final profile = await supabase
           .from('profiles')
           .select('user_type')
@@ -161,7 +156,6 @@ class AuthService extends ChangeNotifier {
       _userType = profile['user_type'];
       print('✅ User type: $_userType');
 
-      // If agency, check OTP status
       if (_userType == 'agency') {
         await _handleAgencyLogin(authResponse.user!.id);
       } else {
@@ -236,13 +230,11 @@ class AuthService extends ChangeNotifier {
       if (response.statusCode == 200) {
         print('✅ OTP verified successfully via backend');
 
-        // Update local agency object
         _currentAgency = _currentAgency!.copyWith(
           otpVerified: true,
           otpVerifiedAt: DateTime.now(),
         );
 
-        // Log successful OTP verification
         await supabase.from('agency_login_history').insert({
           'agency_id': _currentAgency!.id,
           'login_method': 'otp',
@@ -299,7 +291,7 @@ class AuthService extends ChangeNotifier {
   }
 
   // ========================
-  // PASSWORD RESET
+  // PASSWORD RESET - REQUEST
   // ========================
   Future<bool> requestPasswordReset({
     required String email,
@@ -307,23 +299,91 @@ class AuthService extends ChangeNotifier {
     try {
       print('🔄 Password reset requested for: $email');
 
-      await supabase.auth.resetPasswordForEmail(email.trim());
+      // ✅ Option 1: Use Backend for custom email with token
+      final response = await http
+          .post(
+            Uri.parse('$BACKEND_URL/request-password-reset'),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'email': email.trim(),
+            }),
+          )
+          .timeout(Duration(seconds: 30));
 
-      print('✅ Password reset email sent');
-      return true;
+      if (response.statusCode == 200) {
+        print('✅ Password reset email sent via backend');
+        return true;
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['message'] ?? 'Password reset request failed');
+      }
     } catch (e) {
-      print('❌ Password reset request error: $e');
-      throw Exception('Password reset request error: $e');
+      print('⚠️ Backend password reset failed, trying Supabase Auth');
+      try {
+        // ✅ Fallback: Use Supabase Auth
+        await supabase.auth.resetPasswordForEmail(email.trim());
+        print('✅ Password reset email sent via Supabase');
+        return true;
+      } catch (supabaseError) {
+        print('❌ Password reset request error: $supabaseError');
+        throw Exception('Password reset request error: $supabaseError');
+      }
     }
   }
 
-  Future<bool> updatePasswordAfterReset({
+  // ========================
+  // PASSWORD RESET - VERIFY TOKEN & UPDATE
+  // ========================
+  Future<bool> resetPasswordWithToken({
+    required String email,
+    required String resetToken,
     required String newPassword,
   }) async {
     try {
+      print('🔄 Verifying reset token and updating password for: $email');
+
+      final response = await http
+          .post(
+            Uri.parse('$BACKEND_URL/reset-password'),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'email': email.trim(),
+              'resetToken': resetToken.trim(),
+              'newPassword': newPassword.trim(),
+            }),
+          )
+          .timeout(Duration(seconds: 30));
+
+      if (response.statusCode == 200) {
+        print('✅ Password reset successful via backend');
+        return true;
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['message'] ?? 'Password reset failed');
+      }
+    } catch (e) {
+      print('❌ Password reset error: $e');
+      throw Exception('Password reset error: $e');
+    }
+  }
+
+  // ========================
+  // PASSWORD UPDATE - DIRECT (For authenticated users)
+  // ========================
+  Future<bool> updatePasswordDirect({
+    required String newPassword,
+  }) async {
+    try {
+      print('🔄 Updating password for current user');
+
       await supabase.auth.updateUser(
         UserAttributes(password: newPassword.trim()),
       );
+
       print('✅ Password updated successfully');
       return true;
     } catch (e) {

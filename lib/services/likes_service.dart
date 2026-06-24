@@ -1,5 +1,4 @@
 // services/likes_service.dart
-// ✅ COMPLETE LIKES MANAGEMENT SYSTEM
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 

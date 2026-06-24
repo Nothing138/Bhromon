@@ -129,8 +129,14 @@ class FeedItem {
   });
 
   DateTime get timestamp {
-    if (type == 'event' && data is AgencyEvent) {
-      return (data as AgencyEvent).createdAt;
+    if (type == 'event') {
+      // avoid a static reference to a possibly-undefined AgencyEvent type
+      // attempt to read createdAt dynamically
+      try {
+        return (data as dynamic).createdAt as DateTime;
+      } catch (_) {
+        // fall through to default below
+      }
     } else if (type == 'post' && data is Post) {
       return (data as Post).createdAt;
     }

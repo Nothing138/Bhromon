@@ -1,3 +1,6 @@
+// server.js - Complete Bhromon Backend Setup
+// ✅ Raj's working Express server with all routes
+
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -6,6 +9,9 @@ import postsRoutes from './routes/posts.js';
 import feedRoutes from './routes/feedRoutes.js';
 import likesRoutes from './routes/likesRoutes.js';
 import actionsRoutes from './routes/actionsRoutes.js';
+import eventRoutes from './routes/eventRoutes.js'; 
+import profileRoutes from './routes/profile_routes.js';
+import passwordResetRoutes from './routes/password-reset.js';
 
 dotenv.config();
 
@@ -26,10 +32,20 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // ROUTES
 // ========================
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', passwordResetRoutes); 
 app.use('/api/posts', postsRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/likes', likesRoutes);
 app.use('/api/actions', actionsRoutes);
+app.use('/api', eventRoutes); 
+app.use('/api', profileRoutes);
+
+// Uploads folder
+import fs from 'fs';
+const uploadsDir = './uploads/profiles';
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 // ========================
 // HEALTH CHECK

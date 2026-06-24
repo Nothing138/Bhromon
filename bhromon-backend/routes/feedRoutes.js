@@ -32,13 +32,13 @@ const auth = async (req, res, next) => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// GET COMBINED FEED (Posts + Events)
+// GET COMBINED FEED (Posts + Events) - FIXED WITH ALL DATA
 // ═══════════════════════════════════════════════════════════════════════════
 router.get('/combined', auth, async (req, res) => {
   try {
     const { limit = 20, offset = 0 } = req.query;
 
-    // Fetch posts
+    // ── POSTS WITH FULL USER DATA ──
     const { data: posts, error: postsError } = await supabase
       .from('posts')
       .select(`
@@ -47,12 +47,17 @@ router.get('/combined', auth, async (req, res) => {
         content,
         image_url,
         location_name,
+        contact_number,
         created_at,
-        user_name,
-        user_full_name,
-        user_avatar_url,
         likes_count,
-        comments_count
+        comments_count,
+        user:user_id(
+          id,
+          full_name,
+          username,
+          avatar_url,
+          phone_number
+        )
       `)
       .order('created_at', { ascending: false })
       .limit(limit)
@@ -60,7 +65,7 @@ router.get('/combined', auth, async (req, res) => {
 
     if (postsError) throw postsError;
 
-    // Fetch events
+    // ── EVENTS WITH AGENCY DATA ──
     const { data: events, error: eventsError } = await supabase
       .from('agency_events')
       .select(`
@@ -70,9 +75,21 @@ router.get('/combined', auth, async (req, res) => {
         description,
         location,
         event_date,
+        image_url,
         price,
         category,
-        created_at
+        created_at,
+        agency:agency_id(
+          id,
+          user_id,
+          agency_name,
+          owner_full_name,
+          owner_phone,
+          office_phone,
+          office_address,
+          website_url,
+          verification_status
+        )
       `)
       .order('event_date', { ascending: false })
       .limit(limit)
@@ -80,21 +97,56 @@ router.get('/combined', auth, async (req, res) => {
 
     if (eventsError) throw eventsError;
 
-    // Transform and combine
+    // ── TRANSFORM POSTS ──
     const postsWithType = (posts || []).map(p => ({
-      ...p,
-      type: 'post'
+      id: p.id,
+      type: 'post',
+      user_id: p.user_id,
+      content: p.content,
+      image_url: p.image_url,
+      location_name: p.location_name,
+      contact_number: p.contact_number,
+      created_at: p.created_at,
+      likes_count: p.likes_count || 0,
+      comments_count: p.comments_count || 0,
+      // User data
+      user_name: p.user?.username || 'Unknown',
+      user_full_name: p.user?.full_name || 'Unknown User',
+      user_avatar: p.user?.avatar_url,
+      user_phone: p.user?.phone_number,
+      user_id: p.user?.id,
+      sortDate: p.created_at,
     }));
 
+    // ── TRANSFORM EVENTS ──
     const eventsWithType = (events || []).map(e => ({
-      ...e,
-      type: 'event'
+      id: e.id,
+      type: 'event',
+      agency_id: e.agency_id,
+      title: e.title,
+      description: e.description,
+      location: e.location,
+      event_date: e.event_date,
+      image_url: e.image_url,
+      price: e.price,
+      category: e.category,
+      created_at: e.created_at,
+      sortDate: e.event_date,
+      // Agency data
+      agency_name: e.agency?.agency_name || 'Unknown Agency',
+      owner_full_name: e.agency?.owner_full_name,
+      owner_phone: e.agency?.owner_phone,
+      office_phone: e.agency?.office_phone,
+      office_address: e.agency?.office_address,
+      website_url: e.agency?.website_url,
+      verification_status: e.agency?.verification_status,
+      user_id: e.agency?.user_id,
     }));
 
-    // Combine and sort by date
+    // ── COMBINE AND SORT ──
     const combined = [...postsWithType, ...eventsWithType].sort((a, b) => {
-      const dateA = new Date(a.created_at || a.event_date);
-      const dateB = new Date(b.created_at || b.event_date);
+      const dateA = new Date(a.sortDate);
+      const dateB = new Date(b.sortDate);
       return dateB - dateA;
     });
 
@@ -113,7 +165,7 @@ router.get('/combined', auth, async (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// GET FEED - Posts Only
+// GET FEED - Posts Only (WITH FULL DATA)
 // ═══════════════════════════════════════════════════════════════════════════
 router.get('/posts', auth, async (req, res) => {
   try {
@@ -121,7 +173,16 @@ router.get('/posts', auth, async (req, res) => {
 
     const { data, error } = await supabase
       .from('posts')
-      .select('*')
+      .select(`
+        *,
+        user:user_id(
+          id,
+          full_name,
+          username,
+          avatar_url,
+          phone_number
+        )
+      `)
       .order('created_at', { ascending: false })
       .limit(limit)
       .offset(offset);
@@ -142,7 +203,7 @@ router.get('/posts', auth, async (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// GET FEED - Events Only
+// GET FEED - Events Only (WITH AGENCY DATA)
 // ═══════════════════════════════════════════════════════════════════════════
 router.get('/events', auth, async (req, res) => {
   try {
@@ -150,7 +211,20 @@ router.get('/events', auth, async (req, res) => {
 
     const { data, error } = await supabase
       .from('agency_events')
-      .select('*')
+      .select(`
+        *,
+        agency:agency_id(
+          id,
+          user_id,
+          agency_name,
+          owner_full_name,
+          owner_phone,
+          office_phone,
+          office_address,
+          website_url,
+          verification_status
+        )
+      `)
       .order('event_date', { ascending: false })
       .limit(limit)
       .offset(offset);

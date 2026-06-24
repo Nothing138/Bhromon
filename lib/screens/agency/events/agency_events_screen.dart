@@ -2,9 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/theme_provider.dart';
-import '../../../services/auth_service.dart';
 import '../../../services/event_service.dart';
-import '../feed/create_post_screen.dart';
+import '../../../models/event_model.dart';
+import 'create_event_screen.dart';
+import 'event_detail_screen.dart';
 
 class AgencyEventsScreen extends StatefulWidget {
   const AgencyEventsScreen({super.key});
@@ -13,15 +14,27 @@ class AgencyEventsScreen extends StatefulWidget {
   State<AgencyEventsScreen> createState() => _AgencyEventsScreenState();
 }
 
-class _AgencyEventsScreenState extends State<AgencyEventsScreen> {
+class _AgencyEventsScreenState extends State<AgencyEventsScreen>
+    with TickerProviderStateMixin {
+  late TabController _tabController;
+
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+    _loadEvents();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  void _loadEvents() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authService = Provider.of<AuthService>(context, listen: false);
-      if (authService.currentAgency != null) {
-        Provider.of<EventService>(context, listen: false)
-            .fetchAgencyEvents(authService.currentAgency!.id);
+      if (mounted) {
+        Provider.of<EventService>(context, listen: false).fetchAllEvents();
       }
     });
   }
@@ -29,277 +42,348 @@ class _AgencyEventsScreenState extends State<AgencyEventsScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
-    final authService = Provider.of<AuthService>(context);
     final eventService = Provider.of<EventService>(context);
+    final isDark = themeProvider.isDarkMode;
+    final accentColor = themeProvider.accentColor;
 
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.transparent,
+        backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
         title: Text(
-          'My Events',
+          'Events',
           style: TextStyle(
-            color: themeProvider.accentColor,
-            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : Colors.black,
+            fontWeight: FontWeight.w700,
             fontSize: 24,
           ),
         ),
-        centerTitle: true,
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: themeProvider.accentColor,
-        child: const Icon(Icons.add, color: Colors.white),
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const CreatePostScreen()),
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: accentColor,
+          unselectedLabelColor: isDark ? Colors.white38 : Colors.grey[400],
+          indicatorColor: accentColor,
+          indicatorWeight: 3,
+          tabs: const [
+            Tab(text: 'Upcoming'),
+            Tab(text: 'Past'),
+            Tab(text: 'All'),
+          ],
         ),
       ),
-      body: eventService.isLoading
-          ? Center(
-              child: CircularProgressIndicator(
-                color: themeProvider.accentColor,
+      body: RefreshIndicator(
+        onRefresh: () => eventService.fetchAllEvents(),
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            // Upcoming Events
+            _buildEventsList(
+              events: eventService.upcomingEvents,
+              isDark: isDark,
+              accentColor: accentColor,
+              isLoading: eventService.isLoading,
+              isEmpty: eventService.upcomingEvents.isEmpty,
+            ),
+            // Past Events
+            _buildEventsList(
+              events: eventService.pastEvents,
+              isDark: isDark,
+              accentColor: accentColor,
+              isLoading: eventService.isLoading,
+              isEmpty: eventService.pastEvents.isEmpty,
+            ),
+            // All Events
+            _buildEventsList(
+              events: eventService.allEvents,
+              isDark: isDark,
+              accentColor: accentColor,
+              isLoading: eventService.isLoading,
+              isEmpty: eventService.allEvents.isEmpty,
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context)
+              .push(
+                MaterialPageRoute(
+                  builder: (context) => const CreateEventScreen(),
+                ),
+              )
+              .then((_) => _loadEvents());
+        },
+        backgroundColor: accentColor,
+        child: Icon(
+          Icons.add,
+          color: isDark ? Colors.black : Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEventsList({
+    required List<EventModel> events,
+    required bool isDark,
+    required Color accentColor,
+    required bool isLoading,
+    required bool isEmpty,
+  }) {
+    if (isLoading && events.isEmpty) {
+      return Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(accentColor),
+        ),
+      );
+    }
+
+    if (isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.event_outlined,
+              size: 60,
+              color: isDark ? Colors.white24 : Colors.grey[300],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No events yet',
+              style: TextStyle(
+                color: isDark ? Colors.white54 : Colors.grey[600],
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
               ),
-            )
-          : eventService.agencyEvents.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: events.length,
+      itemBuilder: (context, index) {
+        return _buildEventCard(
+          event: events[index],
+          isDark: isDark,
+          accentColor: accentColor,
+          onTap: () {
+            Navigator.of(context)
+                .push(
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        EventDetailScreen(event: events[index]),
+                  ),
+                )
+                .then((_) => _loadEvents());
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildEventCard({
+    required EventModel event,
+    required bool isDark,
+    required Color accentColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark ? Colors.white10 : Colors.grey[200]!,
+            width: 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Event Image
+            if (event.imageUrl != null)
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                ),
+                child: Image.network(
+                  event.imageUrl!,
+                  height: 180,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return _buildPlaceholderImage(isDark);
+                  },
+                ),
+              )
+            else
+              _buildPlaceholderImage(isDark),
+            // Event Details
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Status Badge
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _getStatusColor(event.status, isDark),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      event.status.toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Title
+                  Text(
+                    event.title,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  // Location & Category
+                  Row(
                     children: [
-                      Icon(
-                        Icons.event_outlined,
-                        size: 64,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No events yet',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.white54 : Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Create your first event to get started',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: isDark ? Colors.white54 : Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const CreatePostScreen(),
+                      Icon(Icons.location_on_outlined,
+                          size: 14,
+                          color: isDark ? Colors.white54 : Colors.grey[600]),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          event.location,
+                          style: TextStyle(
+                            color: isDark ? Colors.white54 : Colors.grey[600],
+                            fontSize: 13,
                           ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: themeProvider.accentColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
-                          child: Text(
-                            'Create Event',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   ),
-                )
-              : ListView.builder(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  itemCount: eventService.agencyEvents.length,
-                  itemBuilder: (context, index) {
-                    final event = eventService.agencyEvents[index];
-                    return _buildEventCard(
-                      event,
-                      themeProvider,
-                      isDark,
-                      context,
-                      eventService,
-                    );
-                  },
-                ),
-    );
-  }
-
-  Widget _buildEventCard(
-    dynamic event,
-    ThemeProvider themeProvider,
-    bool isDark,
-    BuildContext context,
-    EventService eventService,
-  ) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: isDark ? Colors.black45 : Colors.black12,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (event.imageUrl != null)
-            Container(
-              width: double.infinity,
-              height: 150,
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  topRight: Radius.circular(12),
-                ),
-                color: isDark ? Colors.white10 : Colors.grey[200],
-              ),
-              child: Image.network(
-                event.imageUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    const SizedBox.expand(
-                  child: Icon(Icons.image_not_supported),
-                ),
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        event.title,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                    PopupMenuButton(
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'edit',
-                          child: Text('Edit'),
-                        ),
-                        const PopupMenuItem(
-                          value: 'delete',
-                          child: Text('Delete'),
-                        ),
-                      ],
-                      onSelected: (value) async {
-                        if (value == 'delete') {
-                          final confirmed = await showDialog<bool>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Delete Event?'),
-                              content: const Text(
-                                'This action cannot be undone.',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, false),
-                                  child: const Text('Cancel'),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  child: const Text('Delete'),
-                                ),
-                              ],
-                            ),
-                          );
-
-                          if (confirmed == true) {
-                            final authService = Provider.of<AuthService>(
-                                context,
-                                listen: false);
-                            await eventService.deleteEvent(
-                              event.id,
-                              authService.currentAgency!.id,
-                            );
-                          }
-                        }
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.calendar_today,
-                      size: 16,
-                      color: themeProvider.accentColor,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _formatDate(event.eventDate),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDark ? Colors.white70 : Colors.grey[700],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Icon(
-                      Icons.location_on,
-                      size: 16,
-                      color: themeProvider.accentColor,
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        event.location ?? 'No location',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                  const SizedBox(height: 12),
+                  // Date & Time
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_today_outlined,
+                          size: 14,
+                          color: isDark ? Colors.white54 : Colors.grey[600]),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${event.formattedDate} at ${event.formattedTime}',
                         style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? Colors.white70 : Colors.grey[700],
+                          color: isDark ? Colors.white54 : Colors.grey[600],
+                          fontSize: 13,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                if (event.capacity != null)
-                  Text(
-                    'Booked: ${event.bookedCount}/${event.capacity}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.orange[600],
-                      fontWeight: FontWeight.w500,
-                    ),
+                    ],
                   ),
-              ],
+                  const SizedBox(height: 12),
+                  // Price & Capacity
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Price',
+                            style: TextStyle(
+                              color: isDark ? Colors.white54 : Colors.grey[600],
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '৳${event.price.toStringAsFixed(0)}',
+                            style: TextStyle(
+                              color: isDark ? Colors.white : Colors.black,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            'Capacity',
+                            style: TextStyle(
+                              color: isDark ? Colors.white54 : Colors.grey[600],
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${event.bookedCount}/${event.capacity}',
+                            style: TextStyle(
+                              color: isDark ? Colors.white : Colors.black,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year} at ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+  Widget _buildPlaceholderImage(bool isDark) {
+    return Container(
+      height: 180,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F172A) : Colors.grey[200],
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(16),
+          topRight: Radius.circular(16),
+        ),
+      ),
+      child: Icon(
+        Icons.event_outlined,
+        size: 50,
+        color: isDark ? Colors.white24 : Colors.grey[400],
+      ),
+    );
+  }
+
+  Color _getStatusColor(String status, bool isDark) {
+    switch (status) {
+      case 'active':
+        return Colors.green;
+      case 'cancelled':
+        return Colors.red;
+      case 'completed':
+        return Colors.blue;
+      default:
+        return Colors.grey;
+    }
   }
 }

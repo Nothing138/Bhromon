@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/theme_provider.dart';
-import '../../../services/feed_service.dart';
-import '../../../services/likes_service.dart';
-import '../../chat/chat_screen.dart';
+import '../../../services/feed_service_simple.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -13,87 +11,21 @@ class AgencyFeedScreen extends StatefulWidget {
   const AgencyFeedScreen({super.key});
 
   @override
-  State<AgencyFeedScreen> createState() => _AgencyFeedScreenState();
+  State<AgencyFeedScreen> createState() => _AgencyFeedScreenFixedState();
 }
 
-class _AgencyFeedScreenState extends State<AgencyFeedScreen> {
-  final feedService = FeedService();
-  final likesService = LikesService();
+class _AgencyFeedScreenFixedState extends State<AgencyFeedScreen> {
+  late FeedServiceSimple feedService;
   final supabase = Supabase.instance.client;
 
   @override
   void initState() {
     super.initState();
-    feedService.debugFeedData();
-  }
+    feedService = FeedServiceSimple();
 
-  Future<void> _initiateCall(String phoneNumber) async {
-    if (phoneNumber.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Phone number not available')),
-      );
-      return;
-    }
-
-    final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
-
-    try {
-      if (await canLaunchUrl(launchUri)) {
-        await launchUrl(launchUri);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not launch call')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
-    }
-  }
-
-  Future<void> _initiateChat(
-      String userId, String userName, String userType) async {
-    final currentUser = supabase.auth.currentUser;
-    if (currentUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please login to message')),
-      );
-      return;
-    }
-
-    try {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ChatScreen(
-            otherUserId: userId,
-            otherUserName: userName,
-          ),
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error opening chat: $e')),
-      );
-    }
-  }
-
-  Future<void> _sharePost(Map<String, dynamic> item) async {
-    final type = item['type'] ?? 'post';
-    final title = item['title'] ?? item['content'] ?? 'Check this out';
-
-    final shareText = type == 'event'
-        ? '📍 $title\n\nCheck out this amazing event on Bhromon!'
-        : '✈️ $title\n\nSharing this awesome travel post!';
-
-    try {
-      await Share.share(shareText);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error sharing: $e')),
-      );
-    }
+    // Debug: Check if data exists
+    debugPrint('🔍 Checking database...');
+    feedService.checkDataExists();
   }
 
   @override
@@ -135,18 +67,19 @@ class _AgencyFeedScreenState extends State<AgencyFeedScreen> {
           ),
         ),
       ),
-      body: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: feedService.getCombinedFeed(),
+      // ✅ Use FutureBuilder instead of StreamBuilder
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: feedService.getCombinedFeed(),
         builder: (context, snapshot) {
           // Loading state
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
               child: SizedBox(
-                width: 40,
-                height: 40,
+                width: 50,
+                height: 50,
                 child: CircularProgressIndicator(
                   valueColor: AlwaysStoppedAnimation<Color>(accentColor),
-                  strokeWidth: 2.5,
+                  strokeWidth: 3,
                 ),
               ),
             );
@@ -154,72 +87,80 @@ class _AgencyFeedScreenState extends State<AgencyFeedScreen> {
 
           // Error state
           if (snapshot.hasError) {
+            debugPrint('❌ Feed Error: ${snapshot.error}');
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.error_outline_rounded,
-                    color: textSecondary,
-                    size: 48,
-                  ),
-                  const SizedBox(height: 16),
+                  Icon(Icons.error_outline, color: Colors.red, size: 60),
+                  const SizedBox(height: 20),
                   Text(
-                    'Failed to load feed',
-                    style: TextStyle(
-                      color: textSecondary,
-                      fontSize: 16,
-                    ),
+                    'Error loading feed',
+                    style: TextStyle(color: textSecondary, fontSize: 16),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    snapshot.error.toString(),
+                    style: TextStyle(color: textSecondary, fontSize: 12),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () => setState(() {}),
+                    child: const Text('Retry'),
                   ),
                 ],
               ),
             );
           }
 
-          // Empty state
+          // No data state
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.feed_outlined,
-                    color: textSecondary,
-                    size: 48,
-                  ),
-                  const SizedBox(height: 16),
+                  Icon(Icons.feed_outlined, color: textSecondary, size: 60),
+                  const SizedBox(height: 20),
                   Text(
                     'No posts or events yet',
-                    style: TextStyle(
-                      color: textSecondary,
-                      fontSize: 16,
-                    ),
+                    style: TextStyle(color: textSecondary, fontSize: 16),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Check back soon!',
+                    style: TextStyle(color: textSecondary, fontSize: 13),
                   ),
                 ],
               ),
             );
           }
 
+          // Success - Show feed
           final feedItems = snapshot.data!;
+          debugPrint('✅ Rendering ${feedItems.length} feed items');
 
-          return ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            itemCount: feedItems.length,
-            itemBuilder: (context, index) {
-              final item = feedItems[index];
-              final isEvent = item['type'] == 'event';
+          return RefreshIndicator(
+            onRefresh: () async => setState(() {}),
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              itemCount: feedItems.length,
+              itemBuilder: (context, index) {
+                final item = feedItems[index];
+                final isEvent = item['type'] == 'event';
 
-              return _buildFeedItem(
-                item: item,
-                isEvent: isEvent,
-                accentColor: accentColor,
-                isDark: isDark,
-                surface: surface,
-                surfaceBorder: surfaceBorder,
-                textPrimary: textPrimary,
-                textSecondary: textSecondary,
-              );
-            },
+                return _buildFeedItem(
+                  item: item,
+                  isEvent: isEvent,
+                  accentColor: accentColor,
+                  isDark: isDark,
+                  surface: surface,
+                  surfaceBorder: surfaceBorder,
+                  textPrimary: textPrimary,
+                  textSecondary: textSecondary,
+                );
+              },
+            ),
           );
         },
       ),
@@ -236,12 +177,27 @@ class _AgencyFeedScreenState extends State<AgencyFeedScreen> {
     required Color textPrimary,
     required Color textSecondary,
   }) {
-    final currentUser = supabase.auth.currentUser;
-    final userId = currentUser?.id ?? '';
+    // Safe getters with defaults
+    final getStr = (dynamic v, String def) => (v ?? def).toString();
+    final getNum = (dynamic v, num def) {
+      try {
+        return num.parse(v?.toString() ?? def.toString());
+      } catch (_) {
+        return def;
+      }
+    };
 
-    final title = item['title'] ?? item['user_name'] ?? 'Unknown';
-    final content = item['content'] ?? item['description'] ?? '';
-    const maxLines = 3;
+    final title = isEvent
+        ? getStr(item['title'], 'Unknown Event')
+        : getStr(item['user_full_name'], 'Unknown User');
+    final content =
+        isEvent ? getStr(item['description'], '') : getStr(item['content'], '');
+    final imageUrl = item['image_url'];
+    final contactNumber =
+        getStr(item['owner_phone'] ?? item['contact_number'], '');
+    final location = getStr(item['location'] ?? item['location_name'], '');
+    final eventDate = isEvent ? getStr(item['event_date'], '') : '';
+    final price = getNum(item['price'], 0);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -249,23 +205,15 @@ class _AgencyFeedScreenState extends State<AgencyFeedScreen> {
         color: surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: surfaceBorder, width: 0.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── HEADER ──
+          // Header
           Padding(
             padding: const EdgeInsets.all(14),
             child: Row(
               children: [
-                // Icon/Avatar
                 Container(
                   width: 44,
                   height: 44,
@@ -274,14 +222,12 @@ class _AgencyFeedScreenState extends State<AgencyFeedScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
-                    isEvent ? Icons.event_rounded : Icons.location_on_rounded,
+                    isEvent ? Icons.event_rounded : Icons.person_rounded,
                     color: accentColor,
                     size: 22,
                   ),
                 ),
                 const SizedBox(width: 12),
-
-                // Title + Type
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -292,14 +238,15 @@ class _AgencyFeedScreenState extends State<AgencyFeedScreen> {
                           color: textPrimary,
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          letterSpacing: -0.2,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        isEvent ? '📍 Event' : '✈️ Post',
+                        contactNumber.isEmpty
+                            ? (isEvent ? '📍 Event' : '✈️ Post')
+                            : '📞 $contactNumber',
                         style: TextStyle(
                           color: textSecondary,
                           fontSize: 11,
@@ -313,23 +260,51 @@ class _AgencyFeedScreenState extends State<AgencyFeedScreen> {
             ),
           ),
 
-          // ── CONTENT ──
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            child: Text(
-              content,
-              style: TextStyle(
-                color: textPrimary,
-                fontSize: 13,
-                height: 1.5,
+          // Image
+          if (imageUrl != null && imageUrl.toString().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  imageUrl.toString(),
+                  height: 180,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    height: 180,
+                    color: isDark ? const Color(0xFF1E293B) : Colors.grey[200],
+                    child: Icon(
+                      Icons.image_not_supported,
+                      color: textSecondary,
+                    ),
+                  ),
+                ),
               ),
-              maxLines: maxLines,
-              overflow: TextOverflow.ellipsis,
             ),
-          ),
-          const SizedBox(height: 12),
 
-          // ── EVENT DETAILS (if event) ──
+          if (imageUrl != null && imageUrl.toString().isNotEmpty)
+            const SizedBox(height: 12),
+
+          // Content
+          if (content.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Text(
+                content,
+                style: TextStyle(
+                  color: textPrimary,
+                  fontSize: 13,
+                  height: 1.5,
+                ),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+
+          if (content.isNotEmpty) const SizedBox(height: 12),
+
+          // Event details
           if (isEvent)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -338,39 +313,56 @@ class _AgencyFeedScreenState extends State<AgencyFeedScreen> {
                 decoration: BoxDecoration(
                   color: accentColor.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: accentColor.withValues(alpha: 0.12),
-                    width: 0.5,
-                  ),
                 ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.calendar_today_rounded,
-                      color: accentColor,
-                      size: 14,
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        item['event_date']?.toString() ?? 'No date',
-                        style: TextStyle(
-                          color: accentColor,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
+                    Row(
+                      children: [
+                        Icon(Icons.calendar_today_rounded,
+                            color: accentColor, size: 14),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            eventDate,
+                            style: TextStyle(
+                              color: accentColor,
+                              fontSize: 11,
+                            ),
+                          ),
                         ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                        if (price > 0)
+                          Text(
+                            '৳${price.toStringAsFixed(0)}',
+                            style: TextStyle(
+                              color: accentColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                      ],
                     ),
-                    if (item['price'] != null)
-                      Text(
-                        '₹${item['price']}',
-                        style: TextStyle(
-                          color: accentColor,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
+                    if (location.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(Icons.location_on_rounded,
+                              color: accentColor, size: 14),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              location,
+                              style: TextStyle(
+                                color: accentColor,
+                                fontSize: 11,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
+                    ],
                   ],
                 ),
               ),
@@ -378,95 +370,52 @@ class _AgencyFeedScreenState extends State<AgencyFeedScreen> {
 
           if (isEvent) const SizedBox(height: 12),
 
-          // ── ACTION BUTTONS ──
+          // Action buttons
           Padding(
             padding: const EdgeInsets.all(14),
             child: Row(
               children: [
-                // Like Button
                 Expanded(
-                  child: _buildActionButton(
+                  child: _buildButton(
                     icon: Icons.favorite_outline_rounded,
                     label: 'Like',
-                    onTap: () async {
-                      if (userId.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please login to like')),
-                        );
-                        return;
-                      }
-                      await likesService.toggleLike(
-                        postId: item['id'] ?? '',
-                        userId: userId,
-                      );
-                      setState(() {});
-                    },
+                    onTap: () {},
                     accentColor: accentColor,
                     textSecondary: textSecondary,
-                    isDark: isDark,
                   ),
                 ),
                 const SizedBox(width: 8),
-
-                // Call Button
                 Expanded(
-                  child: _buildActionButton(
+                  child: _buildButton(
                     icon: Icons.phone_rounded,
                     label: 'Call',
                     onTap: () {
-                      // Get agency phone from item
-                      final agencyPhone =
-                          item['owner_phone'] ?? item['office_phone'] ?? '';
-                      if (agencyPhone.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Phone number not available')),
-                        );
-                        return;
+                      if (contactNumber.isNotEmpty) {
+                        launchUrl(Uri(scheme: 'tel', path: contactNumber));
                       }
-                      _initiateCall(agencyPhone);
                     },
                     accentColor: accentColor,
                     textSecondary: textSecondary,
-                    isDark: isDark,
                   ),
                 ),
                 const SizedBox(width: 8),
-
-                // Message Button
                 Expanded(
-                  child: _buildActionButton(
+                  child: _buildButton(
                     icon: Icons.message_rounded,
                     label: 'Message',
-                    onTap: () {
-                      final userId = item['user_id'] ?? '';
-                      final agencyName =
-                          item['agency_name'] ?? item['user_name'] ?? 'Agency';
-                      if (userId.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Unable to message this item')),
-                        );
-                        return;
-                      }
-                      _initiateChat(userId, agencyName, 'agency');
-                    },
+                    onTap: () {},
                     accentColor: accentColor,
                     textSecondary: textSecondary,
-                    isDark: isDark,
                   ),
                 ),
                 const SizedBox(width: 8),
-
-                // Share Button
                 Expanded(
-                  child: _buildActionButton(
+                  child: _buildButton(
                     icon: Icons.share_rounded,
                     label: 'Share',
-                    onTap: () => _sharePost(item),
+                    onTap: () => Share.share('Check this out!'),
                     accentColor: accentColor,
                     textSecondary: textSecondary,
-                    isDark: isDark,
                   ),
                 ),
               ],
@@ -477,13 +426,12 @@ class _AgencyFeedScreenState extends State<AgencyFeedScreen> {
     );
   }
 
-  Widget _buildActionButton({
+  Widget _buildButton({
     required IconData icon,
     required String label,
     required VoidCallback onTap,
     required Color accentColor,
     required Color textSecondary,
-    required bool isDark,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -492,19 +440,11 @@ class _AgencyFeedScreenState extends State<AgencyFeedScreen> {
         decoration: BoxDecoration(
           color: textSecondary.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: textSecondary.withValues(alpha: 0.08),
-            width: 0.5,
-          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              color: accentColor,
-              size: 16,
-            ),
+            Icon(icon, color: accentColor, size: 16),
             const SizedBox(width: 4),
             Text(
               label,

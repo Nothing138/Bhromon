@@ -1,12 +1,15 @@
 // main.dart
-// main.dart - UPDATED WITH LOGOUT FIX
+// main.dart - UPDATED FOR RAJ'S BHROMON APP
+// ✅ Working with AuthWrapper, all providers, and EventService
+
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'providers/theme_provider.dart';
 import 'providers/cart_provider.dart';
 import 'services/event_service.dart';
+import 'services/agency_service.dart';
 import 'screens/splash/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/main_wrapper.dart';
@@ -40,6 +43,9 @@ Future<void> main() async {
         ),
         ChangeNotifierProvider(
           create: (context) => CartProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => AgencyService(),
         ),
       ],
       child: const BhromonApp(),
@@ -75,15 +81,6 @@ class BhromonApp extends StatelessWidget {
           elevation: 0,
           centerTitle: true,
         ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: themeProvider.accentColor,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
       ),
 
       // --- Dark Theme ---
@@ -102,21 +99,11 @@ class BhromonApp extends StatelessWidget {
           elevation: 0,
           centerTitle: true,
         ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: themeProvider.accentColor,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
       ),
 
       initialRoute: '/',
       routes: {
-        '/': (context) =>
-            const AuthWrapper(), // ✅ CHANGED: Use AuthWrapper instead of SplashScreen
+        '/': (context) => const AuthWrapper(),
         '/login': (context) => const LoginScreen(),
         '/main': (context) => const MainWrapper(),
       },
@@ -124,7 +111,7 @@ class BhromonApp extends StatelessWidget {
   }
 }
 
-// ✅ NEW: Auth Navigation Wrapper - Handles all routing based on auth state
+// ✅ Auth Navigation Wrapper - Handles all routing based on auth state
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
 
@@ -148,23 +135,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
   Widget build(BuildContext context) {
     return Consumer<AuthService>(
       builder: (context, authService, _) {
-        // If explicitly logged out is not provided by AuthService, rely on isAuthenticated
-
         // Not authenticated - show login
         if (!authService.isAuthenticated) {
           return const LoginScreen();
-        }
-
-        // OTP verification required - show OTP screen
-        if (authService.isOtpRequired) {
-          // Navigate to OTP screen instead of splash
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.of(context).pushNamedAndRemoveUntil(
-              '/otp',
-              (route) => false,
-            );
-          });
-          return const SplashScreen();
         }
 
         // ✅ Authenticated: Route based on user type
