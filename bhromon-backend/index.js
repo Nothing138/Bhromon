@@ -12,6 +12,8 @@ import actionsRoutes from './routes/actionsRoutes.js';
 import eventRoutes from './routes/eventRoutes.js'; 
 import profileRoutes from './routes/profile_routes.js';
 import passwordResetRoutes from './routes/password-reset.js';
+import changePasswordRoutes from './routes/change-password.js';
+
 
 dotenv.config();
 
@@ -33,6 +35,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // ========================
 app.use('/api/auth', authRoutes);
 app.use('/api/auth', passwordResetRoutes); 
+app.use('/api/auth', changePasswordRoutes);
 app.use('/api/posts', postsRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/likes', likesRoutes);

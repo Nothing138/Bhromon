@@ -411,6 +411,62 @@ class AuthService extends ChangeNotifier {
   }
 
   // ========================
+// CHANGE PASSWORD - DIRECT (For authenticated users)
+// ========================
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    try {
+      if (newPassword != confirmPassword) {
+        throw Exception('New passwords do not match');
+      }
+
+      if (newPassword.length < 6) {
+        throw Exception('Password must be at least 6 characters');
+      }
+
+      print('🔄 Changing password for current user');
+
+      // ✅ Get auth token
+      final session = supabase.auth.currentSession;
+      if (session == null) {
+        throw Exception('No active session');
+      }
+
+      final token = session.accessToken;
+
+      // ✅ Call backend endpoint
+      final response = await http
+          .post(
+            Uri.parse('$BACKEND_URL/change-password'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({
+              'currentPassword': currentPassword.trim(),
+              'newPassword': newPassword.trim(),
+              'confirmPassword': confirmPassword.trim(),
+            }),
+          )
+          .timeout(Duration(seconds: 30));
+
+      if (response.statusCode == 200) {
+        print('✅ Password changed successfully');
+        return true;
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['message'] ?? 'Failed to change password');
+      }
+    } catch (e) {
+      print('❌ Change password error: $e');
+      throw Exception('Change password error: $e');
+    }
+  }
+
+  // ========================
   // CHECK AUTH STATUS
   // ========================
   Future<void> checkAuthStatus() async {

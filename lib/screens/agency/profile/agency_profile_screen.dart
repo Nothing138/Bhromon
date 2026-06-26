@@ -420,6 +420,7 @@ class _AgencyProfileScreenState extends State<AgencyProfileScreen> {
     );
   }
 
+  // ✅ FIXED: Show Change Password Dialog
   void _showChangePasswordDialog(
     BuildContext context,
     ThemeProvider themeProvider,
@@ -431,102 +432,18 @@ class _AgencyProfileScreenState extends State<AgencyProfileScreen> {
     final TextEditingController confirmPasswordController =
         TextEditingController();
 
+    // ✅ IMPORTANT: Get AuthService BEFORE opening dialog
+    final authService = Provider.of<AuthService>(context, listen: false);
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-        title: Text(
-          'Change Password',
-          style: TextStyle(color: isDark ? Colors.white : Colors.black),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildPasswordField(
-              controller: currentPasswordController,
-              label: 'Current Password',
-              isDark: isDark,
-            ),
-            const SizedBox(height: 16),
-            _buildPasswordField(
-              controller: newPasswordController,
-              label: 'New Password',
-              isDark: isDark,
-            ),
-            const SizedBox(height: 16),
-            _buildPasswordField(
-              controller: confirmPasswordController,
-              label: 'Confirm Password',
-              isDark: isDark,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (newPasswordController.text ==
-                  confirmPasswordController.text) {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Password changed successfully'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Passwords do not match'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            },
-            child: const Text('Update'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPasswordField({
-    required TextEditingController controller,
-    required String label,
-    required bool isDark,
-  }) {
-    return TextField(
-      controller: controller,
-      obscureText: true,
-      style: TextStyle(color: isDark ? Colors.white : Colors.black),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(
-          color: isDark ? Colors.white70 : Colors.grey[600],
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(
-            color: isDark ? Colors.white10 : Colors.grey[300]!,
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(
-            color: isDark ? Colors.white10 : Colors.grey[300]!,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(
-            color: isDark ? Colors.white30 : Colors.grey[400]!,
-          ),
-        ),
-        filled: true,
-        fillColor: isDark ? const Color(0xFF0F172A) : Colors.grey[50],
+      builder: (dialogContext) => _ChangePasswordDialog(
+        isDark: isDark,
+        themeProvider: themeProvider,
+        currentPasswordController: currentPasswordController,
+        newPasswordController: newPasswordController,
+        confirmPasswordController: confirmPasswordController,
+        authService: authService,
       ),
     );
   }
@@ -539,6 +456,342 @@ class _AgencyProfileScreenState extends State<AgencyProfileScreen> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
+  }
+}
+
+// ============================================
+// ✅ SEPARATE STATEFUL WIDGET FOR DIALOG
+// ============================================
+class _ChangePasswordDialog extends StatefulWidget {
+  final bool isDark;
+  final ThemeProvider themeProvider;
+  final TextEditingController currentPasswordController;
+  final TextEditingController newPasswordController;
+  final TextEditingController confirmPasswordController;
+  final AuthService authService;
+
+  const _ChangePasswordDialog({
+    required this.isDark,
+    required this.themeProvider,
+    required this.currentPasswordController,
+    required this.newPasswordController,
+    required this.confirmPasswordController,
+    required this.authService,
+  });
+
+  @override
+  State<_ChangePasswordDialog> createState() => _ChangePasswordDialogState();
+}
+
+class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
+  bool _isLoading = false;
+  bool _showCurrentPassword = false;
+  bool _showNewPassword = false;
+  bool _showConfirmPassword = false;
+
+  @override
+  void dispose() {
+    widget.currentPasswordController.dispose();
+    widget.newPasswordController.dispose();
+    widget.confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleChangePassword() async {
+    setState(() => _isLoading = true);
+
+    try {
+      await widget.authService.changePassword(
+        currentPassword: widget.currentPasswordController.text.trim(),
+        newPassword: widget.newPasswordController.text.trim(),
+        confirmPassword: widget.confirmPasswordController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      Navigator.pop(context);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ Password changed successfully'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      String errorMessage = e.toString();
+
+      if (errorMessage.contains('Current password')) {
+        errorMessage = 'Current password is incorrect';
+      } else if (errorMessage.contains('not match')) {
+        errorMessage = 'New passwords do not match';
+      } else if (errorMessage.contains('at least 6')) {
+        errorMessage = 'Password must be at least 6 characters';
+      } else if (errorMessage.contains('No active session')) {
+        errorMessage = 'Session expired. Please login again.';
+      } else if (errorMessage.contains('Invalid or expired token')) {
+        errorMessage = 'Your session has expired. Please login again.';
+      } else {
+        errorMessage = errorMessage
+            .replaceAll('Exception: ', '')
+            .replaceAll('Change password error: ', '');
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ $errorMessage'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: widget.isDark ? const Color(0xFF1E293B) : Colors.white,
+      title: Text(
+        'Change Password',
+        style: TextStyle(
+          color: widget.isDark ? Colors.white : Colors.black,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ✅ Current Password
+            TextField(
+              controller: widget.currentPasswordController,
+              enabled: !_isLoading,
+              obscureText: !_showCurrentPassword,
+              style: TextStyle(
+                color: widget.isDark ? Colors.white : Colors.black,
+              ),
+              decoration: InputDecoration(
+                labelText: 'Current Password',
+                labelStyle: TextStyle(
+                  color: widget.isDark ? Colors.white70 : Colors.grey[600],
+                ),
+                suffixIcon: IconButton(
+                  onPressed: () {
+                    setState(
+                        () => _showCurrentPassword = !_showCurrentPassword);
+                  },
+                  icon: Icon(
+                    _showCurrentPassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    color: widget.isDark ? Colors.white70 : Colors.grey[600],
+                  ),
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: widget.isDark ? Colors.white10 : Colors.grey[300]!,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: widget.isDark ? Colors.white10 : Colors.grey[300]!,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: widget.themeProvider.accentColor,
+                    width: 2,
+                  ),
+                ),
+                filled: true,
+                fillColor:
+                    widget.isDark ? const Color(0xFF0F172A) : Colors.grey[50],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // ✅ New Password
+            TextField(
+              controller: widget.newPasswordController,
+              enabled: !_isLoading,
+              obscureText: !_showNewPassword,
+              style: TextStyle(
+                color: widget.isDark ? Colors.white : Colors.black,
+              ),
+              decoration: InputDecoration(
+                labelText: 'New Password',
+                labelStyle: TextStyle(
+                  color: widget.isDark ? Colors.white70 : Colors.grey[600],
+                ),
+                suffixIcon: IconButton(
+                  onPressed: () {
+                    setState(() => _showNewPassword = !_showNewPassword);
+                  },
+                  icon: Icon(
+                    _showNewPassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    color: widget.isDark ? Colors.white70 : Colors.grey[600],
+                  ),
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: widget.isDark ? Colors.white10 : Colors.grey[300]!,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: widget.isDark ? Colors.white10 : Colors.grey[300]!,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: widget.themeProvider.accentColor,
+                    width: 2,
+                  ),
+                ),
+                filled: true,
+                fillColor:
+                    widget.isDark ? const Color(0xFF0F172A) : Colors.grey[50],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // ✅ Confirm Password
+            TextField(
+              controller: widget.confirmPasswordController,
+              enabled: !_isLoading,
+              obscureText: !_showConfirmPassword,
+              style: TextStyle(
+                color: widget.isDark ? Colors.white : Colors.black,
+              ),
+              decoration: InputDecoration(
+                labelText: 'Confirm Password',
+                labelStyle: TextStyle(
+                  color: widget.isDark ? Colors.white70 : Colors.grey[600],
+                ),
+                suffixIcon: IconButton(
+                  onPressed: () {
+                    setState(
+                        () => _showConfirmPassword = !_showConfirmPassword);
+                  },
+                  icon: Icon(
+                    _showConfirmPassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    color: widget.isDark ? Colors.white70 : Colors.grey[600],
+                  ),
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: widget.isDark ? Colors.white10 : Colors.grey[300]!,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: widget.isDark ? Colors.white10 : Colors.grey[300]!,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: widget.themeProvider.accentColor,
+                    width: 2,
+                  ),
+                ),
+                filled: true,
+                fillColor:
+                    widget.isDark ? const Color(0xFF0F172A) : Colors.grey[50],
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // ✅ Info Box
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Colors.blue.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 16,
+                    color: Colors.blue[600],
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Password must be at least 6 characters and both passwords must match.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue[600],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isLoading
+              ? null
+              : () {
+                  Navigator.pop(context);
+                },
+          child: Text(
+            'Cancel',
+            style: TextStyle(
+              color: widget.isDark ? Colors.white70 : Colors.grey[600],
+            ),
+          ),
+        ),
+        ElevatedButton(
+          onPressed: _isLoading ? null : _handleChangePassword,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: widget.themeProvider.accentColor,
+            disabledBackgroundColor: Colors.grey[400],
+          ),
+          child: _isLoading
+              ? SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      widget.isDark ? Colors.white : Colors.black,
+                    ),
+                  ),
+                )
+              : const Text(
+                  'Update Password',
+                  style: TextStyle(color: Colors.white),
+                ),
+        ),
+      ],
     );
   }
 }

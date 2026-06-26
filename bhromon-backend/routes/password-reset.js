@@ -1,6 +1,4 @@
 // routes/password-reset.js
-// ✅ Password reset endpoints using Supabase Admin SDK
-
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { randomBytes } from 'crypto';
@@ -11,7 +9,7 @@ dotenv.config();
 
 const router = express.Router();
 
-// ✅ Supabase Admin Client (with service role key)
+// ✅ Supabase Admin Client
 const supabaseAdmin = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -39,16 +37,22 @@ router.post('/request-password-reset', async (req, res) => {
 
     console.log(`🔄 Password reset requested for: ${email}`);
 
-    // ✅ Check if user exists
-    const { data: user, error: userError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+    // ✅ FIXED: Query auth.users table instead of using non-existent method
+    const { data: users, error: userError } = await supabaseAdmin
+      .from('auth.users')
+      .select('id')
+      .eq('email', email)
+      .single();
 
-    if (userError || !user) {
+    if (userError || !users) {
       console.log(`⚠️ User not found: ${email}`);
       // Don't reveal whether email exists (security)
       return res.status(200).json({ 
         message: 'If email exists, reset code will be sent' 
       });
     }
+
+    const userId = users.id;
 
     // ✅ Generate secure reset token (32 characters)
     const resetToken = randomBytes(16).toString('hex');
@@ -58,10 +62,10 @@ router.post('/request-password-reset', async (req, res) => {
     const { error: insertError } = await supabaseAdmin
       .from('password_reset_tokens')
       .insert({
-        user_id: user.id,
+        user_id: userId,
         reset_token: resetToken,
         is_used: false,
-        expires_at: expiresAt,
+        expires_at: expiresAt.toISOString(),
       });
 
     if (insertError) {
@@ -69,7 +73,7 @@ router.post('/request-password-reset', async (req, res) => {
       return res.status(500).json({ message: 'Failed to generate reset code' });
     }
 
-    // ✅ Extract first 6 characters for email display (user-friendly code)
+    // ✅ Extract first 6 characters for email display
     const displayToken = resetToken.substring(0, 6).toUpperCase();
 
     // ✅ Send password reset email
@@ -157,19 +161,25 @@ router.post('/reset-password', async (req, res) => {
 
     console.log(`🔄 Verifying reset token for: ${email}`);
 
-    // ✅ Get user by email
-    const { data: user, error: userError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+    // ✅ Get user by email (FIXED)
+    const { data: users, error: userError } = await supabaseAdmin
+      .from('auth.users')
+      .select('id')
+      .eq('email', email)
+      .single();
 
-    if (userError || !user) {
+    if (userError || !users) {
       console.log(`❌ User not found: ${email}`);
       return res.status(404).json({ message: 'User not found' });
     }
+
+    const userId = users.id;
 
     // ✅ Find and verify reset token
     const { data: tokenData, error: tokenError } = await supabaseAdmin
       .from('password_reset_tokens')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('reset_token', resetToken)
       .eq('is_used', false)
       .single();
@@ -185,9 +195,9 @@ router.post('/reset-password', async (req, res) => {
       return res.status(400).json({ message: 'Token expired. Please request a new reset email.' });
     }
 
-    // ✅ Update password using Admin SDK
+    // ✅ Update password using Admin SDK (FIXED - use correct method)
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-      user.id,
+      userId,
       { password: newPassword }
     );
 
@@ -201,7 +211,7 @@ router.post('/reset-password', async (req, res) => {
       .from('password_reset_tokens')
       .update({
         is_used: true,
-        used_at: new Date(),
+        used_at: new Date().toISOString(),
       })
       .eq('id', tokenData.id);
 
@@ -240,18 +250,24 @@ router.post('/validate-reset-token', async (req, res) => {
 
     console.log(`🔍 Validating reset token for: ${email}`);
 
-    // ✅ Get user by email
-    const { data: user, error: userError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+    // ✅ Get user by email (FIXED)
+    const { data: users, error: userError } = await supabaseAdmin
+      .from('auth.users')
+      .select('id')
+      .eq('email', email)
+      .single();
 
-    if (userError || !user) {
+    if (userError || !users) {
       return res.status(404).json({ message: 'User not found' });
     }
+
+    const userId = users.id;
 
     // ✅ Check token
     const { data: tokenData, error: tokenError } = await supabaseAdmin
       .from('password_reset_tokens')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('reset_token', resetToken)
       .eq('is_used', false)
       .single();
