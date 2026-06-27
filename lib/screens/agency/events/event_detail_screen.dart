@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import '../../../providers/theme_provider.dart';
 import '../../../services/event_service.dart';
 import '../../../models/event_model.dart';
+import '../../../models/event_booking_model.dart';
 import 'create_event_screen.dart';
+import 'booking_detail_screen.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final EventModel event;
@@ -21,12 +23,15 @@ class EventDetailScreen extends StatefulWidget {
 class _EventDetailScreenState extends State<EventDetailScreen> {
   late EventModel _event;
   bool _isLoading = false;
+  List<EventBookingModel> _bookings = [];
+  bool _bookingsLoaded = false;
 
   @override
   void initState() {
     super.initState();
     _event = widget.event;
     _loadEventDetails();
+    _loadBookings();
   }
 
   void _loadEventDetails() async {
@@ -37,6 +42,17 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       setState(() {
         _event = updatedEvent;
         _isLoading = false;
+      });
+    }
+  }
+
+  void _loadBookings() async {
+    final eventService = Provider.of<EventService>(context, listen: false);
+    final bookings = await eventService.fetchEventBookings(_event.id);
+    if (mounted) {
+      setState(() {
+        _bookings = bookings;
+        _bookingsLoaded = true;
       });
     }
   }
@@ -299,12 +315,239 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   ),
                   const SizedBox(height: 30),
 
+                  // Bookings Section
+                  if (_bookingsLoaded) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Bookings (${_bookings.length})',
+                          style: TextStyle(
+                            color: isDark ? Colors.white : Colors.black,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        if (_bookings.isNotEmpty)
+                          Text(
+                            'Total: ৳${_bookings.fold<double>(0, (sum, booking) => sum + booking.totalPrice).toStringAsFixed(2)}',
+                            style: TextStyle(
+                              color: accentColor,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    if (_bookings.isEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? const Color(0xFF1E293B)
+                              : Colors.grey[100],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isDark ? Colors.white10 : Colors.grey[300]!,
+                            width: 1,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'No bookings yet',
+                            style: TextStyle(
+                              color: isDark ? Colors.white54 : Colors.grey[600],
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _bookings.length,
+                        itemBuilder: (context, index) {
+                          final booking = _bookings[index];
+                          return _buildBookingCard(
+                            booking: booking,
+                            isDark: isDark,
+                            accentColor: accentColor,
+                          );
+                        },
+                      ),
+                    const SizedBox(height: 30),
+                  ],
+
                   // Action Buttons
                   _buildActionButtons(
                     isDark: isDark,
                     accentColor: accentColor,
                   ),
                 ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBookingCard({
+    required EventBookingModel booking,
+    required bool isDark,
+    required Color accentColor,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => BookingDetailScreen(
+              booking: booking,
+              eventTitle: _event.title,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.grey[100],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isDark ? Colors.white10 : Colors.grey[300]!,
+            width: 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Name and Status
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        booking.customerName,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        booking.customerPhone,
+                        style: TextStyle(
+                          color: isDark ? Colors.white54 : Colors.grey[600],
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _getBookingStatusColor(booking.status),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    booking.status.toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // Seats and Price
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Seats',
+                      style: TextStyle(
+                        color: isDark ? Colors.white54 : Colors.grey[600],
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${booking.bookingCount} Seat(s)',
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'Total',
+                      style: TextStyle(
+                        color: isDark ? Colors.white54 : Colors.grey[600],
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '৳${booking.totalPrice.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        color: accentColor,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // View Details Button
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => BookingDetailScreen(
+                        booking: booking,
+                        eventTitle: _event.title,
+                      ),
+                    ),
+                  );
+                },
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                ),
+                child: Text(
+                  'View Full Details →',
+                  style: TextStyle(
+                    color: accentColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
           ],
@@ -489,6 +732,19 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         return Colors.red;
       case 'completed':
         return Colors.blue;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Color _getBookingStatusColor(String status) {
+    switch (status) {
+      case 'confirmed':
+        return Colors.green;
+      case 'pending':
+        return Colors.orange;
+      case 'cancelled':
+        return Colors.red;
       default:
         return Colors.grey;
     }

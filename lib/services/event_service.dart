@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/event_model.dart';
+import '../models/event_booking_model.dart';
 
 class EventService extends ChangeNotifier {
   final supabase = Supabase.instance.client;
@@ -9,12 +10,14 @@ class EventService extends ChangeNotifier {
   List<EventModel> _allEvents = [];
   List<EventModel> _upcomingEvents = [];
   List<EventModel> _pastEvents = [];
+  List<EventBookingModel> _eventBookings = [];
   bool _isLoading = false;
   String? _error;
 
   List<EventModel> get allEvents => _allEvents;
   List<EventModel> get upcomingEvents => _upcomingEvents;
   List<EventModel> get pastEvents => _pastEvents;
+  List<EventBookingModel> get eventBookings => _eventBookings;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -56,6 +59,51 @@ class EventService extends ChangeNotifier {
       _error = e.toString();
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  // Fetch bookings for a specific event
+  Future<List<EventBookingModel>> fetchEventBookings(String eventId) async {
+    try {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      final response = await supabase
+          .from('event_bookings')
+          .select()
+          .eq('event_id', eventId)
+          .order('booked_at', ascending: false);
+
+      _eventBookings = (response as List)
+          .map((booking) => EventBookingModel.fromJson(booking))
+          .toList();
+
+      _isLoading = false;
+      notifyListeners();
+      return _eventBookings;
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return [];
+    }
+  }
+
+  // Get single booking details
+  Future<EventBookingModel?> getBookingDetails(String bookingId) async {
+    try {
+      final response = await supabase
+          .from('event_bookings')
+          .select()
+          .eq('id', bookingId)
+          .single();
+
+      return EventBookingModel.fromJson(response);
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return null;
     }
   }
 
