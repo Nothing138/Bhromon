@@ -62,10 +62,10 @@ class AgencyService extends ChangeNotifier {
       final session = supabase.auth.currentSession;
       if (session != null) {
         _token = session.accessToken;
-        print('✅ Token set for agency service');
+        print(' Token set for agency service');
       }
     } catch (e) {
-      print('❌ Error setting token: $e');
+      print(' Error setting token: $e');
       _error = 'Failed to set authentication token';
     }
   }
@@ -75,7 +75,7 @@ class AgencyService extends ChangeNotifier {
   // ========================
   Future<bool> fetchAgencyProfile() async {
     try {
-      print('🔄 Fetching agency profile...');
+      print(' Fetching agency profile...');
 
       await setToken();
 
@@ -87,7 +87,7 @@ class AgencyService extends ChangeNotifier {
           _currentAgency = TravelAgency.fromJson(data['data']);
           _error = null;
           notifyListeners();
-          print('✅ Agency profile fetched: ${_currentAgency!.agencyName}');
+          print(' Agency profile fetched: ${_currentAgency!.agencyName}');
           return true;
         } else {
           _error = data['error'] ?? 'Failed to fetch profile';
@@ -100,7 +100,7 @@ class AgencyService extends ChangeNotifier {
         return false;
       }
     } catch (e) {
-      print('❌ Error fetching agency profile: $e');
+      print(' Error fetching agency profile: $e');
       _error = 'Error: $e';
       notifyListeners();
       return false;
@@ -120,7 +120,7 @@ class AgencyService extends ChangeNotifier {
     String? imageUrl,
   }) async {
     try {
-      print('🔄 Updating agency profile...');
+      print(' Updating agency profile...');
 
       await setToken();
 
@@ -149,7 +149,7 @@ class AgencyService extends ChangeNotifier {
           _currentAgency = TravelAgency.fromJson(data['data']);
           _error = null;
           notifyListeners();
-          print('✅ Agency profile updated successfully');
+          print(' Agency profile updated successfully');
           return true;
         } else {
           _error = data['error'] ?? 'Failed to update profile';
@@ -162,7 +162,7 @@ class AgencyService extends ChangeNotifier {
         return false;
       }
     } catch (e) {
-      print('❌ Error updating agency profile: $e');
+      print(' Error updating agency profile: $e');
       _error = 'Error: $e';
       notifyListeners();
       return false;
@@ -174,7 +174,7 @@ class AgencyService extends ChangeNotifier {
   // ========================
   Future<String?> uploadAgencyImage(File imageFile) async {
     try {
-      print('🔄 Uploading agency image...');
+      print(' Uploading agency image...');
 
       await setToken();
 
@@ -197,7 +197,7 @@ class AgencyService extends ChangeNotifier {
           final imageUrl = data['imageUrl'];
           _error = null;
           notifyListeners();
-          print('✅ Image uploaded successfully: $imageUrl');
+          print(' Image uploaded successfully: $imageUrl');
           return imageUrl;
         } else {
           _error = data['error'] ?? 'Failed to upload image';
@@ -210,7 +210,7 @@ class AgencyService extends ChangeNotifier {
         return null;
       }
     } catch (e) {
-      print('❌ Error uploading image: $e');
+      print(' Error uploading image: $e');
       _error = 'Error uploading image: $e';
       notifyListeners();
       return null;
@@ -222,7 +222,7 @@ class AgencyService extends ChangeNotifier {
   // ========================
   Future<Map<String, dynamic>?> getAgencyStats() async {
     try {
-      print('🔄 Fetching agency statistics...');
+      print(' Fetching agency statistics...');
 
       await setToken();
 
@@ -233,7 +233,7 @@ class AgencyService extends ChangeNotifier {
         if (data['success']) {
           _error = null;
           notifyListeners();
-          print('✅ Agency stats fetched');
+          print(' Agency stats fetched');
           return data['data'];
         } else {
           _error = data['error'] ?? 'Failed to fetch stats';
@@ -246,7 +246,7 @@ class AgencyService extends ChangeNotifier {
         return null;
       }
     } catch (e) {
-      print('❌ Error fetching agency stats: $e');
+      print(' Error fetching agency stats: $e');
       _error = 'Error: $e';
       notifyListeners();
       return null;
@@ -258,7 +258,7 @@ class AgencyService extends ChangeNotifier {
   // ========================
   Future<List<Map<String, dynamic>>> getAgencyDocuments() async {
     try {
-      print('🔄 Fetching agency documents...');
+      print(' Fetching agency documents...');
 
       await setToken();
 
@@ -269,11 +269,11 @@ class AgencyService extends ChangeNotifier {
 
       _error = null;
       notifyListeners();
-      print('✅ Agency documents fetched: ${response.length} documents');
+      print(' Agency documents fetched: ${response.length} documents');
 
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      print('❌ Error fetching documents: $e');
+      print(' Error fetching documents: $e');
       _error = 'Error: $e';
       notifyListeners();
       return [];
@@ -288,7 +288,7 @@ class AgencyService extends ChangeNotifier {
     required String documentUrl,
   }) async {
     try {
-      print('🔄 Updating agency document...');
+      print(' Updating agency document...');
 
       await supabase.from('agency_documents').update({
         'document_url': documentUrl,
@@ -297,10 +297,10 @@ class AgencyService extends ChangeNotifier {
 
       _error = null;
       notifyListeners();
-      print('✅ Document updated successfully');
+      print(' Document updated successfully');
       return true;
     } catch (e) {
-      print('❌ Error updating document: $e');
+      print(' Error updating document: $e');
       _error = 'Error: $e';
       notifyListeners();
       return false;
@@ -316,7 +316,7 @@ class AgencyService extends ChangeNotifier {
         return {'total': 0, 'active': 0, 'cancelled': 0, 'completed': 0};
       }
 
-      print('🔄 Fetching event counts...');
+      print(' Fetching event counts...');
 
       final events = await supabase
           .from('agency_events')
@@ -329,7 +329,7 @@ class AgencyService extends ChangeNotifier {
       final completed = events.where((e) => e['status'] == 'completed').length;
 
       print(
-          '✅ Event counts: Total=$total, Active=$active, Cancelled=$cancelled, Completed=$completed');
+          ' Event counts: Total=$total, Active=$active, Cancelled=$cancelled, Completed=$completed');
 
       return {
         'total': total,
@@ -338,7 +338,7 @@ class AgencyService extends ChangeNotifier {
         'completed': completed,
       };
     } catch (e) {
-      print('❌ Error fetching event counts: $e');
+      print(' Error fetching event counts: $e');
       _error = 'Error: $e';
       notifyListeners();
       return {'total': 0, 'active': 0, 'cancelled': 0, 'completed': 0};
@@ -356,7 +356,7 @@ class AgencyService extends ChangeNotifier {
         throw Exception('No agency found');
       }
 
-      print('🔄 Verifying OTP directly...');
+      print(' Verifying OTP directly...');
 
       await setToken();
 
@@ -371,7 +371,7 @@ class AgencyService extends ChangeNotifier {
       if (response.statusCode == 200) {
         final data = response.data;
         if (data['success']) {
-          print('✅ OTP verified successfully');
+          print(' OTP verified successfully');
           return true;
         } else {
           _error = data['error'] ?? 'OTP verification failed';
@@ -384,7 +384,7 @@ class AgencyService extends ChangeNotifier {
         return false;
       }
     } catch (e) {
-      print('❌ Error verifying OTP: $e');
+      print(' Error verifying OTP: $e');
       _error = 'Error: $e';
       notifyListeners();
       return false;

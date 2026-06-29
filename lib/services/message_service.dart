@@ -33,7 +33,7 @@ class MessageService {
 
       return response;
     } catch (e) {
-      debugPrint('❌ sendMessage error: $e');
+      debugPrint(' sendMessage error: $e');
       return null;
     }
   }
@@ -109,7 +109,7 @@ class MessageService {
             .compareTo(DateTime.parse(b['created_at'] as String)));
         return unique;
       } catch (e) {
-        debugPrint('❌ getConversationStream error: $e');
+        debugPrint(' getConversationStream error: $e');
         return <Map<String, dynamic>>[];
       }
     });
@@ -138,7 +138,7 @@ class MessageService {
 
       return (response as List).cast<Map<String, dynamic>>();
     } catch (e) {
-      debugPrint('❌ getAllConversations error: $e');
+      debugPrint(' getAllConversations error: $e');
       return [];
     }
   }
@@ -155,7 +155,7 @@ class MessageService {
           .eq('sender_id', senderId)
           .eq('read_status', false);
     } catch (e) {
-      debugPrint('❌ markMessagesAsRead error: $e');
+      debugPrint(' markMessagesAsRead error: $e');
     }
   }
 
@@ -171,7 +171,7 @@ class MessageService {
           .eq('read_status', false);
       return (response as List).length;
     } catch (e) {
-      debugPrint('❌ getUnreadCount error: $e');
+      debugPrint(' getUnreadCount error: $e');
       return 0;
     }
   }
@@ -183,7 +183,7 @@ class MessageService {
     try {
       await supabase.from('messages').delete().eq('id', messageId);
     } catch (e) {
-      debugPrint('❌ deleteMessage error: $e');
+      debugPrint(' deleteMessage error: $e');
     }
   }
 
@@ -202,7 +202,7 @@ class MessageService {
           .or('contact_name.ilike.%$query%,contact_phone.ilike.%$query%');
       return (response as List).cast<Map<String, dynamic>>();
     } catch (e) {
-      debugPrint('❌ searchContacts error: $e');
+      debugPrint(' searchContacts error: $e');
       return [];
     }
   }
@@ -248,7 +248,7 @@ class MessageService {
         });
       }
     } catch (e) {
-      debugPrint('❌ _updateConversationMetadata error: $e');
+      debugPrint(' _updateConversationMetadata error: $e');
     }
   }
 
@@ -289,7 +289,7 @@ class MessageService {
         });
       }
     } catch (e) {
-      debugPrint('❌ _updateOrCreateContact error: $e');
+      debugPrint(' _updateOrCreateContact error: $e');
     }
   }
 }

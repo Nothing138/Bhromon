@@ -107,7 +107,7 @@ class NearbyPlacesService {
 
     try {
       debugPrint(
-          '🔄 NearbyPlaces: Calling Groq API for "$placeName" in "$location"');
+          ' NearbyPlaces: Calling Groq API for "$placeName" in "$location"');
 
       final response = await http
           .post(
@@ -134,7 +134,7 @@ class NearbyPlacesService {
         String content = data['choices'][0]['message']['content'] as String;
 
         debugPrint(
-            '✅ NearbyPlaces: Raw response received (${content.length} chars)');
+            ' NearbyPlaces: Raw response received (${content.length} chars)');
 
         // Strip any markdown fences the model might add despite instructions
         content =
@@ -144,7 +144,7 @@ class NearbyPlacesService {
         final startIndex = content.indexOf('{');
         final endIndex = content.lastIndexOf('}');
         if (startIndex == -1 || endIndex == -1) {
-          debugPrint('❌ NearbyPlaces: Could not find JSON braces in response');
+          debugPrint(' NearbyPlaces: Could not find JSON braces in response');
           return {'hotels': [], 'restaurants': []};
         }
         content = content.substring(startIndex, endIndex + 1);
@@ -166,11 +166,11 @@ class NearbyPlacesService {
       } else {
         // Log full error body so you can see what went wrong
         debugPrint(
-            '❌ NearbyPlaces: API error ${response.statusCode}: ${response.body}');
+            ' NearbyPlaces: API error ${response.statusCode}: ${response.body}');
         return {'hotels': [], 'restaurants': []};
       }
     } catch (e, stack) {
-      debugPrint('❌ NearbyPlaces: Exception: $e');
+      debugPrint(' NearbyPlaces: Exception: $e');
       debugPrint('$stack');
       return {'hotels': [], 'restaurants': []};
     }

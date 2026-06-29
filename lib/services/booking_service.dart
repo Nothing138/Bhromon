@@ -5,7 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class BookingService {
   final supabase = Supabase.instance.client;
 
-  /// ✅ Create new booking
+  ///  Create new booking
   Future<Map<String, dynamic>> createBooking({
     required String eventId,
     required String userId,
@@ -39,19 +39,19 @@ class BookingService {
           .select()
           .single();
 
-      debugPrint('✅ Booking created: ${response['id']}');
+      debugPrint(' Booking created: ${response['id']}');
 
-      // 🔄 Update event booked_count
+      //  Update event booked_count
       await _updateEventBookedCount(eventId, bookingCount);
 
       return response as Map<String, dynamic>;
     } catch (e) {
-      debugPrint('❌ Booking error: $e');
+      debugPrint(' Booking error: $e');
       throw Exception('Failed to create booking: $e');
     }
   }
 
-  /// 🔄 Update event booked_count
+  ///  Update event booked_count
   Future<void> _updateEventBookedCount(String eventId, int addedCount) async {
     try {
       final event = await supabase
@@ -67,13 +67,13 @@ class BookingService {
           .from('agency_events')
           .update({'booked_count': newBooked}).eq('id', eventId);
 
-      debugPrint('🎫 Event booked count updated: $newBooked');
+      debugPrint(' Event booked count updated: $newBooked');
     } catch (e) {
-      debugPrint('⚠️ Failed to update booked count: $e');
+      debugPrint('Failed to update booked count: $e');
     }
   }
 
-  /// 🔍 Get user's bookings
+  ///  Get user's bookings
   Future<List<Map<String, dynamic>>> getUserBookings(String userId) async {
     try {
       final bookings = await supabase
@@ -84,12 +84,12 @@ class BookingService {
 
       return List<Map<String, dynamic>>.from(bookings);
     } catch (e) {
-      debugPrint('❌ Error fetching user bookings: $e');
+      debugPrint(' Error fetching user bookings: $e');
       return [];
     }
   }
 
-  /// 🎫 Get event bookings (for agency)
+  ///  Get event bookings (for agency)
   Future<List<Map<String, dynamic>>> getEventBookings(String eventId) async {
     try {
       final bookings = await supabase
@@ -101,7 +101,7 @@ class BookingService {
 
       return List<Map<String, dynamic>>.from(bookings);
     } catch (e) {
-      debugPrint('❌ Error fetching event bookings: $e');
+      debugPrint(' Error fetching event bookings: $e');
       return [];
     }
   }
@@ -134,12 +134,12 @@ class BookingService {
         'is_full': capacity != null ? bookedCount >= capacity : false,
       };
     } catch (e) {
-      debugPrint('❌ Error fetching booking stats: $e');
+      debugPrint(' Error fetching booking stats: $e');
       return {};
     }
   }
 
-  /// ❌ Cancel booking
+  ///  Cancel booking
   Future<void> cancelBooking(String bookingId) async {
     try {
       // Get booking details first
@@ -171,14 +171,14 @@ class BookingService {
           .from('agency_events')
           .update({'booked_count': newBooked}).eq('id', eventId);
 
-      debugPrint('❌ Booking cancelled: $bookingId');
+      debugPrint(' Booking cancelled: $bookingId');
     } catch (e) {
-      debugPrint('❌ Error cancelling booking: $e');
+      debugPrint(' Error cancelling booking: $e');
       throw Exception('Failed to cancel booking: $e');
     }
   }
 
-  /// ✅ Check if event is available for booking
+  ///  Check if event is available for booking
   Future<bool> isEventAvailableForBooking(String eventId) async {
     try {
       final event = await supabase
@@ -196,7 +196,7 @@ class BookingService {
 
       // ② Check if event is active
       if (event['status'] != 'active') {
-        debugPrint('⚠️ Event is not active');
+        debugPrint('Event is not active');
         return false;
       }
 
@@ -210,10 +210,10 @@ class BookingService {
         }
       }
 
-      debugPrint('✅ Event is available for booking');
+      debugPrint(' Event is available for booking');
       return true;
     } catch (e) {
-      debugPrint('❌ Error checking availability: $e');
+      debugPrint(' Error checking availability: $e');
       return false;
     }
   }
@@ -230,16 +230,16 @@ class BookingService {
             return List<Map<String, dynamic>>.from(bookingsList);
           })
           .handleError((error) {
-            debugPrint('❌ Stream error: $error');
+            debugPrint(' Stream error: $error');
             return [];
           });
     } catch (e) {
-      debugPrint('❌ Error creating stream: $e');
+      debugPrint(' Error creating stream: $e');
       return Stream.value([]);
     }
   }
 
-  /// ✅ CHECK IF USER ALREADY BOOKED THIS EVENT
+  ///  CHECK IF USER ALREADY BOOKED THIS EVENT
   Future<bool> hasUserBookedEvent(String eventId, String userId) async {
     try {
       final booking = await supabase
@@ -251,12 +251,12 @@ class BookingService {
 
       return booking.isNotEmpty;
     } catch (e) {
-      debugPrint('❌ Error checking booking: $e');
+      debugPrint(' Error checking booking: $e');
       return false;
     }
   }
 
-  /// 🔄 STREAM EVENT DETAILS (for real-time seat updates)
+  ///  STREAM EVENT DETAILS (for real-time seat updates)
   Stream<Map<String, dynamic>?> streamEventDetails(String eventId) {
     try {
       return supabase
@@ -270,11 +270,11 @@ class BookingService {
             return null;
           })
           .handleError((error) {
-            debugPrint('❌ Event stream error: $error');
+            debugPrint(' Event stream error: $error');
             return null;
           });
     } catch (e) {
-      debugPrint('❌ Error creating event stream: $e');
+      debugPrint(' Error creating event stream: $e');
       return Stream.value(null);
     }
   }

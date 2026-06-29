@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
 
     if (error) throw error;
 
-    console.log(`❌ Agency Rejected! Reason: ${reason}`);
+    console.log(` Agency Rejected! Reason: ${reason}`);
 
     return new Response(
       JSON.stringify({

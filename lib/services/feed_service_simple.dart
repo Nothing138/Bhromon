@@ -1,5 +1,5 @@
 // services/feed_service_simple.dart
-// ✅ SIMPLE WORKING VERSION - Copy-paste এটা!
+//  SIMPLE WORKING VERSION - Copy-paste এটা!
 
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -7,7 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class FeedServiceSimple {
   final supabase = Supabase.instance.client;
 
-  /// ✅ Simple combined feed - কাজ করবে ১০০%
+  ///  Simple combined feed - কাজ করবে ১০০%
   Future<List<Map<String, dynamic>>> getCombinedFeed() async {
     try {
       debugPrint('═══════════════════════════════════════');
@@ -15,27 +15,27 @@ class FeedServiceSimple {
       debugPrint('═══════════════════════════════════════');
 
       // ① POSTS fetch করো
-      debugPrint('📸 Fetching posts...');
+      debugPrint('Fetching posts...');
       final postsData = await supabase
           .from('posts')
           .select()
           .order('created_at', ascending: false)
           .limit(20) as List;
 
-      debugPrint('✅ Posts count: ${postsData.length}');
+      debugPrint(' Posts count: ${postsData.length}');
       if (postsData.isNotEmpty) {
         debugPrint('   Sample post: ${postsData.first}');
       }
 
       // ② EVENTS fetch করো
-      debugPrint('🎫 Fetching events...');
+      debugPrint(' Fetching events...');
       final eventsData = await supabase
           .from('agency_events')
           .select()
           .order('event_date', ascending: false)
           .limit(20) as List;
 
-      debugPrint('✅ Events count: ${eventsData.length}');
+      debugPrint(' Events count: ${eventsData.length}');
       if (eventsData.isNotEmpty) {
         debugPrint('   Sample event: ${eventsData.first}');
       }
@@ -72,25 +72,25 @@ class FeedServiceSimple {
           final dateB = DateTime.parse(b['sortDate'].toString());
           return dateB.compareTo(dateA);
         } catch (e) {
-          debugPrint('⚠️ Sort error: $e');
+          debugPrint('Sort error: $e');
           return 0;
         }
       });
 
       debugPrint('═══════════════════════════════════════');
-      debugPrint('✅ FINAL FEED: ${combined.length} items');
+      debugPrint(' FINAL FEED: ${combined.length} items');
       debugPrint('═══════════════════════════════════════');
 
       return combined;
     } catch (e) {
       debugPrint('═══════════════════════════════════════');
-      debugPrint('❌ ERROR: $e');
+      debugPrint(' ERROR: $e');
       debugPrint('═══════════════════════════════════════');
       return [];
     }
   }
 
-  /// ✅ Check if data exists in database
+  ///  Check if data exists in database
   Future<void> checkDataExists() async {
     try {
       final posts = await supabase.from('posts').select('id');
@@ -101,7 +101,7 @@ class FeedServiceSimple {
       debugPrint('Events: ${(events as List).length} found');
       debugPrint('');
     } catch (e) {
-      debugPrint('❌ Data check error: $e');
+      debugPrint(' Data check error: $e');
     }
   }
 }

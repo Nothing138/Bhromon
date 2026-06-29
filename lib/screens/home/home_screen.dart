@@ -35,39 +35,39 @@ class _HomeScreenState extends State<HomeScreen> {
     _feedService = FeedService();
     _currentUserId = supabase.auth.currentUser?.id ?? '';
 
-    // ✅ DEBUG: Check database on init (FIXED - now checks mounted)
+    //  DEBUG: Check database on init (FIXED - now checks mounted)
     _debugCheckDatabase();
   }
 
-  /// ✅ FIXED: Debug helper - check if data exists in database
+  ///  FIXED: Debug helper - check if data exists in database
   /// Now properly checks if widget is still mounted before setState()
   Future<void> _debugCheckDatabase() async {
     try {
-      debugPrint('🔍 Starting database debug check...');
+      debugPrint(' Starting database debug check...');
 
       // Check posts
       final posts = await supabase
           .from('posts')
           .select()
           .timeout(const Duration(seconds: 5));
-      debugPrint('📸 Posts count: ${posts.length}');
+      debugPrint('Posts count: ${posts.length}');
 
       // Check events
       final events = await supabase
           .from('agency_events')
           .select()
           .timeout(const Duration(seconds: 5));
-      debugPrint('🎫 Events count: ${events.length}');
+      debugPrint(' Events count: ${events.length}');
 
-      // ✅ CRITICAL: Only call setState() if widget is still mounted
+      //  CRITICAL: Only call setState() if widget is still mounted
       if (mounted) {
         setState(() {
           _debugInfo = 'Posts: ${posts.length}, Events: ${events.length}';
         });
       }
     } catch (e) {
-      debugPrint('❌ Database check failed: $e');
-      // ✅ CRITICAL: Only call setState() if widget is still mounted
+      debugPrint(' Database check failed: $e');
+      //  CRITICAL: Only call setState() if widget is still mounted
       if (mounted) {
         setState(() {
           _debugInfo = 'DB Error: $e';
@@ -222,11 +222,11 @@ class _HomeScreenState extends State<HomeScreen> {
       body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: _feedService.getCombinedFeed(),
         builder: (context, snapshot) {
-          debugPrint('🔄 Stream state: ${snapshot.connectionState}');
-          debugPrint('📊 Snapshot has data: ${snapshot.hasData}');
-          debugPrint('❌ Snapshot has error: ${snapshot.hasError}');
+          debugPrint('Stream state: ${snapshot.connectionState}');
+          debugPrint('Snapshot has data: ${snapshot.hasData}');
+          debugPrint(' Snapshot has error: ${snapshot.hasError}');
           if (snapshot.hasError) {
-            debugPrint('❌ Stream error: ${snapshot.error}');
+            debugPrint(' Stream error: ${snapshot.error}');
           }
 
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -434,10 +434,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final formattedDate =
         DateFormat('MMM dd, yyyy - hh:mm a').format(eventDate);
 
-    // ✅ Check if event has passed
+    //  Check if event has passed
     final isEventPassed = eventDate.isBefore(DateTime.now());
 
-    // ✅ Use StreamBuilder for REAL-TIME seat updates
+    //  Use StreamBuilder for REAL-TIME seat updates
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -472,7 +472,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   child: Text(
-                    '🎫 Agency Event',
+                    ' Agency Event',
                     style: TextStyle(
                       fontSize: 9,
                       fontWeight: FontWeight.w600,
@@ -606,7 +606,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 12),
 
-                    // PRICE & CAPACITY - ✅ WITH REAL-TIME UPDATES
+                    // PRICE & CAPACITY -  WITH REAL-TIME UPDATES
                     Row(
                       children: [
                         Expanded(
@@ -697,7 +697,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              // ACTION BUTTONS - ✅ WITH BOOKING STATUS
+              // ACTION BUTTONS -  WITH BOOKING STATUS
               Padding(
                 padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
                 child: Row(
@@ -729,7 +729,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-// ✅ UPDATED BOOK BUTTON WITH STATUS CHECK
+//  UPDATED BOOK BUTTON WITH STATUS CHECK
   Widget _buildEventBookButtonWithStatus({
     required Map<String, dynamic> event,
     required String eventId,
@@ -749,7 +749,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ? () {
                   String message = '';
                   if (hasBooked) {
-                    message = '✅ You have already booked this event!';
+                    message = ' You have already booked this event!';
                   } else if (isEventPassed) {
                     message = '⏰ This event date has passed';
                   } else if (isFull) {
@@ -840,7 +840,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-// ✅ UPDATED SHARE BUTTON WITH REAL FUNCTIONALITY
+//  UPDATED SHARE BUTTON WITH REAL FUNCTIONALITY
   Widget _buildShareButton({
     required Map<String, dynamic> event,
     required Color accentColor,
@@ -852,7 +852,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final eventDate = event['event_date'] as String? ?? '';
 
         // Create share message
-        final shareMessage = '''🎫 Check out this amazing event: "$eventTitle"
+        final shareMessage = ''' Check out this amazing event: "$eventTitle"
  
 📍 Location: $eventLocation
 📅 Date: $eventDate
@@ -1028,7 +1028,7 @@ Book your spot now on Bhromon! 🚀''';
     );
   }
 
-  // ✅ UPDATED BOOK BUTTON WITH MODAL
+  //  UPDATED BOOK BUTTON WITH MODAL
   Widget _buildEventBookButton({
     required Map<String, dynamic> event,
     required Color accentColor,
@@ -1045,7 +1045,7 @@ Book your spot now on Bhromon! 🚀''';
               );
             }
           : () {
-              // ✅ SHOW BOOKING MODAL
+              //  SHOW BOOKING MODAL
               showModalBottomSheet(
                 context: context,
                 isScrollControlled: true,
@@ -1148,7 +1148,7 @@ Book your spot now on Bhromon! 🚀''';
                 ),
               ),
               child: Text(
-                '📸 User Post',
+                'User Post',
                 style: TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w600,

@@ -1,5 +1,4 @@
 // services/auth_service.dart
-// services/auth_service.dart - UPDATED WITH PASSWORD RESET
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -39,7 +38,7 @@ class AuthService extends ChangeNotifier {
     required String password,
   }) async {
     try {
-      print('🔄 Starting user registration via backend for: $email');
+      print(' Starting user registration via backend for: $email');
 
       final response = await http
           .post(
@@ -57,7 +56,7 @@ class AuthService extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print('✅ Backend registration successful: ${data['userId']}');
+        print(' Backend registration successful: ${data['userId']}');
 
         await Future.delayed(Duration(seconds: 2));
         await smartLogin(email: email, password: password);
@@ -67,7 +66,7 @@ class AuthService extends ChangeNotifier {
         throw Exception(error['message'] ?? 'Registration failed');
       }
     } catch (e) {
-      print('❌ User registration error: $e');
+      print(' User registration error: $e');
       throw Exception('User registration error: $e');
     }
   }
@@ -81,7 +80,7 @@ class AuthService extends ChangeNotifier {
   }) async {
     try {
       print(
-          '🔄 Starting agency registration via backend for: ${request.ownerEmail}');
+          ' Starting agency registration via backend for: ${request.ownerEmail}');
 
       final response = await http
           .post(
@@ -110,7 +109,7 @@ class AuthService extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print('✅ Backend agency registration successful: ${data['agencyId']}');
+        print(' Backend agency registration successful: ${data['agencyId']}');
 
         await Future.delayed(Duration(seconds: 2));
         await smartLogin(email: request.ownerEmail, password: request.password);
@@ -120,7 +119,7 @@ class AuthService extends ChangeNotifier {
         throw Exception(error['message'] ?? 'Agency registration failed');
       }
     } catch (e) {
-      print('❌ Agency registration error: $e');
+      print(' Agency registration error: $e');
       throw Exception('Agency registration error: $e');
     }
   }
@@ -133,7 +132,7 @@ class AuthService extends ChangeNotifier {
     required String password,
   }) async {
     try {
-      print('🔄 Starting login for: $email');
+      print(' Starting login for: $email');
 
       final authResponse = await supabase.auth.signInWithPassword(
         email: email.trim(),
@@ -145,7 +144,7 @@ class AuthService extends ChangeNotifier {
       }
 
       _currentUser = authResponse.user;
-      print('✅ User authenticated: ${authResponse.user!.id}');
+      print(' User authenticated: ${authResponse.user!.id}');
 
       final profile = await supabase
           .from('profiles')
@@ -154,7 +153,7 @@ class AuthService extends ChangeNotifier {
           .single();
 
       _userType = profile['user_type'];
-      print('✅ User type: $_userType');
+      print(' User type: $_userType');
 
       if (_userType == 'agency') {
         await _handleAgencyLogin(authResponse.user!.id);
@@ -165,7 +164,7 @@ class AuthService extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      print('❌ Login error: $e');
+      print(' Login error: $e');
       throw Exception('Login error: $e');
     }
   }
@@ -182,21 +181,21 @@ class AuthService extends ChangeNotifier {
           .single();
 
       _currentAgency = TravelAgency.fromJson(agency);
-      print('✅ Agency loaded: ${_currentAgency!.agencyName}');
+      print(' Agency loaded: ${_currentAgency!.agencyName}');
 
       if (!_currentAgency!.otpVerified) {
         _isOtpRequired = true;
-        print('⚠️ OTP verification required');
+        print('OTP verification required');
       } else {
         _isOtpRequired = false;
         await supabase.from('agency_login_history').insert({
           'agency_id': _currentAgency!.id,
           'login_method': 'password',
         });
-        print('✅ OTP already verified, login successful');
+        print(' OTP already verified, login successful');
       }
     } catch (e) {
-      print('❌ Agency login check error: $e');
+      print(' Agency login check error: $e');
       throw Exception('Agency login check error: $e');
     }
   }
@@ -212,7 +211,7 @@ class AuthService extends ChangeNotifier {
         throw Exception('No agency found');
       }
 
-      print('🔄 Verifying OTP via backend for agency: ${_currentAgency!.id}');
+      print(' Verifying OTP via backend for agency: ${_currentAgency!.id}');
 
       final response = await http
           .post(
@@ -228,7 +227,7 @@ class AuthService extends ChangeNotifier {
           .timeout(Duration(seconds: 30));
 
       if (response.statusCode == 200) {
-        print('✅ OTP verified successfully via backend');
+        print(' OTP verified successfully via backend');
 
         _currentAgency = _currentAgency!.copyWith(
           otpVerified: true,
@@ -249,7 +248,7 @@ class AuthService extends ChangeNotifier {
         throw Exception(error['message'] ?? 'OTP verification failed');
       }
     } catch (e) {
-      print('❌ OTP verification error: $e');
+      print(' OTP verification error: $e');
       throw Exception('OTP verification error: $e');
     }
   }
@@ -263,7 +262,7 @@ class AuthService extends ChangeNotifier {
         throw Exception('No agency found');
       }
 
-      print('🔄 Resending OTP via backend for agency: ${_currentAgency!.id}');
+      print(' Resending OTP via backend for agency: ${_currentAgency!.id}');
 
       final response = await http
           .post(
@@ -278,14 +277,14 @@ class AuthService extends ChangeNotifier {
           .timeout(Duration(seconds: 30));
 
       if (response.statusCode == 200) {
-        print('✅ OTP resent successfully via backend');
+        print(' OTP resent successfully via backend');
         return true;
       } else {
         final error = jsonDecode(response.body);
         throw Exception(error['message'] ?? 'Resend OTP failed');
       }
     } catch (e) {
-      print('❌ Resend OTP error: $e');
+      print(' Resend OTP error: $e');
       throw Exception('Resend OTP error: $e');
     }
   }
@@ -297,9 +296,9 @@ class AuthService extends ChangeNotifier {
     required String email,
   }) async {
     try {
-      print('🔄 Password reset requested for: $email');
+      print(' Password reset requested for: $email');
 
-      // ✅ Option 1: Use Backend for custom email with token
+      //  Option 1: Use Backend for custom email with token
       final response = await http
           .post(
             Uri.parse('$BACKEND_URL/request-password-reset'),
@@ -313,21 +312,21 @@ class AuthService extends ChangeNotifier {
           .timeout(Duration(seconds: 30));
 
       if (response.statusCode == 200) {
-        print('✅ Password reset email sent via backend');
+        print(' Password reset email sent via backend');
         return true;
       } else {
         final error = jsonDecode(response.body);
         throw Exception(error['message'] ?? 'Password reset request failed');
       }
     } catch (e) {
-      print('⚠️ Backend password reset failed, trying Supabase Auth');
+      print('Backend password reset failed, trying Supabase Auth');
       try {
-        // ✅ Fallback: Use Supabase Auth
+        //  Fallback: Use Supabase Auth
         await supabase.auth.resetPasswordForEmail(email.trim());
-        print('✅ Password reset email sent via Supabase');
+        print(' Password reset email sent via Supabase');
         return true;
       } catch (supabaseError) {
-        print('❌ Password reset request error: $supabaseError');
+        print(' Password reset request error: $supabaseError');
         throw Exception('Password reset request error: $supabaseError');
       }
     }
@@ -342,7 +341,7 @@ class AuthService extends ChangeNotifier {
     required String newPassword,
   }) async {
     try {
-      print('🔄 Verifying reset token and updating password for: $email');
+      print(' Verifying reset token and updating password for: $email');
 
       final response = await http
           .post(
@@ -359,14 +358,14 @@ class AuthService extends ChangeNotifier {
           .timeout(Duration(seconds: 30));
 
       if (response.statusCode == 200) {
-        print('✅ Password reset successful via backend');
+        print(' Password reset successful via backend');
         return true;
       } else {
         final error = jsonDecode(response.body);
         throw Exception(error['message'] ?? 'Password reset failed');
       }
     } catch (e) {
-      print('❌ Password reset error: $e');
+      print(' Password reset error: $e');
       throw Exception('Password reset error: $e');
     }
   }
@@ -378,16 +377,16 @@ class AuthService extends ChangeNotifier {
     required String newPassword,
   }) async {
     try {
-      print('🔄 Updating password for current user');
+      print(' Updating password for current user');
 
       await supabase.auth.updateUser(
         UserAttributes(password: newPassword.trim()),
       );
 
-      print('✅ Password updated successfully');
+      print(' Password updated successfully');
       return true;
     } catch (e) {
-      print('❌ Password update error: $e');
+      print(' Password update error: $e');
       throw Exception('Password update error: $e');
     }
   }
@@ -403,9 +402,9 @@ class AuthService extends ChangeNotifier {
       _userType = null;
       _isOtpRequired = false;
       notifyListeners();
-      print('✅ Logged out successfully');
+      print(' Logged out successfully');
     } catch (e) {
-      print('❌ Logout error: $e');
+      print(' Logout error: $e');
       throw Exception('Logout error: $e');
     }
   }
@@ -427,9 +426,9 @@ class AuthService extends ChangeNotifier {
         throw Exception('Password must be at least 6 characters');
       }
 
-      print('🔄 Changing password for current user');
+      print(' Changing password for current user');
 
-      // ✅ Get auth token
+      //  Get auth token
       final session = supabase.auth.currentSession;
       if (session == null) {
         throw Exception('No active session');
@@ -437,7 +436,7 @@ class AuthService extends ChangeNotifier {
 
       final token = session.accessToken;
 
-      // ✅ Call backend endpoint
+      //  Call backend endpoint
       final response = await http
           .post(
             Uri.parse('$BACKEND_URL/change-password'),
@@ -454,14 +453,14 @@ class AuthService extends ChangeNotifier {
           .timeout(Duration(seconds: 30));
 
       if (response.statusCode == 200) {
-        print('✅ Password changed successfully');
+        print(' Password changed successfully');
         return true;
       } else {
         final error = jsonDecode(response.body);
         throw Exception(error['message'] ?? 'Failed to change password');
       }
     } catch (e) {
-      print('❌ Change password error: $e');
+      print(' Change password error: $e');
       throw Exception('Change password error: $e');
     }
   }
@@ -474,7 +473,7 @@ class AuthService extends ChangeNotifier {
       final session = supabase.auth.currentSession;
       if (session != null) {
         _currentUser = session.user;
-        print('✅ Session found for: ${session.user.email}');
+        print(' Session found for: ${session.user.email}');
 
         final profile = await supabase
             .from('profiles')
@@ -483,7 +482,7 @@ class AuthService extends ChangeNotifier {
             .single();
 
         _userType = profile['user_type'];
-        print('✅ User type: $_userType');
+        print(' User type: $_userType');
 
         if (_userType == 'agency') {
           await _handleAgencyLogin(session.user.id);
@@ -491,7 +490,7 @@ class AuthService extends ChangeNotifier {
       }
       notifyListeners();
     } catch (e) {
-      print('⚠️ Auth status check error: $e');
+      print('Auth status check error: $e');
     }
   }
 }

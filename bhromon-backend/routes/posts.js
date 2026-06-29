@@ -63,7 +63,7 @@ router.post('/create', async (req, res) => {
       });
     }
 
-    console.log(`🔄 Creating post for user: ${userId}`);
+    console.log(` Creating post for user: ${userId}`);
 
     // Get user profile
     const { data: userProfile } = await supabaseAdmin
@@ -95,14 +95,14 @@ router.post('/create', async (req, res) => {
       .single();
 
     if (postError) {
-      console.error(`❌ Post creation error: ${postError.message}`);
+      console.error(` Post creation error: ${postError.message}`);
       return res.status(500).json({
         success: false,
         message: `Post error: ${postError.message}`,
       });
     }
 
-    console.log(`✅ Post created: ${newPost.id}`);
+    console.log(` Post created: ${newPost.id}`);
 
     return res.status(200).json({
       success: true,
@@ -110,7 +110,7 @@ router.post('/create', async (req, res) => {
       post: newPost,
     });
   } catch (error) {
-    console.error(`❌ Create post error: ${error.message}`);
+    console.error(` Create post error: ${error.message}`);
     return res.status(500).json({
       success: false,
       message: `Unexpected error: ${error.message}`,
@@ -123,7 +123,7 @@ router.post('/create', async (req, res) => {
 // ========================
 router.get('/all', async (req, res) => {
   try {
-    console.log('🔄 Fetching all posts...');
+    console.log(' Fetching all posts...');
 
     const { data: posts, error: postsError } = await supabaseAdmin
       .from('posts')
@@ -139,14 +139,14 @@ router.get('/all', async (req, res) => {
       .limit(100);
 
     if (postsError) {
-      console.error(`❌ Fetch error: ${postsError.message}`);
+      console.error(` Fetch error: ${postsError.message}`);
       return res.status(500).json({
         success: false,
         message: `Fetch error: ${postsError.message}`,
       });
     }
 
-    console.log(`✅ Fetched ${posts.length} posts`);
+    console.log(` Fetched ${posts.length} posts`);
 
     return res.status(200).json({
       success: true,
@@ -154,7 +154,7 @@ router.get('/all', async (req, res) => {
       count: posts.length,
     });
   } catch (error) {
-    console.error(`❌ Get posts error: ${error.message}`);
+    console.error(` Get posts error: ${error.message}`);
     return res.status(500).json({
       success: false,
       message: `Unexpected error: ${error.message}`,
@@ -176,7 +176,7 @@ router.post('/toggle-like', async (req, res) => {
       });
     }
 
-    console.log(`🔄 Toggling like for post: ${postId}`);
+    console.log(` Toggling like for post: ${postId}`);
 
     // Check if already liked
     const { data: existingLike } = await supabaseAdmin
@@ -231,7 +231,7 @@ router.post('/toggle-like', async (req, res) => {
       likesCount,
     });
   } catch (error) {
-    console.error(`❌ Toggle like error: ${error.message}`);
+    console.error(` Toggle like error: ${error.message}`);
     return res.status(500).json({
       success: false,
       message: `Unexpected error: ${error.message}`,
@@ -253,7 +253,7 @@ router.post('/add-comment', async (req, res) => {
       });
     }
 
-    console.log(`🔄 Adding comment to post: ${postId}`);
+    console.log(` Adding comment to post: ${postId}`);
 
     // Get user profile
     const { data: userProfile } = await supabaseAdmin
@@ -276,7 +276,7 @@ router.post('/add-comment', async (req, res) => {
       .single();
 
     if (commentError) {
-      console.error(`❌ Comment creation error: ${commentError.message}`);
+      console.error(` Comment creation error: ${commentError.message}`);
       return res.status(500).json({
         success: false,
         message: `Comment error: ${commentError.message}`,
@@ -297,7 +297,7 @@ router.post('/add-comment', async (req, res) => {
       .update({ comments_count: commentsCount })
       .eq('id', postId);
 
-    console.log(`✅ Comment added: ${newComment.id}`);
+    console.log(` Comment added: ${newComment.id}`);
 
     return res.status(200).json({
       success: true,
@@ -306,7 +306,7 @@ router.post('/add-comment', async (req, res) => {
       commentsCount,
     });
   } catch (error) {
-    console.error(`❌ Add comment error: ${error.message}`);
+    console.error(` Add comment error: ${error.message}`);
     return res.status(500).json({
       success: false,
       message: `Unexpected error: ${error.message}`,
@@ -321,7 +321,7 @@ router.get('/:postId/comments', async (req, res) => {
   try {
     const { postId } = req.params;
 
-    console.log(`🔄 Fetching comments for post: ${postId}`);
+    console.log(` Fetching comments for post: ${postId}`);
 
     const { data: comments, error: commentsError } = await supabaseAdmin
       .from('post_comments')
@@ -330,14 +330,14 @@ router.get('/:postId/comments', async (req, res) => {
       .order('created_at', { ascending: false });
 
     if (commentsError) {
-      console.error(`❌ Fetch comments error: ${commentsError.message}`);
+      console.error(` Fetch comments error: ${commentsError.message}`);
       return res.status(500).json({
         success: false,
         message: `Fetch error: ${commentsError.message}`,
       });
     }
 
-    console.log(`✅ Fetched ${comments.length} comments`);
+    console.log(` Fetched ${comments.length} comments`);
 
     return res.status(200).json({
       success: true,
@@ -345,7 +345,7 @@ router.get('/:postId/comments', async (req, res) => {
       count: comments.length,
     });
   } catch (error) {
-    console.error(`❌ Get comments error: ${error.message}`);
+    console.error(` Get comments error: ${error.message}`);
     return res.status(500).json({
       success: false,
       message: `Unexpected error: ${error.message}`,
@@ -367,7 +367,7 @@ router.post('/share', async (req, res) => {
       });
     }
 
-    console.log(`🔄 Sharing post: ${postId}`);
+    console.log(` Sharing post: ${postId}`);
 
     // Get post details
     const { data: post } = await supabaseAdmin
@@ -387,14 +387,14 @@ router.post('/share', async (req, res) => {
       });
 
     if (shareError) {
-      console.error(`❌ Share error: ${shareError.message}`);
+      console.error(` Share error: ${shareError.message}`);
       return res.status(500).json({
         success: false,
         message: `Share error: ${shareError.message}`,
       });
     }
 
-    console.log(`✅ Post shared successfully`);
+    console.log(` Post shared successfully`);
 
     return res.status(200).json({
       success: true,
@@ -403,7 +403,7 @@ router.post('/share', async (req, res) => {
       sharedWith: shareToUserIds.length,
     });
   } catch (error) {
-    console.error(`❌ Share post error: ${error.message}`);
+    console.error(` Share post error: ${error.message}`);
     return res.status(500).json({
       success: false,
       message: `Unexpected error: ${error.message}`,
@@ -455,7 +455,7 @@ router.post('/call-request', async (req, res) => {
       .single();
 
     if (callError) {
-      console.error(`❌ Call log error: ${callError.message}`);
+      console.error(` Call log error: ${callError.message}`);
       return res.status(500).json({
         success: false,
         message: `Call error: ${callError.message}`,
@@ -479,13 +479,13 @@ router.post('/call-request', async (req, res) => {
             </div>
           `,
         });
-        console.log(`✅ Email sent to agency: ${agencyData.owner_email}`);
+        console.log(` Email sent to agency: ${agencyData.owner_email}`);
       } catch (emailError) {
-        console.warn(`⚠️ Email send failed (non-critical): ${emailError.message}`);
+        console.warn(`Email send failed (non-critical): ${emailError.message}`);
       }
     }
 
-    console.log(`✅ Call request created: ${callLog.id}`);
+    console.log(` Call request created: ${callLog.id}`);
 
     return res.status(200).json({
       success: true,
@@ -494,7 +494,7 @@ router.post('/call-request', async (req, res) => {
       agencyEmail: agencyData?.owner_email,
     });
   } catch (error) {
-    console.error(`❌ Call request error: ${error.message}`);
+    console.error(` Call request error: ${error.message}`);
     return res.status(500).json({
       success: false,
       message: `Unexpected error: ${error.message}`,
@@ -517,7 +517,7 @@ router.delete('/:postId', async (req, res) => {
       });
     }
 
-    console.log(`🔄 Deleting post: ${postId}`);
+    console.log(` Deleting post: ${postId}`);
 
     // Verify ownership
     const { data: post } = await supabaseAdmin
@@ -548,14 +548,14 @@ router.delete('/:postId', async (req, res) => {
     // Delete post
     await supabaseAdmin.from('posts').delete().eq('id', postId);
 
-    console.log(`✅ Post deleted: ${postId}`);
+    console.log(` Post deleted: ${postId}`);
 
     return res.status(200).json({
       success: true,
       message: 'Post deleted successfully!',
     });
   } catch (error) {
-    console.error(`❌ Delete post error: ${error.message}`);
+    console.error(` Delete post error: ${error.message}`);
     return res.status(500).json({
       success: false,
       message: `Unexpected error: ${error.message}`,

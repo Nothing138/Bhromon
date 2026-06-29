@@ -420,7 +420,7 @@ class _AgencyProfileScreenState extends State<AgencyProfileScreen> {
     );
   }
 
-  // ✅ FIXED: Show Change Password Dialog
+  //  FIXED: Show Change Password Dialog
   void _showChangePasswordDialog(
     BuildContext context,
     ThemeProvider themeProvider,
@@ -432,7 +432,7 @@ class _AgencyProfileScreenState extends State<AgencyProfileScreen> {
     final TextEditingController confirmPasswordController =
         TextEditingController();
 
-    // ✅ IMPORTANT: Get AuthService BEFORE opening dialog
+    //  IMPORTANT: Get AuthService BEFORE opening dialog
     final authService = Provider.of<AuthService>(context, listen: false);
 
     showDialog(
@@ -461,7 +461,7 @@ class _AgencyProfileScreenState extends State<AgencyProfileScreen> {
 }
 
 // ============================================
-// ✅ SEPARATE STATEFUL WIDGET FOR DIALOG
+//  SEPARATE STATEFUL WIDGET FOR DIALOG
 // ============================================
 class _ChangePasswordDialog extends StatefulWidget {
   final bool isDark;
@@ -514,7 +514,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('✅ Password changed successfully'),
+          content: Text(' Password changed successfully'),
           backgroundColor: Colors.green,
           duration: Duration(seconds: 2),
         ),
@@ -542,7 +542,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('❌ $errorMessage'),
+          content: Text(' $errorMessage'),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 3),
         ),
@@ -569,7 +569,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // ✅ Current Password
+            //  Current Password
             TextField(
               controller: widget.currentPasswordController,
               enabled: !_isLoading,
@@ -620,7 +620,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
             ),
             const SizedBox(height: 16),
 
-            // ✅ New Password
+            //  New Password
             TextField(
               controller: widget.newPasswordController,
               enabled: !_isLoading,
@@ -670,7 +670,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
             ),
             const SizedBox(height: 16),
 
-            // ✅ Confirm Password
+            //  Confirm Password
             TextField(
               controller: widget.confirmPasswordController,
               enabled: !_isLoading,
@@ -721,7 +721,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
             ),
             const SizedBox(height: 12),
 
-            // ✅ Info Box
+            //  Info Box
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(

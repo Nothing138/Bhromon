@@ -1,7 +1,5 @@
 // main.dart
-// main.dart - UPDATED FOR RAJ'S BHROMON APP
-// ✅ Working with AuthWrapper, all providers, and EventService
-
+// main.dart - CORRECTED VERSION
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -19,7 +17,7 @@ import 'services/auth_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ✅ Load environment variables from .env file
+  // Load environment variables from .env file
   await dotenv.load(fileName: ".env");
 
   // Supabase Initialize
@@ -29,11 +27,16 @@ Future<void> main() async {
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpsZ2RnbHR1Ym11cWZheG5ra2RjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTIxNjU2MiwiZXhwIjoyMDkwNzkyNTYyfQ.jnBUv0GKrWNqGdmNYVmR9oYUmkFJ5ZZPnPLjwi59U9M',
   );
 
+  // Initialize ThemeProvider before running app
+  final themeProvider = ThemeProvider();
+  await themeProvider.initializeTheme();
+
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (context) => ThemeProvider(),
+        // Theme Provider with initialized values
+        ChangeNotifierProvider.value(
+          value: themeProvider,
         ),
         ChangeNotifierProvider(
           create: (context) => EventService(),
@@ -65,7 +68,7 @@ class BhromonApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       themeMode: themeProvider.themeMode,
 
-      // --- Light Theme ---
+      // --- Light Theme (DEFAULT) ---
       theme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.light,
@@ -77,9 +80,12 @@ class BhromonApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFFF8FAFC),
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.transparent,
-          foregroundColor: Colors.black,
+          foregroundColor: Colors.black87,
           elevation: 0,
           centerTitle: true,
+        ),
+        switchTheme: SwitchThemeData(
+          thumbColor: WidgetStateProperty.all(themeProvider.accentColor),
         ),
       ),
 
@@ -99,56 +105,20 @@ class BhromonApp extends StatelessWidget {
           elevation: 0,
           centerTitle: true,
         ),
+        switchTheme: SwitchThemeData(
+          thumbColor: WidgetStateProperty.all(themeProvider.accentColor),
+        ),
       ),
 
+      // ========================================
+      //  CORRECTED: SplashScreen as initial
+      // ========================================
       initialRoute: '/',
       routes: {
-        '/': (context) => const AuthWrapper(),
+        '/': (context) => const SplashScreen(), //  Initial route
         '/login': (context) => const LoginScreen(),
         '/main': (context) => const MainWrapper(),
-      },
-    );
-  }
-}
-
-// ✅ Auth Navigation Wrapper - Handles all routing based on auth state
-class AuthWrapper extends StatefulWidget {
-  const AuthWrapper({super.key});
-
-  @override
-  State<AuthWrapper> createState() => _AuthWrapperState();
-}
-
-class _AuthWrapperState extends State<AuthWrapper> {
-  @override
-  void initState() {
-    super.initState();
-    _checkAuthStatus();
-  }
-
-  Future<void> _checkAuthStatus() async {
-    final authService = Provider.of<AuthService>(context, listen: false);
-    await authService.checkAuthStatus();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<AuthService>(
-      builder: (context, authService, _) {
-        // Not authenticated - show login
-        if (!authService.isAuthenticated) {
-          return const LoginScreen();
-        }
-
-        // ✅ Authenticated: Route based on user type
-        if (authService.isAgency) {
-          return const AgencyMainWrapper();
-        } else if (authService.isUser) {
-          return const MainWrapper();
-        }
-
-        // Default splash while loading
-        return const SplashScreen();
+        '/agency': (context) => const AgencyMainWrapper(),
       },
     );
   }

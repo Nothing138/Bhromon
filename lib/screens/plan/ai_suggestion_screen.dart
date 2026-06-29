@@ -362,7 +362,7 @@ class _AISuggestionScreenState extends State<AISuggestionScreen>
 
           final responseText = snapshot.data ?? 'No suggestions found.';
           final isError =
-              responseText.startsWith('❌') || responseText.startsWith('⏳');
+              responseText.startsWith('') || responseText.startsWith('⏳');
 
           return SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
@@ -518,7 +518,7 @@ class _AISuggestionScreenState extends State<AISuggestionScreen>
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
-                                responseText.replaceFirst('❌ ', ''),
+                                responseText.replaceFirst(' ', ''),
                                 style: const TextStyle(
                                   color: Colors.redAccent,
                                   fontSize: 13,

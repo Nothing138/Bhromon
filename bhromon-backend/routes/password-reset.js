@@ -9,13 +9,13 @@ dotenv.config();
 
 const router = express.Router();
 
-// ✅ Supabase Admin Client
+//  Supabase Admin Client
 const supabaseAdmin = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// ✅ Email Service Setup (Gmail/Nodemailer)
+//  Email Service Setup (Gmail/Nodemailer)
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -35,9 +35,9 @@ router.post('/request-password-reset', async (req, res) => {
       return res.status(400).json({ message: 'Email is required' });
     }
 
-    console.log(`🔄 Password reset requested for: ${email}`);
+    console.log(` Password reset requested for: ${email}`);
 
-    // ✅ FIXED: Query auth.users table instead of using non-existent method
+    //  FIXED: Query auth.users table instead of using non-existent method
     const { data: users, error: userError } = await supabaseAdmin
       .from('auth.users')
       .select('id')
@@ -45,7 +45,7 @@ router.post('/request-password-reset', async (req, res) => {
       .single();
 
     if (userError || !users) {
-      console.log(`⚠️ User not found: ${email}`);
+      console.log(`User not found: ${email}`);
       // Don't reveal whether email exists (security)
       return res.status(200).json({ 
         message: 'If email exists, reset code will be sent' 
@@ -54,11 +54,11 @@ router.post('/request-password-reset', async (req, res) => {
 
     const userId = users.id;
 
-    // ✅ Generate secure reset token (32 characters)
+    //  Generate secure reset token (32 characters)
     const resetToken = randomBytes(16).toString('hex');
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-    // ✅ Store reset token in database
+    //  Store reset token in database
     const { error: insertError } = await supabaseAdmin
       .from('password_reset_tokens')
       .insert({
@@ -69,14 +69,14 @@ router.post('/request-password-reset', async (req, res) => {
       });
 
     if (insertError) {
-      console.error('❌ Error storing reset token:', insertError);
+      console.error(' Error storing reset token:', insertError);
       return res.status(500).json({ message: 'Failed to generate reset code' });
     }
 
-    // ✅ Extract first 6 characters for email display
+    //  Extract first 6 characters for email display
     const displayToken = resetToken.substring(0, 6).toUpperCase();
 
-    // ✅ Send password reset email
+    //  Send password reset email
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}&email=${email}`;
 
     const mailOptions = {
@@ -124,7 +124,7 @@ router.post('/request-password-reset', async (req, res) => {
     };
 
     await transporter.sendMail(mailOptions);
-    console.log(`✅ Password reset email sent to: ${email}`);
+    console.log(` Password reset email sent to: ${email}`);
 
     return res.status(200).json({ 
       message: 'Password reset email sent successfully',
@@ -132,7 +132,7 @@ router.post('/request-password-reset', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Password reset request error:', error);
+    console.error(' Password reset request error:', error);
     return res.status(500).json({ 
       message: 'Failed to process password reset request',
       error: error.message 
@@ -159,9 +159,9 @@ router.post('/reset-password', async (req, res) => {
       });
     }
 
-    console.log(`🔄 Verifying reset token for: ${email}`);
+    console.log(` Verifying reset token for: ${email}`);
 
-    // ✅ Get user by email (FIXED)
+    //  Get user by email (FIXED)
     const { data: users, error: userError } = await supabaseAdmin
       .from('auth.users')
       .select('id')
@@ -169,13 +169,13 @@ router.post('/reset-password', async (req, res) => {
       .single();
 
     if (userError || !users) {
-      console.log(`❌ User not found: ${email}`);
+      console.log(` User not found: ${email}`);
       return res.status(404).json({ message: 'User not found' });
     }
 
     const userId = users.id;
 
-    // ✅ Find and verify reset token
+    //  Find and verify reset token
     const { data: tokenData, error: tokenError } = await supabaseAdmin
       .from('password_reset_tokens')
       .select('*')
@@ -185,28 +185,28 @@ router.post('/reset-password', async (req, res) => {
       .single();
 
     if (tokenError || !tokenData) {
-      console.log(`❌ Invalid or missing reset token for: ${email}`);
+      console.log(` Invalid or missing reset token for: ${email}`);
       return res.status(400).json({ message: 'Invalid reset code' });
     }
 
-    // ✅ Check if token is expired
+    //  Check if token is expired
     if (new Date(tokenData.expires_at) < new Date()) {
-      console.log(`❌ Reset token expired for: ${email}`);
+      console.log(` Reset token expired for: ${email}`);
       return res.status(400).json({ message: 'Token expired. Please request a new reset email.' });
     }
 
-    // ✅ Update password using Admin SDK (FIXED - use correct method)
+    //  Update password using Admin SDK (FIXED - use correct method)
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
       userId,
       { password: newPassword }
     );
 
     if (updateError) {
-      console.error('❌ Error updating password:', updateError);
+      console.error(' Error updating password:', updateError);
       return res.status(500).json({ message: 'Failed to update password', error: updateError.message });
     }
 
-    // ✅ Mark token as used
+    //  Mark token as used
     const { error: markUsedError } = await supabaseAdmin
       .from('password_reset_tokens')
       .update({
@@ -216,18 +216,18 @@ router.post('/reset-password', async (req, res) => {
       .eq('id', tokenData.id);
 
     if (markUsedError) {
-      console.error('⚠️ Error marking token as used:', markUsedError);
+      console.error('Error marking token as used:', markUsedError);
       // Don't return error - password was already updated
     }
 
-    console.log(`✅ Password reset successful for: ${email}`);
+    console.log(` Password reset successful for: ${email}`);
 
     return res.status(200).json({ 
       message: 'Password has been reset successfully. You can now login with your new password.' 
     });
 
   } catch (error) {
-    console.error('❌ Password reset error:', error);
+    console.error(' Password reset error:', error);
     return res.status(500).json({ 
       message: 'Failed to reset password',
       error: error.message 
@@ -248,9 +248,9 @@ router.post('/validate-reset-token', async (req, res) => {
       });
     }
 
-    console.log(`🔍 Validating reset token for: ${email}`);
+    console.log(` Validating reset token for: ${email}`);
 
-    // ✅ Get user by email (FIXED)
+    //  Get user by email (FIXED)
     const { data: users, error: userError } = await supabaseAdmin
       .from('auth.users')
       .select('id')
@@ -263,7 +263,7 @@ router.post('/validate-reset-token', async (req, res) => {
 
     const userId = users.id;
 
-    // ✅ Check token
+    //  Check token
     const { data: tokenData, error: tokenError } = await supabaseAdmin
       .from('password_reset_tokens')
       .select('*')
@@ -276,12 +276,12 @@ router.post('/validate-reset-token', async (req, res) => {
       return res.status(400).json({ message: 'Invalid reset code' });
     }
 
-    // ✅ Check expiration
+    //  Check expiration
     if (new Date(tokenData.expires_at) < new Date()) {
       return res.status(400).json({ message: 'Token expired' });
     }
 
-    console.log(`✅ Reset token is valid for: ${email}`);
+    console.log(` Reset token is valid for: ${email}`);
 
     return res.status(200).json({ 
       message: 'Token is valid',
@@ -290,7 +290,7 @@ router.post('/validate-reset-token', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Token validation error:', error);
+    console.error(' Token validation error:', error);
     return res.status(500).json({ 
       message: 'Failed to validate token',
       error: error.message 

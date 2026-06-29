@@ -39,7 +39,7 @@ class LikesService {
         return true; // Now liked
       }
     } catch (e) {
-      debugPrint('❌ toggleLike error: $e');
+      debugPrint(' toggleLike error: $e');
       rethrow;
     }
   }
@@ -61,7 +61,7 @@ class LikesService {
 
       return result != null;
     } catch (e) {
-      debugPrint('❌ hasUserLiked error: $e');
+      debugPrint(' hasUserLiked error: $e');
       return false;
     }
   }
@@ -76,7 +76,7 @@ class LikesService {
 
       return (result as List).length;
     } catch (e) {
-      debugPrint('❌ getLikesCount error: $e');
+      debugPrint(' getLikesCount error: $e');
       return 0;
     }
   }
@@ -124,7 +124,7 @@ class LikesService {
 
       return (result as List).cast<Map<String, dynamic>>();
     } catch (e) {
-      debugPrint('❌ getLikedByUsers error: $e');
+      debugPrint(' getLikedByUsers error: $e');
       return [];
     }
   }
@@ -143,7 +143,7 @@ class LikesService {
           .eq('post_id', postId)
           .eq('user_id', userId);
     } catch (e) {
-      debugPrint('❌ deleteLike error: $e');
+      debugPrint(' deleteLike error: $e');
       rethrow;
     }
   }
@@ -155,7 +155,7 @@ class LikesService {
     try {
       await supabase.from('post_likes').delete().eq('post_id', postId);
     } catch (e) {
-      debugPrint('❌ clearPostLikes error: $e');
+      debugPrint(' clearPostLikes error: $e');
       rethrow;
     }
   }

@@ -35,80 +35,127 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Future<void> _loadPreferences() async {
     try {
       final userId = supabase.auth.currentUser?.id;
-      if (userId == null) return;
+      if (userId == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('User not authenticated'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+        return;
+      }
 
-      // profiles টেবিল থেকে notification prefs লোড করো
-      // যদি আলাদা কলাম না থাকে, তাহলে JSONB field ব্যবহার করো
-      // এখানে default values রাখা আছে, তুমি Supabase অনুযায়ী adjust করো
-      final data = await supabase
+      final response = await supabase
           .from('profiles')
           .select('notification_prefs')
           .eq('id', userId)
           .maybeSingle();
 
-      if (data != null && data['notification_prefs'] != null) {
-        final prefs = data['notification_prefs'] as Map<String, dynamic>;
-        setState(() {
-          _pushEnabled = prefs['push_enabled'] ?? true;
-          _tripReminders = prefs['trip_reminders'] ?? true;
-          _bookingUpdates = prefs['booking_updates'] ?? true;
-          _groupInvites = prefs['group_invites'] ?? true;
-          _sosAlerts = prefs['sos_alerts'] ?? true;
-          _newPlaces = prefs['new_places'] ?? false;
-          _weeklyDigest = prefs['weekly_digest'] ?? false;
-          _marketingEmails = prefs['marketing_emails'] ?? false;
-        });
+      if (response != null && response['notification_prefs'] != null) {
+        final prefs = response['notification_prefs'] as Map<String, dynamic>;
+        if (mounted) {
+          setState(() {
+            _pushEnabled = prefs['push_enabled'] as bool? ?? true;
+            _tripReminders = prefs['trip_reminders'] as bool? ?? true;
+            _bookingUpdates = prefs['booking_updates'] as bool? ?? true;
+            _groupInvites = prefs['group_invites'] as bool? ?? true;
+            _sosAlerts = prefs['sos_alerts'] as bool? ?? true;
+            _newPlaces = prefs['new_places'] as bool? ?? false;
+            _weeklyDigest = prefs['weekly_digest'] as bool? ?? false;
+            _marketingEmails = prefs['marketing_emails'] as bool? ?? false;
+          });
+        }
+      } else {
+        // Initialize with default values if no preferences exist
+        if (mounted) {
+          setState(() {
+            _pushEnabled = true;
+            _tripReminders = true;
+            _bookingUpdates = true;
+            _groupInvites = true;
+            _sosAlerts = true;
+            _newPlaces = false;
+            _weeklyDigest = false;
+            _marketingEmails = false;
+          });
+        }
       }
     } catch (e) {
-      debugPrint('Load notif prefs error: $e');
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _savePreferences() async {
-    setState(() => _isSaving = true);
-    try {
-      final userId = supabase.auth.currentUser?.id;
-      if (userId == null) return;
-
-      await supabase.from('profiles').update({
-        'notification_prefs': {
-          'push_enabled': _pushEnabled,
-          'trip_reminders': _tripReminders,
-          'booking_updates': _bookingUpdates,
-          'group_invites': _groupInvites,
-          'sos_alerts': _sosAlerts,
-          'new_places': _newPlaces,
-          'weekly_digest': _weeklyDigest,
-          'marketing_emails': _marketingEmails,
-        },
-      }).eq('id', userId);
-
+      debugPrint('Error loading notification preferences: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Notification preferences saved!'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error saving: $e'),
+            content: Text('Error loading preferences: $e'),
             backgroundColor: Colors.redAccent,
             behavior: SnackBarBehavior.floating,
           ),
         );
       }
     } finally {
-      if (mounted) setState(() => _isSaving = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _savePreferences() async {
+    if (_isSaving) return; // Prevent multiple submissions
+
+    setState(() => _isSaving = true);
+    try {
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final prefsMap = {
+        'push_enabled': _pushEnabled,
+        'trip_reminders': _tripReminders,
+        'booking_updates': _bookingUpdates,
+        'group_invites': _groupInvites,
+        'sos_alerts': _sosAlerts,
+        'new_places': _newPlaces,
+        'weekly_digest': _weeklyDigest,
+        'marketing_emails': _marketingEmails,
+      };
+
+      await supabase.from('profiles').update({
+        'notification_prefs': prefsMap,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', userId);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:
+                const Text('✓ Notification preferences saved successfully!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error saving notification preferences: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error saving preferences: ${e.toString()}'),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
   }
 
@@ -236,7 +283,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         ),
                         Switch(
                           value: _pushEnabled,
-                          onChanged: (v) => setState(() => _pushEnabled = v),
+                          onChanged: (value) {
+                            setState(() => _pushEnabled = value);
+                          },
                           activeThumbColor: amberColor,
                         ),
                       ],
@@ -257,7 +306,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         title: 'Trip Reminders',
                         subtitle: 'Get reminded before your trips',
                         color: accentColor,
-                        value: _tripReminders && _pushEnabled,
+                        value: _tripReminders,
                         enabled: _pushEnabled,
                         onChanged: (v) => setState(() => _tripReminders = v),
                       ),
@@ -266,7 +315,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         title: 'Booking Updates',
                         subtitle: 'Confirmation & status changes',
                         color: const Color(0xFF06B6D4),
-                        value: _bookingUpdates && _pushEnabled,
+                        value: _bookingUpdates,
                         enabled: _pushEnabled,
                         onChanged: (v) => setState(() => _bookingUpdates = v),
                       ),
@@ -275,7 +324,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         title: 'Group Invites',
                         subtitle: 'When someone adds you to a group',
                         color: const Color(0xFF8B5CF6),
-                        value: _groupInvites && _pushEnabled,
+                        value: _groupInvites,
                         enabled: _pushEnabled,
                         onChanged: (v) => setState(() => _groupInvites = v),
                       ),
@@ -298,7 +347,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         title: 'SOS Alerts',
                         subtitle: 'Emergency alerts from your travel group',
                         color: Colors.redAccent,
-                        value: _sosAlerts && _pushEnabled,
+                        value: _sosAlerts,
                         enabled: _pushEnabled,
                         onChanged: (v) => setState(() => _sosAlerts = v),
                       ),
@@ -320,7 +369,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         title: 'New Places',
                         subtitle: 'Discover new destinations nearby',
                         color: const Color(0xFF10B981),
-                        value: _newPlaces && _pushEnabled,
+                        value: _newPlaces,
                         enabled: _pushEnabled,
                         onChanged: (v) => setState(() => _newPlaces = v),
                       ),

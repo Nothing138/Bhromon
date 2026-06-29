@@ -1,5 +1,4 @@
 // screens/chat/contacts_list_screen.dart
-// screens/chat/contacts_list_screen.dart (FIXED)
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -53,6 +52,7 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: surface,
+        centerTitle: true,
         title: const Text(
           'Messages',
           style: TextStyle(

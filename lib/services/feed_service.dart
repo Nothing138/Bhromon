@@ -31,7 +31,7 @@ class FeedService {
   Stream<List<Map<String, dynamic>>> _getCombinedFeedWithRetry(int attempt) {
     try {
       debugPrint(
-          '✅ FeedService: Starting getCombinedFeed() - Attempt ${attempt + 1}');
+          ' FeedService: Starting getCombinedFeed() - Attempt ${attempt + 1}');
 
       // ═══════════════════════════════════════════════════════════════
       // POSTS STREAM - with error handling & retry
@@ -41,7 +41,7 @@ class FeedService {
           .stream(primaryKey: ['id'])
           .order('created_at', ascending: false)
           .handleError((error) {
-            debugPrint('❌ Posts Stream Error (Attempt $attempt): $error');
+            debugPrint(' Posts Stream Error (Attempt $attempt): $error');
             _connectionSubject.add(false);
 
             // Auto-reconnect after delay
@@ -57,7 +57,7 @@ class FeedService {
           .map<List<Map<String, dynamic>>>((postsList) {
             try {
               _connectionSubject.add(true);
-              debugPrint('📸 Posts received: ${postsList.length}');
+              debugPrint('Posts received: ${postsList.length}');
               return postsList.cast<Map<String, dynamic>>().map((p) {
                 return {
                   ...p,
@@ -67,7 +67,7 @@ class FeedService {
                 };
               }).toList();
             } catch (e) {
-              debugPrint('❌ Posts Map Error: $e');
+              debugPrint(' Posts Map Error: $e');
               return [];
             }
           })
@@ -81,7 +81,7 @@ class FeedService {
           .stream(primaryKey: ['id'])
           .order('event_date', ascending: false)
           .handleError((error) {
-            debugPrint('❌ Events Stream Error (Attempt $attempt): $error');
+            debugPrint(' Events Stream Error (Attempt $attempt): $error');
             _connectionSubject.add(false);
 
             // Auto-reconnect after delay
@@ -97,7 +97,7 @@ class FeedService {
           .map<List<Map<String, dynamic>>>((eventsList) {
             try {
               _connectionSubject.add(true);
-              debugPrint('🎫 Events received: ${eventsList.length}');
+              debugPrint(' Events received: ${eventsList.length}');
               return eventsList.cast<Map<String, dynamic>>().map((e) {
                 return {
                   ...e,
@@ -107,7 +107,7 @@ class FeedService {
                 };
               }).toList();
             } catch (e) {
-              debugPrint('❌ Events Map Error: $e');
+              debugPrint(' Events Map Error: $e');
               return [];
             }
           })
@@ -123,7 +123,7 @@ class FeedService {
         (posts, events) {
           try {
             debugPrint(
-                '🔄 Combining feeds: Posts=${posts.length}, Events=${events.length}');
+                ' Combining feeds: Posts=${posts.length}, Events=${events.length}');
 
             // Merge both lists
             final combined = <Map<String, dynamic>>[...posts, ...events];
@@ -137,25 +137,25 @@ class FeedService {
                     DateTime.now().toIso8601String());
                 return dateB.compareTo(dateA);
               } catch (e) {
-                debugPrint('⚠️ Sort Error: $e');
+                debugPrint('Sort Error: $e');
                 return 0;
               }
             });
 
-            debugPrint('✅ Final feed: ${combined.length} items');
+            debugPrint(' Final feed: ${combined.length} items');
             return combined;
           } catch (e) {
-            debugPrint('❌ Combine Error: $e');
+            debugPrint(' Combine Error: $e');
             return [];
           }
         },
       ).handleError((error) {
-        debugPrint('❌ CombineLatest Error: $error');
+        debugPrint(' CombineLatest Error: $error');
         _connectionSubject.add(false);
         return <Map<String, dynamic>>[];
       });
     } catch (e) {
-      debugPrint('❌ getCombinedFeed() Fatal Error: $e');
+      debugPrint(' getCombinedFeed() Fatal Error: $e');
       return Stream.value(<Map<String, dynamic>>[]);
     }
   }
@@ -211,15 +211,15 @@ class FeedService {
               b['created_at']?.toString() ?? b['event_date']?.toString() ?? '');
           return dateB.compareTo(dateA);
         } catch (e) {
-          debugPrint('⚠️ Sort Error: $e');
+          debugPrint('Sort Error: $e');
           return 0;
         }
       });
 
-      debugPrint('✅ HTTP Fallback: Got ${combined.length} items');
+      debugPrint(' HTTP Fallback: Got ${combined.length} items');
       return combined;
     } catch (e) {
-      debugPrint('❌ HTTP Fallback Error: $e');
+      debugPrint(' HTTP Fallback Error: $e');
       return [];
     }
   }
@@ -232,35 +232,35 @@ class FeedService {
           .from('posts')
           .select()
           .then((data) => (data as List).length);
-      debugPrint('📸 Posts count: $postsCount');
+      debugPrint('Posts count: $postsCount');
 
       // Check events
       final eventsCount = await supabase
           .from('agency_events')
           .select()
           .then((data) => (data as List).length);
-      debugPrint('🎫 Events count: $eventsCount');
+      debugPrint(' Events count: $eventsCount');
 
       // Sample posts
       final samplePosts = await supabase.from('posts').select().limit(1);
       if (samplePosts.isNotEmpty) {
-        debugPrint('📸 Sample post: ${samplePosts.first.keys.toList()}');
+        debugPrint('Sample post: ${samplePosts.first.keys.toList()}');
       }
 
       // Sample events
       final sampleEvents =
           await supabase.from('agency_events').select().limit(1);
       if (sampleEvents.isNotEmpty) {
-        debugPrint('🎫 Sample event: ${sampleEvents.first.keys.toList()}');
+        debugPrint(' Sample event: ${sampleEvents.first.keys.toList()}');
       }
     } catch (e) {
-      debugPrint('❌ Debug Error: $e');
+      debugPrint(' Debug Error: $e');
     }
   }
 
   /// Reset connection (call this on app resume)
   void resetConnection() {
-    debugPrint('🔄 Resetting Realtime connection...');
+    debugPrint(' Resetting Realtime connection...');
     _connectionSubject.add(true);
   }
 

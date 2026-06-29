@@ -131,12 +131,12 @@ class _AgencyRegisterScreenState extends State<AgencyRegisterScreen> {
 
       if (!mounted) return;
 
-      // ✅ UPDATED: Better dialog message
+      //  UPDATED: Better dialog message
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => AlertDialog(
-          title: const Text('✅ Registration Successful!'),
+          title: const Text(' Registration Successful!'),
           content: const Text(
             'Your agency account has been created successfully.\n\n'
             'An OTP has been sent to your email address.\n\n'

@@ -33,7 +33,7 @@ class SSLCommercePaymentService {
   }) {
     try {
       if (_isInitialized) {
-        print('⚠️  Payment service already initialized');
+        print(' Payment service already initialized');
         return;
       }
 
@@ -41,13 +41,13 @@ class SSLCommercePaymentService {
       _onFailure = onFailure;
       _isInitialized = true;
 
-      print('✅ SSL Commerce Payment Service initialized (Test Mode)');
+      print(' SSL Commerce Payment Service initialized (Test Mode)');
       print('💡 টেস্ট মোডে আপনি এই কার্ড দিয়ে পেমেন্ট করতে পারবেন:');
       print('   কার্ড নম্বর: 4232 0522 8000 1638');
       print('   এক্সপায়ারি: যেকোনো ভবিষ্যত তারিখ');
       print('   CVV: যেকোনো ৩ সংখ্যা');
     } catch (e) {
-      print('❌ Error initializing payment service: $e');
+      print(' Error initializing payment service: $e');
       _onFailure?.call('Failed to initialize payment: $e');
     }
   }
@@ -115,7 +115,7 @@ class SSLCommercePaymentService {
 
       if (response.statusCode == 200) {
         final responseBody = response.body;
-        print('✅ SSL Commerce response received');
+        print(' SSL Commerce response received');
         print('Response: $responseBody');
 
         // লিংক এক্সট্র্যাক্ট করুন
@@ -147,7 +147,7 @@ class SSLCommercePaymentService {
         _onFailure?.call('Payment service error: ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ Error processing payment: $e');
+      print(' Error processing payment: $e');
       _onFailure?.call('Error processing payment: ${e.toString()}');
     }
   }
@@ -170,29 +170,29 @@ class SSLCommercePaymentService {
 
       if (response.statusCode == 200) {
         final responseBody = response.body;
-        print('✅ Payment validation response: $responseBody');
+        print(' Payment validation response: $responseBody');
 
         // রেসপন্স পার্সিং
         if (responseBody.contains('VALID')) {
-          print('✅ Payment validated successfully');
+          print(' Payment validated successfully');
           return true;
         } else {
-          print('❌ Payment validation failed');
+          print(' Payment validation failed');
           return false;
         }
       }
       return false;
     } catch (e) {
-      print('❌ Error validating payment: $e');
+      print(' Error validating payment: $e');
       return false;
     }
   }
 
   void dispose() {
     try {
-      print('✅ Payment service disposed');
+      print(' Payment service disposed');
     } catch (e) {
-      print('⚠️  Error disposing payment service: $e');
+      print(' Error disposing payment service: $e');
     }
   }
 

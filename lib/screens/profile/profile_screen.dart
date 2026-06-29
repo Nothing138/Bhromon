@@ -1,8 +1,8 @@
 // screens/profile/profile_screen.dart
 // screens/profile/profile_screen.dart (UPDATED)
-// ✅ Updated with Past Shopping এবং My Places sections
+//  Updated with Past Shopping এবং My Places sections
 
-// ⚠️ এই file টি পুরোটা replace করবেন আপনার profile_screen.dart দিয়ে
+// এই file টি পুরোটা replace করবেন আপনার profile_screen.dart দিয়ে
 
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -286,7 +286,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       _buildStatsRow(accentColor, isDark, textColor, cardColor),
                       const SizedBox(height: 28),
 
-                      // ✅ HISTORY SECTION (নতুন)
+                      //  HISTORY SECTION (নতুন)
                       _buildSectionLabel('HISTORY', isDark),
                       const SizedBox(height: 10),
                       _buildMenuCard(

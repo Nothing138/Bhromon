@@ -58,7 +58,7 @@ Keep everything practical and within Bangladesh only.
         final text = data['choices'][0]['message']['content'] as String;
         return text;
       } else if (response.statusCode == 401) {
-        return "❌ Invalid API Key! Get a new key from console.groq.com.";
+        return " Invalid API Key! Get a new key from console.groq.com.";
       } else if (response.statusCode == 429) {
         return "⏳There have been a few too many requests. Please try again after a while.";
       } else {
@@ -66,15 +66,15 @@ Keep everything practical and within Bangladesh only.
           final errorData = jsonDecode(response.body);
           final errorMsg = errorData['error']['message'] ?? 'Unknown error';
           debugPrint("Groq Error Detail: $errorMsg");
-          return "❌ Error: $errorMsg";
+          return " Error: $errorMsg";
         } catch (_) {
           debugPrint("Groq Error: ${response.statusCode} - ${response.body}");
-          return "❌ Error ${response.statusCode}: The itinerary could not be created. Please try again.";
+          return " Error ${response.statusCode}: The itinerary could not be created. Please try again.";
         }
       }
     } catch (e) {
       debugPrint("Connection Error: $e");
-      return "❌ Check your internet connection and try again.";
+      return " Check your internet connection and try again.";
     }
   }
 }

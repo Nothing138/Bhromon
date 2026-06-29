@@ -5,14 +5,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class AgencyLikesService {
   final supabase = Supabase.instance.client;
 
-  /// ✅ Toggle Like/Unlike
+  ///  Toggle Like/Unlike
   Future<bool> toggleLike(String postId) async {
     try {
-      debugPrint('🔄 Toggling like for post: $postId');
+      debugPrint(' Toggling like for post: $postId');
 
       final userId = supabase.auth.currentUser?.id;
       if (userId == null) {
-        debugPrint('❌ User not authenticated');
+        debugPrint(' User not authenticated');
         throw Exception('Please login to like posts');
       }
 
@@ -35,7 +35,7 @@ class AgencyLikesService {
             .eq('post_id', postId)
             .eq('user_id', userId);
 
-        debugPrint('✅ Unlike করা হয়েছে');
+        debugPrint(' Unlike করা হয়েছে');
         return false;
       } else {
         // Like
@@ -46,16 +46,16 @@ class AgencyLikesService {
           'created_at': DateTime.now().toIso8601String(),
         });
 
-        debugPrint('✅ Like করা হয়েছে');
+        debugPrint(' Like করা হয়েছে');
         return true;
       }
     } catch (e) {
-      debugPrint('❌ Like toggle error: $e');
+      debugPrint(' Like toggle error: $e');
       rethrow;
     }
   }
 
-  /// ✅ Check if user liked this post
+  ///  Check if user liked this post
   Future<bool> isPostLikedByUser(String postId) async {
     try {
       final userId = supabase.auth.currentUser?.id;
@@ -70,12 +70,12 @@ class AgencyLikesService {
 
       return result != null;
     } catch (e) {
-      debugPrint('❌ Check like error: $e');
+      debugPrint(' Check like error: $e');
       return false;
     }
   }
 
-  /// ✅ Get likes count
+  ///  Get likes count
   Future<int> getLikesCount(String postId) async {
     try {
       final result =
@@ -83,12 +83,12 @@ class AgencyLikesService {
 
       return (result as List).length;
     } catch (e) {
-      debugPrint('❌ Get likes count error: $e');
+      debugPrint(' Get likes count error: $e');
       return 0;
     }
   }
 
-  /// ✅ Stream likes count (real-time updates)
+  ///  Stream likes count (real-time updates)
   Stream<int> streamLikesCount(String postId) {
     return supabase
         .from('post_likes')
@@ -96,12 +96,12 @@ class AgencyLikesService {
         .eq('post_id', postId)
         .map((rows) => (rows as List).length)
         .handleError((e) {
-          debugPrint('❌ Stream likes error: $e');
+          debugPrint(' Stream likes error: $e');
           return 0;
         });
   }
 
-  /// ✅ Stream user like status (real-time)
+  ///  Stream user like status (real-time)
   Stream<bool> streamUserLikeStatus(String postId) {
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) {
@@ -117,7 +117,7 @@ class AgencyLikesService {
           return likes.any((like) => like['user_id'] == userId);
         })
         .handleError((e) {
-          debugPrint('❌ Stream user like status error: $e');
+          debugPrint(' Stream user like status error: $e');
           return false;
         });
   }

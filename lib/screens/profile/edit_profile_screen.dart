@@ -61,7 +61,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         debugPrint('📷 Image picked: ${picked.path}');
       }
     } catch (e) {
-      debugPrint('❌ Image pick error: $e');
+      debugPrint(' Image pick error: $e');
       if (mounted) {
         _showSnack(
             'Could not open gallery. Check app permissions.', Colors.orange);
@@ -105,10 +105,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       final String finalUrl =
           '$publicUrl?v=${DateTime.now().millisecondsSinceEpoch}';
 
-      debugPrint('✅ Upload success. URL: $finalUrl');
+      debugPrint(' Upload success. URL: $finalUrl');
       return finalUrl;
     } catch (e) {
-      debugPrint('❌ Upload error: $e');
+      debugPrint(' Upload error: $e');
       if (mounted) {
         _showSnack('Photo upload failed: $e', Colors.redAccent);
       }
@@ -165,18 +165,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         if (mounted) setState(() => _currentAvatarUrl = newAvatarUrl);
       }
 
-      debugPrint('🔄 Updating profile: $updateData');
+      debugPrint(' Updating profile: $updateData');
 
       await supabase.from('profiles').update(updateData).eq('id', userId);
 
-      debugPrint('✅ Profile update done');
+      debugPrint(' Profile update done');
 
       if (mounted) {
         Navigator.pop(context, true);
         _showSnack('Profile updated successfully!', Colors.green);
       }
     } on PostgrestException catch (e) {
-      debugPrint('❌ Supabase DB error [${e.code}]: ${e.message}');
+      debugPrint(' Supabase DB error [${e.code}]: ${e.message}');
       final msg = e.code == '23505'
           ? 'Username already taken.'
           : e.code == '42501'
@@ -184,7 +184,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               : 'DB error: ${e.message}';
       if (mounted) _showSnack(msg, Colors.redAccent);
     } catch (e) {
-      debugPrint('❌ General error: $e');
+      debugPrint(' General error: $e');
       if (mounted) _showSnack('Error: $e', Colors.redAccent);
     } finally {
       if (mounted) setState(() => _isUpdating = false);

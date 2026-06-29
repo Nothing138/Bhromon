@@ -1,6 +1,6 @@
 // screens/agency/profile/edit_profile_screen.dart
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart'; // ✅ FOR kIsWeb
+import 'package:flutter/foundation.dart'; //  FOR kIsWeb
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
@@ -154,10 +154,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  // ✅ HELPER FUNCTION FOR PLATFORM-SPECIFIC IMAGE DISPLAY
+  //  HELPER FUNCTION FOR PLATFORM-SPECIFIC IMAGE DISPLAY
   Widget _buildProfileImage(
       BuildContext context, bool isDark, Color accentColor) {
-    // ✅ Web doesn't support Image.file(), use Icon instead
+    //  Web doesn't support Image.file(), use Icon instead
     if (kIsWeb) {
       return Container(
         width: 120,
@@ -178,7 +178,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       );
     }
 
-    // ✅ Mobile: Show selected image or default icon
+    //  Mobile: Show selected image or default icon
     return Container(
       width: 120,
       height: 120,
@@ -240,7 +240,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             Center(
               child: Column(
                 children: [
-                  // ✅ USE HELPER FUNCTION FOR PLATFORM-SPECIFIC IMAGE
+                  //  USE HELPER FUNCTION FOR PLATFORM-SPECIFIC IMAGE
                   _buildProfileImage(context, isDark, accentColor),
                   const SizedBox(height: 16),
                   // Upload Button

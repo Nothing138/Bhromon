@@ -19,6 +19,9 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
     with TickerProviderStateMixin {
   final supabase = Supabase.instance.client;
 
+  // ========================
+  // STATE VARIABLES
+  // ========================
   bool _isSending = false;
   bool _alertSent = false;
   List<Map<String, dynamic>> _myAlerts = [];
@@ -72,6 +75,9 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
     super.dispose();
   }
 
+  // ========================
+  // LOAD EMERGENCY CONTACTS FROM DATABASE
+  // ========================
   Future<void> _loadEmergencyContacts() async {
     try {
       final userId = supabase.auth.currentUser?.id;
@@ -91,11 +97,16 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
           _activeContactsCount = _emergencyContacts.length;
         });
       }
+
+      debugPrint(' Loaded ${_emergencyContacts.length} emergency contacts');
     } catch (e) {
-      debugPrint('Error loading emergency contacts: $e');
+      debugPrint(' Error loading emergency contacts: $e');
     }
   }
 
+  // ========================
+  // GET USER LOCATION
+  // ========================
   Future<void> _initLocation() async {
     if (!mounted) return;
 
@@ -119,7 +130,7 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
       if (permission == LocationPermission.deniedForever) {
         if (mounted) {
           setState(() {
-            _locationError = 'Please enable location in settings';
+            _locationError = 'Enable location in settings';
             _loadingLocation = false;
           });
         }
@@ -139,16 +150,22 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
           _locationError = null;
         });
       }
+
+      debugPrint(' Location obtained: $_latitude, $_longitude');
     } catch (e) {
       if (mounted) {
         setState(() {
-          _locationError = 'Location error';
+          _locationError = 'Location error: ${e.toString().split('\n')[0]}';
           _loadingLocation = false;
         });
       }
+      debugPrint(' Location error: $e');
     }
   }
 
+  // ========================
+  // LOAD MY PAST ALERTS
+  // ========================
   Future<void> _loadMyAlerts() async {
     try {
       final userId = supabase.auth.currentUser?.id;
@@ -170,22 +187,29 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
           _loadingAlerts = false;
         });
       }
+
+      debugPrint(' Loaded ${_myAlerts.length} past alerts');
     } catch (e) {
       if (mounted) {
         setState(() => _loadingAlerts = false);
       }
+      debugPrint(' Error loading alerts: $e');
     }
   }
 
+  // ========================
+  // FETCH NEARBY EMERGENCY SERVICES
+  // ========================
   Future<void> _fetchNearbyServices() async {
     if (_latitude == null || _longitude == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Please enable location'),
-            backgroundColor: Colors.redAccent,
+            content: Text('Please enable location first'),
+            backgroundColor: Colors.orange,
             behavior: SnackBarBehavior.floating,
             margin: EdgeInsets.all(16),
+            duration: Duration(seconds: 2),
           ),
         );
       }
@@ -197,10 +221,12 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
     }
 
     try {
+      debugPrint(' Fetching nearby services near $_latitude, $_longitude');
+
       final response = await supabase
           .from('emergency_services')
           .select()
-          .or('type.eq.hospital,type.eq.police,type.eq.ambulance')
+          .inFilter('type', ['hospital', 'police', 'ambulance'])
           .gte('lat', _latitude! - 0.1)
           .lte('lat', _latitude! + 0.1)
           .gte('lng', _longitude! - 0.1)
@@ -213,6 +239,7 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
         services.add(EmergencyService.fromMap(item));
       }
 
+      // Calculate distance for each service
       for (var service in services) {
         service.distance = _calculateDistance(
           _latitude!,
@@ -222,6 +249,7 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
         );
       }
 
+      // Sort by distance
       services.sort((a, b) => a.distance.compareTo(b.distance));
 
       if (mounted) {
@@ -230,23 +258,29 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
           _loadingServices = false;
         });
 
+        debugPrint(' Found ${services.length} nearby services');
         _showServicesBottomSheet();
       }
     } catch (e) {
       if (mounted) {
         setState(() => _loadingServices = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error loading services'),
+          SnackBar(
+            content: Text(' Error: ${e.toString().split('\n')[0]}'),
             backgroundColor: Colors.redAccent,
             behavior: SnackBarBehavior.floating,
-            margin: EdgeInsets.all(16),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 3),
           ),
         );
       }
+      debugPrint(' Error fetching services: $e');
     }
   }
 
+  // ========================
+  // CALCULATE DISTANCE
+  // ========================
   double _calculateDistance(
     double lat1,
     double lng1,
@@ -340,7 +374,7 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 32),
                     child: Text(
-                      'No services found',
+                      'No services found nearby',
                       style: TextStyle(color: textSecondary),
                     ),
                   ),
@@ -477,7 +511,7 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
             children: [
               Expanded(
                 child: GestureDetector(
-                  onTap: () => _launchCall(service.phone),
+                  onTap: () => _makeCall(service.phone),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
@@ -509,7 +543,7 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
               const SizedBox(width: 10),
               Expanded(
                 child: GestureDetector(
-                  onTap: () => _launchMaps(service.lat, service.lng),
+                  onTap: () => _openMaps(service.lat, service.lng),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
@@ -545,58 +579,75 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
     );
   }
 
-  Future<void> _launchCall(String phoneNumber) async {
+  // ========================
+  // CALL EMERGENCY SERVICE
+  // ========================
+  Future<void> _makeCall(String phoneNumber) async {
     try {
       final uri = Uri(scheme: 'tel', path: phoneNumber);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Cannot call: $phoneNumber'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
       }
     } catch (e) {
-      debugPrint('Error: $e');
+      debugPrint(' Call error: $e');
     }
   }
 
-  Future<void> _launchMaps(double lat, double lng) async {
+  // ========================
+  // OPEN MAPS NAVIGATION
+  // ========================
+  Future<void> _openMaps(double lat, double lng) async {
     try {
       final uri = Uri(scheme: 'geo', path: '$lat,$lng');
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Cannot open maps'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
       }
     } catch (e) {
-      debugPrint('Error: $e');
+      debugPrint(' Maps error: $e');
     }
   }
 
+  // ========================
+  // SEND SOS ALERT
+  // ========================
   Future<void> _sendSOS() async {
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please login first'),
-          backgroundColor: Colors.redAccent,
-          behavior: SnackBarBehavior.floating,
-          margin: EdgeInsets.all(16),
-        ),
-      );
+      _showError('Please login first');
       return;
     }
 
     if (_latitude == null || _longitude == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Getting location...'),
-          backgroundColor: Colors.orange,
-          behavior: SnackBarBehavior.floating,
-          margin: EdgeInsets.all(16),
-        ),
-      );
+      _showError('📍 Getting location...');
+      await Future.delayed(const Duration(seconds: 2));
+      await _initLocation();
       return;
     }
 
     setState(() => _isSending = true);
 
     try {
-      // Create SOS alert
+      debugPrint('📤 Sending SOS alert...');
+
+      // Create SOS alert in database
       final alertData = await supabase.from('sos_alerts').insert({
         'user_id': userId,
         'latitude': _latitude,
@@ -604,13 +655,18 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
         'status': 'active',
       }).select();
 
-      if (alertData.isNotEmpty) {
-        final alertId = alertData[0]['id'];
+      if (alertData.isEmpty) {
+        throw Exception('Failed to create SOS alert');
+      }
 
-        // Notify emergency contacts
-        if (_emergencyContacts.isNotEmpty) {
-          await _notifyEmergencyContacts(alertId, userId);
-        }
+      final alertId = alertData[0]['id'];
+      debugPrint(' SOS alert created: $alertId');
+
+      // Notify emergency contacts with location
+      if (_emergencyContacts.isNotEmpty) {
+        await _notifyEmergencyContacts(alertId, userId);
+      } else {
+        debugPrint('No emergency contacts to notify');
       }
 
       if (mounted) {
@@ -630,21 +686,21 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
     } catch (e) {
       if (mounted) {
         setState(() => _isSending = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.redAccent,
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.all(16),
-          ),
-        );
+        _showError('Error: ${e.toString().split('\n')[0]}');
       }
+      debugPrint(' SOS error: $e');
     }
   }
 
+  // ========================
+  // NOTIFY EMERGENCY CONTACTS
+  // ========================
   Future<void> _notifyEmergencyContacts(String alertId, String userId) async {
     try {
-      // Get user profile for message
+      debugPrint(
+          '📢 Notifying ${_emergencyContacts.length} emergency contacts');
+
+      // Get user profile
       final userProfile = await supabase
           .from('profiles')
           .select('full_name, phone_number')
@@ -652,12 +708,15 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
           .single();
 
       final userName = userProfile['full_name'] ?? 'Someone';
+      final userPhone = userProfile['phone_number'] ?? 'N/A';
       final userLocation = 'Latitude: $_latitude, Longitude: $_longitude';
+      final googleMapsLink =
+          'https://maps.google.com/?q=$_latitude,$_longitude';
 
-      // For each emergency contact, store the notification record
+      // For each emergency contact
       for (var contact in _emergencyContacts) {
         try {
-          // Insert into sos_alert_contacts table
+          // Store notification record
           await supabase.from('sos_alert_contacts').insert({
             'alert_id': alertId,
             'contact_id': contact.id,
@@ -667,49 +726,96 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
             'notification_status': 'pending',
           });
 
-          // Call the Edge Function to send SMS
+          // Send SMS notification
           await _sendSMSNotification(
             contact.contactPhone,
             userName,
             userLocation,
             contact.contactName,
+            googleMapsLink,
           );
+
+          // Send Email notification
+          await _sendEmailNotification(
+            contact.contactPhone,
+            userName,
+            userLocation,
+            contact.contactName,
+            userPhone,
+            googleMapsLink,
+          );
+
+          debugPrint(' Notified: ${contact.contactName}');
         } catch (e) {
-          debugPrint('Error notifying ${contact.contactName}: $e');
+          debugPrint(' Error notifying ${contact.contactName}: $e');
         }
       }
     } catch (e) {
-      debugPrint('Error in _notifyEmergencyContacts: $e');
+      debugPrint(' Error in _notifyEmergencyContacts: $e');
     }
   }
 
+  // ========================
+  // SEND SMS NOTIFICATION
+  // ========================
   Future<void> _sendSMSNotification(
     String phoneNumber,
     String userName,
     String location,
     String contactName,
+    String googleMapsLink,
   ) async {
     try {
-      // Call Supabase Edge Function to send SMS
-      final response = await supabase.functions.invoke(
+      await supabase.functions.invoke(
         'send-sos-sms',
         body: {
           'phone': phoneNumber,
           'userName': userName,
           'location': location,
           'contactName': contactName,
+          'mapsLink': googleMapsLink,
         },
       );
-
-      //if (response['success'] == true) {
-      //debugPrint('SMS sent successfully to $phoneNumber');
-      //}
-      debugPrint('SMS request sent to $phoneNumber');
+      debugPrint('📱 SMS sent to $phoneNumber');
     } catch (e) {
-      debugPrint('Error sending SMS to $phoneNumber: $e');
+      debugPrint(' SMS error: $e');
     }
   }
 
+  // ========================
+  // SEND EMAIL NOTIFICATION
+  // ========================
+  Future<void> _sendEmailNotification(
+    String phoneNumber,
+    String userName,
+    String location,
+    String contactName,
+    String userPhone,
+    String googleMapsLink,
+  ) async {
+    try {
+      await supabase.functions.invoke(
+        'send-sos-email',
+        body: {
+          'recipientPhone': phoneNumber,
+          'userName': userName,
+          'location': location,
+          'contactName': contactName,
+          'userPhone': userPhone,
+          'mapsLink': googleMapsLink,
+          'latitude': _latitude,
+          'longitude': _longitude,
+        },
+      );
+      debugPrint(' Email sent to $contactName');
+    } catch (e) {
+      debugPrint(' Email error: $e');
+    }
+  }
+
+  // ========================
+  // CANCEL ACTIVE ALERT
+  // ========================
   Future<void> _cancelAlert(String alertId) async {
     try {
       await supabase
@@ -720,16 +826,41 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
       if (mounted) {
         setState(() => _alertSent = false);
         _successController.reverse();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✓ Alert cancelled'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 1),
+          ),
+        );
       }
     } catch (e) {
-      debugPrint('Error: $e');
+      _showError('Error cancelling alert: ${e.toString().split('\n')[0]}');
+      debugPrint(' Cancel error: $e');
+    }
+  }
+
+  // ========================
+  // SHOW ERROR
+  // ========================
+  void _showError(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    final accentColor = themeProvider.accentColor;
     final isDark = themeProvider.isDarkMode;
 
     final bg = isDark ? const Color(0xFF080C18) : const Color(0xFFF5F7FF);
@@ -748,20 +879,7 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
         elevation: 0,
         backgroundColor: bg,
         titleSpacing: 0,
-        leading: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Container(
-            margin: const EdgeInsets.only(left: 16),
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: surfaceBorder, width: 0.5),
-            ),
-            child: Icon(Icons.arrow_back_rounded, color: accentColor, size: 20),
-          ),
-        ),
+        leading: null, //  Back button removed
         title: Padding(
           padding: const EdgeInsets.only(left: 10),
           child: Row(
@@ -843,7 +961,8 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: surfaceBorder, width: 0.5),
                 ),
-                child: Icon(Icons.person_add, color: accentColor, size: 18),
+                child:
+                    Icon(Icons.person_add, color: Colors.blueAccent, size: 18),
               ),
             ),
         ],
@@ -1003,7 +1122,6 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
                   ? ScaleTransition(
                       scale: _successController,
                       child: _buildSuccessState(
-                        accentColor,
                         isDark,
                         textPrimary,
                         textSecondary,
@@ -1063,7 +1181,7 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
                               ),
                             ),
                             TextSpan(
-                              text: 'be notified when you send SOS',
+                              text: 'be notified with location & email',
                               style: TextStyle(
                                 color:
                                     Colors.greenAccent.withValues(alpha: 0.8),
@@ -1082,27 +1200,30 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
             _buildInfoCard(
               Icons.location_on_outlined,
               'Location Sharing',
-              'GPS coordinates sent with alert',
+              'GPS coordinates automatically sent to emergency contacts',
               Colors.blueAccent,
               isDark,
               textPrimary,
               textSecondary,
             ),
             const SizedBox(height: 12),
-            _buildInfoCard(
-              Icons.local_hospital_outlined,
-              'Find Services',
-              'Locate nearby hospitals and ambulances',
-              Colors.redAccent,
-              isDark,
-              textPrimary,
-              textSecondary,
+            GestureDetector(
+              onTap: _fetchNearbyServices,
+              child: _buildInfoCard(
+                Icons.local_hospital_outlined,
+                'Find Services',
+                'Tap to locate nearby hospitals, police & ambulances',
+                Colors.redAccent,
+                isDark,
+                textPrimary,
+                textSecondary,
+              ),
             ),
             const SizedBox(height: 12),
             _buildInfoCard(
-              Icons.people_outline_rounded,
-              'Alert Broadcast',
-              'Emergency contacts will be notified',
+              Icons.email_outlined,
+              'Email Alerts',
+              'Emergency contacts receive instant notifications',
               Colors.orange,
               isDark,
               textPrimary,
@@ -1215,7 +1336,6 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
   }
 
   Widget _buildSuccessState(
-    Color accentColor,
     bool isDark,
     Color textPrimary,
     Color textSecondary,
@@ -1267,7 +1387,7 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
         ),
         const SizedBox(height: 6),
         Text(
-          'Help is on the way',
+          'Contacts notified with location',
           style: TextStyle(color: textSecondary, fontSize: 13),
         ),
         const SizedBox(height: 20),
@@ -1405,8 +1525,7 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
 
     final status = alert['status'] as String? ?? 'active';
     final isActive = status == 'active';
-
-    Color statusColor = isActive ? Colors.redAccent : Colors.grey;
+    final Color statusColor = isActive ? Colors.redAccent : Colors.grey;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -1448,6 +1567,9 @@ class _SOSPageUpdatedState extends State<SOSPageUpdated>
   }
 }
 
+// ========================
+// EMERGENCY SERVICE MODEL
+// ========================
 class EmergencyService {
   final String id;
   final String name;
@@ -1482,6 +1604,9 @@ class EmergencyService {
   }
 }
 
+// ========================
+// EMERGENCY CONTACT MODEL
+// ========================
 class EmergencyContact {
   final String id;
   final String contactName;

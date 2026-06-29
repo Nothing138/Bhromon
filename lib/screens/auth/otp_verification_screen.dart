@@ -69,19 +69,19 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
 
-      print('🔄 Verifying OTP: $otpCode');
+      print(' Verifying OTP: $otpCode');
       await authService.verifyOtp(otpCode: otpCode);
 
       if (!mounted) return;
 
-      print('✅ OTP verified successfully');
+      print(' OTP verified successfully');
 
-      // ✅ Show success dialog then navigate to login screen
+      //  Show success dialog then navigate to login screen
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => AlertDialog(
-          title: const Text('✅ Verification Successful!'),
+          title: const Text(' Verification Successful!'),
           content: const Text(
             'Your email has been verified successfully.\n\n'
             'You can now log in with your credentials.',
@@ -90,7 +90,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             TextButton(
               onPressed: () {
                 Navigator.pop(context); // Close dialog
-                // ✅ Navigate to Login Screen
+                //  Navigate to Login Screen
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
@@ -104,7 +104,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         ),
       );
     } catch (e) {
-      print('❌ OTP verification error: $e');
+      print(' OTP verification error: $e');
       if (!mounted) return;
       _showErrorDialog(_extractErrorMessage(e.toString()));
     } finally {
@@ -122,12 +122,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
 
-      print('🔄 Resending OTP...');
+      print(' Resending OTP...');
       await authService.resendOtp();
 
       if (!mounted) return;
 
-      print('✅ OTP resent successfully');
+      print(' OTP resent successfully');
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -144,7 +144,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
       _startResendTimer();
     } catch (e) {
-      print('❌ Resend OTP error: $e');
+      print(' Resend OTP error: $e');
       if (!mounted) return;
       _showErrorDialog(_extractErrorMessage(e.toString()));
     } finally {

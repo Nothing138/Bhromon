@@ -33,7 +33,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
     super.dispose();
   }
 
-  // ✅ Step 1: Request Password Reset
+  //  Step 1: Request Password Reset
   Future<void> _handleResetRequest() async {
     if (_emailController.text.isEmpty) {
       _showErrorDialog('Please enter your email address');
@@ -59,7 +59,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('✅ Password reset email has been sent'),
+          content: Text(' Password reset email has been sent'),
           backgroundColor: Colors.green,
         ),
       );
@@ -73,7 +73,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
     }
   }
 
-  // ✅ Step 2: Verify Token & Reset Password
+  //  Step 2: Verify Token & Reset Password
   Future<void> _handlePasswordReset() async {
     if (_tokenController.text.isEmpty) {
       _showErrorDialog('Please enter the reset code from your email');
@@ -146,7 +146,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('❌ Error'),
+        title: const Text(' Error'),
         content: Text(message),
         actions: [
           TextButton(
@@ -251,7 +251,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
             const SizedBox(height: 40),
 
             if (!_emailSent) ...[
-              // ✅ STEP 1: EMAIL VERIFICATION
+              //  STEP 1: EMAIL VERIFICATION
               Text(
                 'Email Address',
                 style: TextStyle(
@@ -356,7 +356,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                       ),
               ),
             ] else ...[
-              // ✅ STEP 2: PASSWORD RESET WITH TOKEN
+              //  STEP 2: PASSWORD RESET WITH TOKEN
               Text(
                 'Reset Code',
                 style: TextStyle(

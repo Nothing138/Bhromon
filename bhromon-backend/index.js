@@ -1,6 +1,4 @@
-// server.js - Complete Bhromon Backend Setup
-// ✅ Raj's working Express server with all routes
-
+// server.js 
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -55,12 +53,12 @@ if (!fs.existsSync(uploadsDir)) {
 // ========================
 app.get('/health', (req, res) => {
   res.json({
-    status: '✅ Bhromon Backend is Running',
+    status: ' Bhromon Backend is Running',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     services: {
-      supabase: process.env.SUPABASE_URL ? '✅ Connected' : '❌ Missing',
-      gmail: process.env.GMAIL_USER ? '✅ Configured' : '❌ Missing'
+      supabase: process.env.SUPABASE_URL ? ' Connected' : ' Missing',
+      gmail: process.env.GMAIL_USER ? ' Configured' : ' Missing'
     }
   });
 });
@@ -80,7 +78,7 @@ app.use((req, res) => {
 // GLOBAL ERROR HANDLER
 // ========================
 app.use((err, req, res, next) => {
-  console.error('❌ Error:', err.message);
+  console.error(' Error:', err.message);
   console.error('Stack:', err.stack);
   
   res.status(err.status || 500).json({
@@ -98,13 +96,13 @@ app.listen(PORT, () => {
   console.log('╔════════════════════════════════════════════╗');
   console.log('║   🌍 BHROMON BACKEND SERVER STARTED       ║');
   console.log('╚════════════════════════════════════════════╝\n');
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📧 Gmail SMTP: ${process.env.GMAIL_USER ? '✅ Configured' : '❌ Not configured'}`);
-  console.log(`🗄️  Supabase URL: ${process.env.SUPABASE_URL ? '✅ Loaded' : '❌ Missing'}`);
-  console.log(`🔑 Service Role Key: ${process.env.SUPABASE_SERVICE_ROLE_KEY ? '✅ Loaded' : '❌ Missing'}`);
-  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`📡 CORS Origin: ${process.env.FRONTEND_URL || 'All origins'}`);
-  console.log('\n✅ All services initialized!\n');
+  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Gmail SMTP: ${process.env.GMAIL_USER ? ' Configured' : ' Not configured'}`);
+  console.log(`Supabase URL: ${process.env.SUPABASE_URL ? ' Loaded' : ' Missing'}`);
+  console.log(`Service Role Key: ${process.env.SUPABASE_SERVICE_ROLE_KEY ? ' Loaded' : ' Missing'}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`CORS Origin: ${process.env.FRONTEND_URL || 'All origins'}`);
+  console.log('\n\n\n All services initialized!\n');
 });
 
 // ========================
@@ -116,11 +114,11 @@ process.on('SIGTERM', () => {
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  console.error(' Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
 process.on('uncaughtException', (error) => {
-  console.error('❌ Uncaught Exception:', error);
+  console.error(' Uncaught Exception:', error);
   process.exit(1);
 });
 

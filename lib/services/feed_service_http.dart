@@ -29,7 +29,7 @@ class FeedServiceHttp {
         throw Exception('Failed to load feed');
       }
     } catch (e) {
-      print('❌ Error: $e');
+      print(' Error: $e');
       rethrow;
     }
   }
@@ -52,7 +52,7 @@ class FeedServiceHttp {
         throw Exception('Failed to toggle like');
       }
     } catch (e) {
-      print('❌ Error: $e');
+      print(' Error: $e');
       rethrow;
     }
   }
@@ -76,7 +76,7 @@ class FeedServiceHttp {
         throw Exception('Failed to send message');
       }
     } catch (e) {
-      print('❌ Error: $e');
+      print(' Error: $e');
       rethrow;
     }
   }
@@ -99,7 +99,7 @@ class FeedServiceHttp {
         throw Exception('Failed to share post');
       }
     } catch (e) {
-      print('❌ Error: $e');
+      print(' Error: $e');
       rethrow;
     }
   }

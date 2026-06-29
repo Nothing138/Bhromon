@@ -1,5 +1,5 @@
 // screens/profile/add_place_screen.dart
-// ✅ FINAL CORRECT - নতুন place: দুই table এ, পুরোনো place: alert দেখাবে
+//  FINAL CORRECT - নতুন place: দুই table এ, পুরোনো place: alert দেখাবে
 
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -101,7 +101,7 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
     }
   }
 
-  // ✅ Check if place exists in GLOBAL places table
+  //  Check if place exists in GLOBAL places table
   Future<Map<String, dynamic>?> _checkPlaceInGlobalDatabase(
       String placeName) async {
     try {
@@ -131,16 +131,16 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
       final location = _locationController.text.trim();
       final description = _descriptionController.text.trim();
 
-      // ✅ STEP 1: Check if place exists in places table
+      //  STEP 1: Check if place exists in places table
       final existingPlace = await _checkPlaceInGlobalDatabase(placeName);
 
       if (existingPlace != null) {
-        // ❌ Place already exists - Show alert and don't add anything
+        //  Place already exists - Show alert and don't add anything
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                '⚠️ "${existingPlace['name']}" already exists in our database. Cannot add duplicate places.',
+                '"${existingPlace['name']}" already exists in our database. Cannot add duplicate places.',
               ),
               backgroundColor: Colors.red,
               behavior: SnackBarBehavior.floating,
@@ -152,13 +152,13 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
         return;
       }
 
-      // ✅ STEP 2: Upload image if selected
+      //  STEP 2: Upload image if selected
       String? imageUrl;
       if (_imageBytes != null) {
         imageUrl = await _uploadImage();
       }
 
-      // ✅ STEP 3: Place is NEW - Add to BOTH tables
+      //  STEP 3: Place is NEW - Add to BOTH tables
 
       // Add to places table (global - everyone sees)
       await supabase.from('places').insert({
@@ -188,7 +188,7 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ New place added successfully!'),
+            content: Text(' New place added successfully!'),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
             duration: Duration(seconds: 2),
@@ -200,7 +200,7 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('❌ Error: $e'),
+            content: Text(' Error: $e'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 3),

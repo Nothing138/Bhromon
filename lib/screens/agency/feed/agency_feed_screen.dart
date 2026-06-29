@@ -24,7 +24,7 @@ class _AgencyFeedScreenFixedState extends State<AgencyFeedScreen> {
     feedService = FeedServiceSimple();
 
     // Debug: Check if data exists
-    debugPrint('🔍 Checking database...');
+    debugPrint(' Checking database...');
     feedService.checkDataExists();
   }
 
@@ -67,7 +67,7 @@ class _AgencyFeedScreenFixedState extends State<AgencyFeedScreen> {
           ),
         ),
       ),
-      // ✅ Use FutureBuilder instead of StreamBuilder
+      //  Use FutureBuilder instead of StreamBuilder
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: feedService.getCombinedFeed(),
         builder: (context, snapshot) {
@@ -87,7 +87,7 @@ class _AgencyFeedScreenFixedState extends State<AgencyFeedScreen> {
 
           // Error state
           if (snapshot.hasError) {
-            debugPrint('❌ Feed Error: ${snapshot.error}');
+            debugPrint(' Feed Error: ${snapshot.error}');
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -138,7 +138,7 @@ class _AgencyFeedScreenFixedState extends State<AgencyFeedScreen> {
 
           // Success - Show feed
           final feedItems = snapshot.data!;
-          debugPrint('✅ Rendering ${feedItems.length} feed items');
+          debugPrint(' Rendering ${feedItems.length} feed items');
 
           return RefreshIndicator(
             onRefresh: () async => setState(() {}),

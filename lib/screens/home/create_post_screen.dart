@@ -1,5 +1,5 @@
 // screens/home/create_post_screen.dart
-// ✅ FULLY FIXED FOR WEB + MOBILE
+//  FULLY FIXED FOR WEB + MOBILE
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -260,7 +260,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Selected Image Preview - ✅ WEB COMPATIBLE
+            // Selected Image Preview -  WEB COMPATIBLE
             if (_selectedImage != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
@@ -268,7 +268,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(14),
-                      // ✅ Conditional image loading for web/mobile
+                      //  Conditional image loading for web/mobile
                       child: kIsWeb
                           ? Image.network(
                               _selectedImage!.path,

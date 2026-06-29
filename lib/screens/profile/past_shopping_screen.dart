@@ -1,5 +1,5 @@
 // screens/profile/past_shopping_screen.dart
-// ✅ Past Shopping History Screen
+//  Past Shopping History Screen
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

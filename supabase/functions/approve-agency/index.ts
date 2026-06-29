@@ -70,8 +70,8 @@ Deno.serve(async (req) => {
     if (updateError) throw updateError;
 
     // Log করো console এ (email sending এর জন্য placeholder)
-    console.log(`✅ Agency Approved!`);
-    console.log(`📧 Would send OTP to: ${agency.owner_email}`);
+    console.log(` Agency Approved!`);
+    console.log(` Would send OTP to: ${agency.owner_email}`);
     console.log(`🔐 OTP: ${otp}`);
 
     // Success response পাঠাও
@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('❌ Error:', error);
+    console.error(' Error:', error);
     return new Response(
       JSON.stringify({ 
         success: false, 

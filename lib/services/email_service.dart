@@ -5,7 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 
 class EmailService {
-  // ✅ Load API key from .env file
+  //  Load API key from .env file
   late String _resendApiKey;
   static const String _resendBaseUrl = 'https://api.resend.com/emails';
   static const int _timeoutSeconds = 30; // Increased timeout
@@ -15,12 +15,12 @@ class EmailService {
     _resendApiKey = dotenv.env['RESEND_API_KEY'] ?? '';
 
     if (_resendApiKey.isEmpty) {
-      print('⚠️ WARNING: RESEND_API_KEY not found in .env file!');
+      print('WARNING: RESEND_API_KEY not found in .env file!');
       print(
           'Expected .env file in project root with: RESEND_API_KEY=your_key_here');
     } else {
       print(
-          '✅ RESEND_API_KEY loaded successfully (${_resendApiKey.substring(0, 10)}...)');
+          ' RESEND_API_KEY loaded successfully (${_resendApiKey.substring(0, 10)}...)');
     }
   }
 
@@ -36,7 +36,7 @@ class EmailService {
         throw Exception('RESEND_API_KEY is not configured');
       }
 
-      print('📧 Sending welcome email to $email');
+      print(' Sending welcome email to $email');
 
       final response = await http
           .post(
@@ -54,20 +54,20 @@ class EmailService {
           )
           .timeout(Duration(seconds: _timeoutSeconds))
           .catchError((e) {
-        print('❌ Network error sending email: $e');
+        print(' Network error sending email: $e');
         throw Exception('Network timeout or error: $e');
       });
 
       if (response.statusCode == 200) {
-        print('✅ User welcome email sent to $email');
+        print(' User welcome email sent to $email');
       } else {
-        print('❌ Resend API Error: ${response.statusCode}');
+        print(' Resend API Error: ${response.statusCode}');
         print('Response body: ${response.body}');
         throw Exception(
             'Resend API error (${response.statusCode}): ${response.body}');
       }
     } catch (e) {
-      print('❌ User email send error: $e');
+      print(' User email send error: $e');
       rethrow;
     }
   }
@@ -85,7 +85,7 @@ class EmailService {
         throw Exception('RESEND_API_KEY is not configured');
       }
 
-      print('📧 Sending agency registration OTP to $email');
+      print(' Sending agency registration OTP to $email');
 
       final response = await http
           .post(
@@ -103,20 +103,20 @@ class EmailService {
           )
           .timeout(Duration(seconds: _timeoutSeconds))
           .catchError((e) {
-        print('❌ Network error sending OTP: $e');
+        print(' Network error sending OTP: $e');
         throw Exception('Network timeout or error: $e');
       });
 
       if (response.statusCode == 200) {
-        print('✅ Agency registration OTP email sent to $email');
+        print(' Agency registration OTP email sent to $email');
       } else {
-        print('❌ Resend API Error: ${response.statusCode}');
+        print(' Resend API Error: ${response.statusCode}');
         print('Response body: ${response.body}');
         throw Exception(
             'Resend API error (${response.statusCode}): ${response.body}');
       }
     } catch (e) {
-      print('❌ Agency OTP email send error: $e');
+      print(' Agency OTP email send error: $e');
       rethrow;
     }
   }
@@ -134,7 +134,7 @@ class EmailService {
         throw Exception('RESEND_API_KEY is not configured');
       }
 
-      print('📧 Sending OTP resend email to $email');
+      print(' Sending OTP resend email to $email');
 
       final response = await http
           .post(
@@ -152,20 +152,20 @@ class EmailService {
           )
           .timeout(Duration(seconds: _timeoutSeconds))
           .catchError((e) {
-        print('❌ Network error sending resend OTP: $e');
+        print(' Network error sending resend OTP: $e');
         throw Exception('Network timeout or error: $e');
       });
 
       if (response.statusCode == 200) {
-        print('✅ Agency resend OTP email sent to $email');
+        print(' Agency resend OTP email sent to $email');
       } else {
-        print('❌ Resend API Error: ${response.statusCode}');
+        print(' Resend API Error: ${response.statusCode}');
         print('Response body: ${response.body}');
         throw Exception(
             'Resend API error (${response.statusCode}): ${response.body}');
       }
     } catch (e) {
-      print('❌ Resend OTP email send error: $e');
+      print(' Resend OTP email send error: $e');
       rethrow;
     }
   }
@@ -258,7 +258,7 @@ class EmailService {
 
         <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
           <p style="color: #1976d2; margin: 0; font-size: 14px;">
-            ✅ Your agency is approved! Enter the OTP to activate your account.
+             Your agency is approved! Enter the OTP to activate your account.
           </p>
         </div>
 
@@ -317,7 +317,7 @@ class EmailService {
 
         <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
           <p style="color: #856404; margin: 0; font-size: 14px;">
-            ⚠️ If you didn't request this code, you can safely ignore this email.
+            If you didn't request this code, you can safely ignore this email.
           </p>
         </div>
 

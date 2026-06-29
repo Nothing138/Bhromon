@@ -1,5 +1,5 @@
 // screens/shop/checkout_page.dart
-// ✅ সম্পূর্ণ FIXED VERSION - সব syntax error সমাধান করা
+//  সম্পূর্ণ FIXED VERSION - সব syntax error সমাধান করা
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -40,7 +40,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         onFailure: _handlePaymentFailure,
       );
     } catch (e) {
-      print('❌ Error initializing checkout: $e');
+      print(' Error initializing checkout: $e');
     }
   }
 
@@ -95,7 +95,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       );
 
       if (order != null) {
-        print('✅ Order created successfully: ${order.orderId}');
+        print(' Order created successfully: ${order.orderId}');
         // Clear cart
         cartProvider.clearCart();
 
@@ -116,7 +116,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         }
       }
     } catch (e) {
-      print('❌ Error handling payment success: $e');
+      print(' Error handling payment success: $e');
       if (mounted) {
         _showErrorDialog('Error', 'An error occurred: $e');
       }
@@ -124,7 +124,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   void _handlePaymentFailure(String error) {
-    print('❌ Payment failed: $error');
+    print(' Payment failed: $error');
 
     // পেমেন্ট গেটওয়ে লিংক
     if (error.startsWith('PAYMENT_REDIRECT:')) {
@@ -217,7 +217,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
             'Travel Gear Purchase - ${cartProvider.cartItems.length} items',
       );
     } catch (e) {
-      print('❌ Error processing payment: $e');
+      print(' Error processing payment: $e');
       if (mounted) {
         _showErrorDialog('Payment Error', 'Error: ${e.toString()}');
         setState(() => _isProcessing = false);
@@ -478,9 +478,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      "✅ আপনি এখন টেস্ট মোডে আছেন\n"
-                      "✅ এখানে টাকা কাটা হবে না\n"
-                      "✅ যেকোনো কার্ড দিয়ে পেমেন্ট করতে পারেন\n\n"
+                      " আপনি এখন টেস্ট মোডে আছেন\n"
+                      " এখানে টাকা কাটা হবে না\n"
+                      " যেকোনো কার্ড দিয়ে পেমেন্ট করতে পারেন\n\n"
                       "কার্ড: 4232 0522 8000 1638\n"
                       "এক্সপায়ারি: যেকোনো ভবিষ্যত তারিখ\n"
                       "CVV: যেকোনো ৩ সংখ্যা",
@@ -782,7 +782,7 @@ class _PaymentWebViewState extends State<PaymentWebView> {
             setState(() => _isLoading = false);
           },
           onWebResourceError: (WebResourceError error) {
-            print('❌ Web error: ${error.description}');
+            print(' Web error: ${error.description}');
             setState(() => _isLoading = false);
           },
         ),

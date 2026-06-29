@@ -1,4 +1,5 @@
 // screens/agency/profile/appearance_settings_screen.dart
+// screens/agency/profile/appearance_settings_screen.dart (AGENCY VERSION)
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/theme_provider.dart';
@@ -53,7 +54,9 @@ class _AppearanceSettingsScreenState extends State<AppearanceSettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Theme Mode Section
+            // ========================
+            // THEME MODE SECTION
+            // ========================
             Text(
               'THEME MODE',
               style: TextStyle(
@@ -88,8 +91,10 @@ class _AppearanceSettingsScreenState extends State<AppearanceSettingsScreen> {
                           color: Colors.amber.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(
-                          Icons.dark_mode_outlined,
+                        child: Icon(
+                          isDark
+                              ? Icons.dark_mode_outlined
+                              : Icons.light_mode_outlined,
                           color: Colors.amber,
                           size: 24,
                         ),
@@ -99,7 +104,7 @@ class _AppearanceSettingsScreenState extends State<AppearanceSettingsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Dark Mode',
+                            isDark ? 'Dark Mode' : 'Light Mode',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -108,7 +113,9 @@ class _AppearanceSettingsScreenState extends State<AppearanceSettingsScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Easier on the eyes in low light',
+                            isDark
+                                ? 'Easier on the eyes in low light'
+                                : 'Default light theme (default)',
                             style: TextStyle(
                               fontSize: 12,
                               color: isDark ? Colors.white54 : Colors.grey[600],
@@ -123,8 +130,25 @@ class _AppearanceSettingsScreenState extends State<AppearanceSettingsScreen> {
                     scale: 1.2,
                     child: Switch(
                       value: isDark,
-                      onChanged: (value) {
-                        themeProvider.setDarkMode(value);
+                      onChanged: (value) async {
+                        await themeProvider.setDarkMode(value);
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                value
+                                    ? '🌙 Dark Mode Enabled'
+                                    : '☀️ Light Mode Enabled',
+                              ),
+                              backgroundColor: themeProvider.accentColor,
+                              behavior: SnackBarBehavior.floating,
+                              duration: const Duration(seconds: 1),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          );
+                        }
                       },
                       activeColor: themeProvider.accentColor,
                       inactiveThumbColor: Colors.grey[400],
@@ -137,7 +161,9 @@ class _AppearanceSettingsScreenState extends State<AppearanceSettingsScreen> {
             ),
             const SizedBox(height: 32),
 
-            // Accent Colors Section
+            // ========================
+            // ACCENT COLORS SECTION
+            // ========================
             Text(
               'ACCENT COLORS',
               style: TextStyle(
@@ -204,7 +230,9 @@ class _AppearanceSettingsScreenState extends State<AppearanceSettingsScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Color Grid
+            // ========================
+            // COLOR GRID
+            // ========================
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -220,8 +248,21 @@ class _AppearanceSettingsScreenState extends State<AppearanceSettingsScreen> {
                     themeProvider.accentColor.value == color.value;
 
                 return GestureDetector(
-                  onTap: () {
-                    themeProvider.setAccentColor(color);
+                  onTap: () async {
+                    await themeProvider.setAccentColor(color);
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('✓ Color updated'),
+                          backgroundColor: color,
+                          behavior: SnackBarBehavior.floating,
+                          duration: const Duration(seconds: 1),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      );
+                    }
                   },
                   child: Container(
                     decoration: BoxDecoration(
@@ -263,7 +304,9 @@ class _AppearanceSettingsScreenState extends State<AppearanceSettingsScreen> {
             ),
             const SizedBox(height: 32),
 
-            // Preview Section
+            // ========================
+            // PREVIEW SECTION
+            // ========================
             Text(
               'PREVIEW',
               style: TextStyle(
@@ -350,6 +393,34 @@ class _AppearanceSettingsScreenState extends State<AppearanceSettingsScreen> {
                 ],
               ),
             ),
+
+            // ========================
+            // RESET BUTTON
+            // ========================
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: OutlinedButton(
+                onPressed: () => _showResetDialog(context, themeProvider),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(
+                    color: Colors.red.withValues(alpha: 0.5),
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  "Reset to Default",
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
             const SizedBox(height: 32),
           ],
         ),
@@ -361,5 +432,51 @@ class _AppearanceSettingsScreenState extends State<AppearanceSettingsScreen> {
   Color _getContrastColor(Color backgroundColor) {
     final luminance = backgroundColor.computeLuminance();
     return luminance > 0.5 ? Colors.black : Colors.white;
+  }
+
+  void _showResetDialog(
+    BuildContext context,
+    ThemeProvider provider,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Reset Theme"),
+        content: const Text(
+          "Reset to light mode and gold color?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () async {
+              await provider.resetToDefaults();
+              if (mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text("✓ Theme reset to defaults"),
+                    backgroundColor: Colors.green,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                );
+              }
+            },
+            child: const Text(
+              "Reset",
+              style: TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

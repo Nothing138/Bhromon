@@ -1,5 +1,5 @@
 // screens/profile/my_places_screen.dart
-// ✅ My Places Screen - User added places
+//  My Places Screen - User added places
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

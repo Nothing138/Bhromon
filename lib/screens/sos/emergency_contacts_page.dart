@@ -284,7 +284,7 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
     );
   }
 
-  // ✅ FIXED: Using Opacity widget instead of opacity parameter
+  //  FIXED: Using Opacity widget instead of opacity parameter
   Widget _buildContactCard(
     EmergencyContact contact,
     bool isDark,

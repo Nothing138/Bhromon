@@ -40,8 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
 
-      // Smart login - detects user vs agency
-      print('🔄 Attempting login...');
+      print('Attempting login...');
       await authService.smartLogin(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
@@ -49,14 +48,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!mounted) return;
 
-      print('✅ Login successful');
+      print('Login successful');
       print('User Type: ${authService.userType}');
       print('Is Agency: ${authService.isAgency}');
       print('Is OTP Required: ${authService.isOtpRequired}');
 
-      // ✅ SMART ROUTING BASED ON USER TYPE
+      // SMART ROUTING BASED ON USER TYPE
       if (authService.isOtpRequired) {
         // Agency needs OTP verification
+        // OTP screen এ যাওয়ার সময় pushReplacement ঠিক আছে
+        // কারণ OTP verify হলে সেখান থেকে stack clear করা হবে
         print('→ Routing to OTP Verification Screen');
         Navigator.pushReplacement(
           context,
@@ -65,26 +66,24 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
       } else if (authService.isAgency) {
-        // ✅ Agency user - go to AgencyMainWrapper
+        // ✅ Agency user — পুরো stack clear করে AgencyMainWrapper এ যাও
         print('→ Routing to AgencyMainWrapper');
-        Navigator.pushReplacement(
+        Navigator.pushNamedAndRemoveUntil(
           context,
-          MaterialPageRoute(
-            builder: (context) => const AgencyMainWrapper(),
-          ),
+          '/agency',
+          (route) => false,
         );
       } else {
-        // ✅ Regular user - go to MainWrapper
+        // ✅ Regular user — পুরো stack clear করে MainWrapper এ যাও
         print('→ Routing to MainWrapper');
-        Navigator.pushReplacement(
+        Navigator.pushNamedAndRemoveUntil(
           context,
-          MaterialPageRoute(
-            builder: (context) => const MainWrapper(),
-          ),
+          '/main',
+          (route) => false,
         );
       }
     } catch (e) {
-      print('❌ Login error: $e');
+      print('Login error: $e');
       if (!mounted) return;
       _showErrorDialog(_extractErrorMessage(e.toString()));
     } finally {
